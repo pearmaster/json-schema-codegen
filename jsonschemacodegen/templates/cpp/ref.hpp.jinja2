@@ -1,0 +1,7 @@
+{%-import 'loader.jinja2' as loader-%}
+{%-set refName = loader.Reference(resolver, schema['$ref'])-%}
+/*! {{Name}} is an alias of {{refName}}.
+ */
+using {{refName}} as {{Name}};
+
+{{''}}

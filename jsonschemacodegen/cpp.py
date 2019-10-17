@@ -94,13 +94,14 @@ class GeneratorFromSchema(object):
             "schema": schemawrappers.SchemaFactory(schema),
         }
         headerFilename = "%s.hpp" % (filename_base)
-        srcGenerator.RenderTemplate("source.cpp.jinja2", 
-            "%s.cpp" % (filename_base), 
-            deps=["\"%s\"" % (headerFilename)], 
-            usings=self.usings,
-            ns=self.namespace, 
-            resolver=self.resolver,
-            **args)
+        if '$ref' not in schema:
+            srcGenerator.RenderTemplate("source.cpp.jinja2", 
+                "%s.cpp" % (filename_base), 
+                deps=["\"%s\"" % (headerFilename)], 
+                usings=self.usings,
+                ns=self.namespace, 
+                resolver=self.resolver,
+                **args)
         headerGenerator.RenderTemplate("header.hpp.jinja2", 
             headerFilename, 
             ns=self.namespace, 
