@@ -1,0 +1,44 @@
+/*! {{Name}} is a wrapper around a {{schema.type}}.
+ * The value is limited to a set of enum values.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    enum class Value
+    {
+        {%-for opt in schema.enum %}
+        {{opt |enumify}}{%if not loop.last%},{%endif%}
+        {%-endfor%}
+    };
+
+    static constexpr int ENUM_MAX = {{schema.enum | length}};
+
+    {{Name}}(Value value);
+
+    {%-if schema.default is defined %}
+    {{Name}}();
+    {%-endif%}
+
+    virtual ~{{Name}}() = default;
+
+    operator Value() const;
+    
+    {{Name}}& operator=(Value value);
+
+    void Set(Value value);
+
+    Value Get() const;
+
+    static std::string EnumToString(Value value);
+    static Value StringToEnum(const std::string& str);
+
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    Value _value;
+};

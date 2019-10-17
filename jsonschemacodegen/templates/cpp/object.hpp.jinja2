@@ -1,0 +1,52 @@
+{%-import 'loader.jinja2' as loader%}
+{%macro NestedObjectName(name) -%}
+    {{-name | UpperCamelCase-}}
+{%-endmacro%}
+{%-macro ObjectType(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-loader.Reference(resolver, propSchema['$ref'])-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+/*! {{Name}} is a wrapper around an object.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    {%-for propName, propSchema in schema.properties.items() %}
+    {{loader.Class('hpp', resolver, [Name], [], NestedObjectName(propName), propSchema) | indent(4) }}
+    
+    {%endfor%}
+
+    {%-if schema.RequiredList() | length > 0 %}
+    {{Name}}({%for propName, propSchema in schema.RequiredList()%}const {{ObjectType(propName, propSchema)}}& {{propName | camelCase}}{%if not loop.last%}, {%endif%}{%endfor%});
+    {%-else%}
+    {{Name}}();
+    {%-endif%}
+    virtual ~{{Name}}() = default;
+    {%for propName, propSchema in schema.properties.items() %}
+    {%-if propName in schema.required%}
+    {{ObjectType(propName, propSchema)}} Get{{propName | UpperCamelCase}}() const;
+    {%-else%}
+    boost::optional<{{ObjectType(propName, propSchema)}}> Get{{propName | UpperCamelCase}}() const;
+    {%-endif%}
+    void Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value);
+    {%endfor%}
+
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    {%-for propName, propSchema in schema.properties.items() %}
+    {%-if propName in schema.required %}
+    {{ObjectType(propName, propSchema)}} {{propName | privatize}};
+    {%-else%}
+    boost::optional<{{ObjectType(propName, propSchema)}}> {{propName | privatize}};
+    {%-endif%}
+    {%-endfor%}
+};

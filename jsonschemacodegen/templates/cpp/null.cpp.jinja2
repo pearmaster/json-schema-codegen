@@ -1,0 +1,24 @@
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{{className}}::{{Name}}()
+{
+}
+
+boost::none_t {{className}}::Get() const
+{
+    return boost::none;
+}
+
+{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{
+    if (!(json.IsNull()))
+    {
+        throw std::invalid_argument("The '{{className}}' document JSON wasn't a string");
+    }
+
+    return {{className}}();
+}
+
+void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+{
+    value.SetNull();  
+}

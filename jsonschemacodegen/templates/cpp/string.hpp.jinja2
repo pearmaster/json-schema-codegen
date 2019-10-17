@@ -1,0 +1,40 @@
+/*! {{Name}} is a wrapper around a {{schema.type}}.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    {%-if schema.maxLength is defined %}
+    static constexpr int MAX_LENGTH = {{schema.maxLength}};
+    {%-endif%}
+    {%-if schema.minLength is defined %}
+    static constexpr int MIN_LENGTH = {{schema.minLength}};
+    {%-endif%}
+
+    {{Name}}(const std::string& value);
+
+    {%-if schema.default is defined %}
+    {{Name}}();
+    {%-endif%}
+
+    virtual ~{{Name}}() = default;
+
+    operator std::string() const;
+    
+    {{Name}}& operator=(const std::string& value);
+
+    void Set(const std::string& value);
+
+    std::string Get() const;
+
+    static void Validate(const std::string& testValue);
+
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    std::string _value;
+};

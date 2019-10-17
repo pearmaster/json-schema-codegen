@@ -1,0 +1,78 @@
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
+{%-set enumType = className+"::Value"%}
+{{className}}::{{Name}}({{enumType}} value)
+{
+    Set(value);
+}
+
+{%-if schema.default is defined %}
+{%set emptyConstructor = true %}
+{{className}}::{{Name}}()
+{
+    Set({{enumType}}::{{schema.default |enumify}});
+}
+{%-endif%}
+
+{{className}}::operator {{enumType}}() const
+{
+    return Get();
+}
+
+{{className}}& {{className}}::operator=({{enumType}} value)
+{
+    Set(value);
+    return *this;
+}
+
+void {{className}}::Set({{enumType}} value)
+{
+    _value = value;
+}
+
+{{enumType}} {{className}}::Get() const
+{
+    return _value;
+}
+
+{{std}}string {{className}}::EnumToString({{enumType}} value)
+{
+    switch (value)
+    {
+        {%-for enum in schema.enum%}
+        case {{enumType}}::{{enum | enumify}}:
+            return "{{enum}}";
+        {%-endfor%}
+    }
+}
+
+{{enumType}} {{className}}::StringToEnum(const std::string& input)
+{
+    {%-for enum in schema.enum %}
+    {%if not loop.first%}else {%endif%}if (input == "{{enum}}")
+    {
+        return {{enumType}}::{{enum | enumify}};
+    }
+    {%-endfor%}
+    else
+    {
+        throw std::out_of_range("Could not find enum value for string");
+    }
+}
+
+{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{
+    if (!(json.IsString()))
+    {
+        throw {{std}}invalid_argument("The '{{className}}' document JSON wasn't a string");
+    }
+
+    {{std}}string testValue = json.GetString();
+    return {{className}}(StringToEnum(testValue));
+}
+
+void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+{
+    {{std}}string strValue = EnumToString(_value);
+    value.SetString(strValue.c_str(), strValue.size(), allocator);
+}

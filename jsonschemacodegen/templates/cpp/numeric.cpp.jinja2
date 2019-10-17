@@ -1,0 +1,74 @@
+{%-if schema.type == 'integer'%}{%-set rjtype = 'int'%}{%-else%}{%-set rjtype = 'number'%}{%-endif-%}
+{%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif%}
+{%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+
+{{className}}::{{Name}}({{cpptype}} value)
+{
+    Set(value);
+}
+
+{%-if schema.default is defined %}
+{%set emptyConstructor = true %}
+{{className}}::{{Name}}()
+{
+    Set({{schema.default}});
+}
+{%-endif%}
+
+{{className}}::operator {{cpptype}}() const
+{
+    return Get();
+}
+
+{{className}}& {{className}}::operator=({{cpptype}} value)
+{
+    Set(value);
+    return *this;
+}
+
+void {{className}}::Set({{cpptype}} value)
+{
+    Validate(value);
+    _value = value;
+}
+
+{{cpptype}} {{className}}::Get() const
+{
+    return _value;
+}
+
+void {{className}}::Validate({{cpptype}} testValue)
+{
+    {%-if schema.minimum is defined %}
+    if (testValue < {{schema.minimum}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than {{schema.minimum}}");
+    {%-endif%}
+    {%-if schema.exclusiveMinimum is defined %}
+    if (testValue <= {{schema.exclusiveMinimum}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMinimum}}");
+    {%-endif%}
+    {%-if schema.maximum is defined %}
+    if (testValue < {{schema.maximum}}) throw {{std}}invalid_argument("The '{{Name}}' value was more than {{schema.maximum}}");
+    {%-endif%}
+    {%-if schema.exclusiveMaximum is defined %}
+    if (testValue >= {{schema.exclusiveMaximum}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMaximum}}");
+    {%-endif%}
+    {%-if schema.multipleOf is defined %}
+    if ((testValue % {{schema.multipleOf}}) != 0) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMaximum}}");
+    {%-endif%}
+}
+
+{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{
+    if (!(json.Is{{rjtype | UpperCamelCase}}()))
+    {
+        throw {{std}}invalid_argument("The '{{Name}}' document wasn't a {{rjtype}}");
+    }
+
+    {{className}} newObject(json.Get{{cpptype | UpperCamelCase}}());
+    return newObject;
+}
+
+void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+{
+    value.Set{{cpptype | UpperCamelCase}}(_value); 
+}

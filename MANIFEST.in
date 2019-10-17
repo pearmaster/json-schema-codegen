@@ -1,0 +1,6 @@
+include README.md
+exclude *.git*
+global-exclude *.pyc
+global-exclude __pycache__
+recursive-include templates *.jinja2
+include LICENSE

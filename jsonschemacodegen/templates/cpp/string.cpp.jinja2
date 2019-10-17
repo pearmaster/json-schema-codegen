@@ -1,0 +1,73 @@
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
+{{className}}::{{Name}}(const {{std}}string& value)
+{
+    Set(value);
+}
+
+{%-if schema.default is defined %}
+{%set emptyConstructor = true %}
+{{className}}::{{Name}}()
+{
+    Set("{{schema.default}}");
+}
+{%-endif%}
+
+{{className}}::operator {{std}}string() const
+{
+    return Get();
+}
+
+{{className}}& {{className}}::operator=(const {{std}}string& value)
+{
+    Set(value);
+    return *this;
+}
+
+void {{className}}::Set(const {{std}}string& value)
+{
+    Validate(value);
+    _value = value;
+}
+
+{{std}}string {{className}}::Get() const
+{
+    return _value;
+}
+
+void {{className}}::Validate(const {{std}}string& testValue)
+{
+    {%-if schema.maxLength is defined %}
+    if (testValue.size() > {{className}}::MAX_LENGTH)
+    {
+        throw {{std}}out_of_range("The string is shorter than {{className}}::MAX_LENGTH={{schema.maxLength}}");
+    }
+    {%-endif%}
+    {%-if schema.minLength is defined %}
+    if (testValue.size() < {{className}}::MIN_LENGTH)
+    {
+        throw {{std}}out_of_range("The string is longer than {{className}}::MIN_LENGTH={{schema.minLength}}");
+    }
+    {%-endif%}
+    {%-if schema.pattern is defined %}
+    {{std}}regex regexPattern("{{schema.pattern}}");
+    {{std}}smatch regexMatch;
+    {{std}}regex_match(testValue, regexMatch, regexPattern);
+    if (regexMatch.empty()) {{std}}out_of_range("The contents of '{{className}}' did not match the required pattern '{{schema.pattern}}'");
+    {%-endif%}
+}
+
+{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{
+    if (!(json.IsString()))
+    {
+        throw std::invalid_argument("The '{{className}}' document JSON wasn't a string");
+    }
+
+    return {{className}}(json.GetString());
+}
+
+void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+{
+    value.SetString(_value.c_str(), _value.size(), allocator);  
+}

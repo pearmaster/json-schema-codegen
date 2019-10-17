@@ -1,0 +1,68 @@
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%macro NestedObjectName(name) -%}
+    {{className}}::{{-name | UpperCamelCase-}}
+{%-endmacro%}
+{%-macro ObjectType(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-loader.Reference(resolver, propSchema['$ref'], usings)-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+{%-macro ObjectName(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-resolver.GetName(propSchema['$ref'])|UpperCamelCase-}}
+    {%-else-%}
+        {{-propName | UpperCamelCase-}}
+    {%-endif-%}
+{%-endmacro%}
+
+{%import 'loader.jinja2' as loader%}
+{%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+{{loader.Class('cpp', resolver, [className], usings, componentName, s) }}
+{%-endfor%}
+
+
+{{className}}::{{Name}}({%-for s in schema.allOf -%}
+        {%-set componentName%}Component{{loop.index}}{%endset-%}
+        const {{ObjectType(componentName, s)}}& {{componentName|camelCase}}{%if not loop.last%}, {%endif-%}
+    {%-endfor%}) : {%for s in schema.allOf -%}
+        {%-set componentName%}Component{{loop.index}}{%endset-%}
+        {{componentName|privatize}}({{componentName|camelCase}}){%if not loop.last%}, {%endif-%}
+    {%-endfor%}
+{
+
+}
+
+{%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+{{ObjectType(componentName, s)}} {{className}}::Get{{ObjectName(componentName, s)}}() const
+{
+    return {{componentName|privatize}};
+}
+
+void {{className}}::Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
+{
+    {{componentName|privatize}} = component;
+}
+{%endfor%}
+
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
+{
+    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    {{ObjectType(componentName, s)}} init{{componentName}} = {{ObjectType(componentName, s)}}::FromJson(json);
+    {%-endfor%}
+
+    return {{className}}({%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}init{{componentName}}{%if not loop.last%}, {%endif%}{%endfor%});
+}
+
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
+{
+    if (!value.IsObject())
+    {
+        value.SetObject();
+    }
+
+    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    {{componentName|privatize}}.ToJson(value, allocator);
+    {%-endfor %}
+}

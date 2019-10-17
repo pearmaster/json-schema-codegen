@@ -1,0 +1,73 @@
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%macro NestedObjectName(name) -%}
+    {{className}}::{{-name | UpperCamelCase-}}
+{%-endmacro%}
+{%-macro ObjectType(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-loader.Reference(resolver, propSchema['$ref'], usings)-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+{%-macro ObjectName(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-resolver.GetName(propSchema['$ref'])|UpperCamelCase-}}
+    {%-else-%}
+        {{-propName | UpperCamelCase-}}
+    {%-endif-%}
+{%-endmacro%}
+
+{%import 'loader.jinja2' as loader%}
+{%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+{{loader.Class('cpp', resolver, [className], usings, componentName, s) }}
+{%-endfor%}
+
+
+{{className}}::{{Name}}()
+{
+
+}
+
+{%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+boost::optional<{{ObjectType(componentName, s)}}> {{className}}::Get{{ObjectName(componentName, s)}}() const
+{
+    return {{componentName|privatize}};
+}
+
+void {{className}}::Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
+{
+    {{componentName|privatize}} = component;
+}
+{%endfor%}
+
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
+{
+    {{className}} returnObject;
+    {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    try
+    {
+        returnObject.Set{{ObjectName(componentName, s)}}({{ObjectType(componentName, s)}}::FromJson(json));
+    }
+    catch (...)
+    {
+        // If the type didn't parse, then no big deal since AnyOf doesn't require it to
+    }
+    {%-endfor%}
+
+    return returnObject;
+}
+
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
+{
+    if (!value.IsObject())
+    {
+        value.SetObject();
+    }
+
+    {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    if ({{componentName|privatize}})
+    {
+        {{componentName|privatize}}->ToJson(value, allocator);
+    }
+    {%-endfor %}
+}

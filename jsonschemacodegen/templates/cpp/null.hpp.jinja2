@@ -1,0 +1,21 @@
+/*! {{Name}} is a wrapper around a boolean.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    {{Name}}();
+
+    virtual ~{{Name}}() = default;
+
+    boost::none_t Get() const;
+
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+
+};

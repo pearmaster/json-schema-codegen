@@ -1,0 +1,51 @@
+{%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{{className}}::{{Name}}(bool value)
+{
+    Set(value);
+}
+
+{%-if schema.default is defined %}
+{%set emptyConstructor = true %}
+{{className}}::{{Name}}()
+{
+    Set({{schema.default|lower}});
+}
+{%-endif%}
+
+{{className}}::operator bool() const
+{
+    return Get();
+}
+
+{{className}}& {{className}}::operator=(bool value)
+{
+    Set(value);
+    return *this;
+}
+
+void {{className}}::Set(bool value)
+{
+    _value = value;
+}
+
+bool {{className}}::Get() const
+{
+    return _value;
+}
+
+{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{
+    if (!(json.IsBool()))
+    {
+        throw {{std}}invalid_argument("The '{{Name}}' document wasn't a boolean");
+    }
+
+    {{className}} newObject(json.GetBool());
+    return newObject;
+}
+
+void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'],  '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+{
+    value.SetBool(_value); 
+}

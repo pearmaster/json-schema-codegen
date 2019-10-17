@@ -1,0 +1,86 @@
+{%import 'loader.jinja2' as loader-%}
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-if schema.GetItemSchema()['$ref'] %}
+// Array uses items reference
+{%-set itemtype = loader.Reference(resolver, schema.GetItemSchema()['$ref'], usings) %}
+{%-else%}
+{%-set itemtype = className+'::Item'%}
+
+{%import 'loader.jinja2' as loader%}
+{{loader.Class('cpp', 
+               resolver, 
+               resolver.AppendToNamespace(ns, Name), 
+               usings,
+               'Item', 
+               schema.GetItemSchema()) }}
+{%endif%}
+
+{{className}}::{{Name}}({{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}> arr)
+{
+
+}
+
+{%if schema.minItems is not defined or schema.minItems == 0 -%}
+{{className}}::{{Name}}()
+{
+
+}
+{%-endif%}
+
+void {{className}}::SetArray(const {{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}>& arr)
+{
+    {%-if schema.maxItems is defined %}
+    if (arr.size() > {{schema.maxItems}})
+    {
+        throw;
+    }
+    {%-endif%}
+    {%-if schema.minItems is defined %}
+    if (arr.size() < {{schema.minItems}})
+    {
+        throw;
+    }
+    {%-endif%}
+    _arr = arr;
+}
+
+{{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}> {{className}}::GetArray() const
+{
+    return _arr;
+}
+
+void {{className}}::Append(const {{itemtype}}& item)
+{
+    {%-if schema.maxItems is defined %}
+    if (_arr.size() == {{schema.maxItems}})
+    {
+        throw;
+    }
+    {%-endif%}
+    _arr.push_back(item);
+}
+
+{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{
+    if (!json.IsArray())
+    {
+        throw std::invalid_argument("The '{{className}}' document JSON wasn't an array");
+    }
+    {{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}> arr;
+    for (auto& v : json.GetArray())
+    {
+        arr.push_back({{itemtype}}::FromJson(v));
+    }
+    return {{className}}(arr);
+}
+
+void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+{
+    value.SetArray();
+    for (const {{itemtype}}& el : _arr)
+    {
+        {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value elementValue;
+        el.ToJson(elementValue, allocator);
+        value.PushBack(elementValue, allocator);
+    }
+}

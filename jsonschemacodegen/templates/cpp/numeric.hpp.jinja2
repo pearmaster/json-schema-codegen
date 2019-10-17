@@ -1,0 +1,50 @@
+{%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif-%}
+/*! {{Name}} is a wrapper around a {{schema.type}}.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    {%-if schema.minimum is defined %}
+    static constexpr int VALUE_MINIMUM = {{schema.minimum}};
+    {%-endif%}
+    {%-if schema.maximum is defined %}
+    static constexpr int VALUE_MAXIMUM = {{schema.maximum}};
+    {%-endif%}
+    {%-if schema.exclusiveMinimum is defined %}
+    static constexpr int VALUE_EXCLUSIVE_MINIMUM = {{schema.exclusiveMinimum}};
+    {%-endif%}
+    {%-if schema.exclusiveMaximum is defined %}
+    static constexpr int VALUE_EXCLUSIVE_MAXIMUM = {{schema.exclusiveMaximum}};
+    {%-endif%}
+    {%-if schema.multipleOf is defined %}
+    static constexpr int VALUE_MULTIPLE_OF = {{schema.multipleOf}};
+    {%-endif%}
+
+    {{Name}}({{cpptype}} value);
+
+    {%-if schema.default is defined %}
+    {{Name}}();
+    {%-endif%}
+
+    virtual ~{{Name}}() = default;
+
+    operator {{cpptype}}() const;
+    
+    {{Name}}& operator=({{cpptype}} value);
+
+    void Set({{cpptype}} value);
+
+    {{cpptype}} Get() const;
+
+    static void Validate({{cpptype}} testValue);
+
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    {{cpptype}} _value;
+};

@@ -1,0 +1,107 @@
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set rapidjson = resolver.ResolveNamespace(usings, ['rapidjson'], '::') %}
+{%macro NestedObjectName(name) -%}
+    {{className}}::{{-name | UpperCamelCase-}}
+{%-endmacro%}
+{%-macro ObjectType(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-loader.Reference(resolver, propSchema['$ref'], usings)-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+
+{%import 'loader.jinja2' as loader%}
+{%-for propName, propSchema in schema.RequiredList() %}
+{{loader.Class('cpp', resolver, [className], usings, propName|UpperCamelCase, propSchema) }}
+{%-endfor%}
+{%-for propName, propSchema in schema.UnRequiredList() %}
+{{loader.Class('cpp', resolver, [className], usings, propName|UpperCamelCase, propSchema) }}
+{%-endfor%}
+
+{%if schema.RequiredList() | length > 0 %}
+{{className}}::{{Name}}(
+    {%-for propName, propSchema in schema.RequiredList()-%}
+        const {{ObjectType(propName, propSchema)}}& {{propName | camelCase}}{%if not loop.last%}, {%endif%}
+    {%-endfor%}){{' : '}}
+    {%-for propName, propSchema in schema.RequiredList()-%}
+        {{propName | privatize}}({{propName | camelCase}}){%if not loop.last%}, {%endif%}
+    {%-endfor%}
+{
+
+}
+{%else%}
+{{className}}::{{Name}}()
+{
+
+}
+{%endif%}
+
+{%-for propName, propSchema in schema.RequiredList() %}
+{{ObjectType(propName, propSchema)}} {{className}}::Get{{propName | UpperCamelCase}}() const
+{
+    return {{propName | privatize}};
+}
+
+void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
+{
+    {{propName | privatize}}.Set(value);
+}
+{%-endfor%}
+{%-for propName, propSchema in schema.UnRequiredList() %}
+boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propName | UpperCamelCase}}() const
+{
+    return {{propName | privatize}};
+}
+
+void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
+{
+    {{propName | privatize}} = value;
+}
+{%-endfor%}
+
+{{className}} {{className}}::FromJson(const {{rapidjson}}Value& json)
+{
+    {%-for propName, propSchema in schema.RequiredList()-%}
+    if (!json.HasMember("{{propName}}"))
+    {
+        throw std::invalid_argument("JSON is missing the '{{propName}}' property.");
+    }
+    {{ObjectType(propName, propSchema)}} local{{propName | UpperCamelCase}} = {{ObjectType(propName, propSchema)}}::FromJson(json["{{propName}}"]);
+    {%-endfor%}
+
+    {%-if schema.RequiredList() %}
+    {{className}} newInstance({%for propName, propSchema in schema.RequiredList()%}local{{propName | UpperCamelCase}}{%if not loop.last%}, {%endif%}{%endfor%});
+    {%else%}
+    {{className}} newInstance;
+    {%-endif%}
+    {%-for propName, propSchema in schema.UnRequiredList()%}
+    if (json.HasMember("{{propName}}"))
+    {
+        newInstance.Set{{propName | UpperCamelCase}}({{ObjectType(propName, propSchema)}}::FromJson(json["{{propName}}"]));
+    }
+    {%-endfor%}
+    return newInstance;
+}
+
+void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const //{{rapidjson}}
+{
+    if (!value.IsObject())
+    {
+        value.SetObject();
+    }
+    {%-for propName, propSchema in schema.RequiredList()%}
+    {{rapidjson}}Value temp{{propName|UpperCamelCase}};
+    {{propName|privatize}}.ToJson(temp{{propName|UpperCamelCase}}, allocator);
+    value.AddMember("{{propName}}", temp{{propName|UpperCamelCase}}, allocator);
+    {%-endfor%}
+
+    {%-for propName, propSchema in schema.UnRequiredList()%}
+    if ({{propName|privatize}})
+    {
+        {{rapidjson}}Value temp{{propName|UpperCamelCase}};
+        {{propName|privatize}}->ToJson(temp{{propName|UpperCamelCase}}, allocator);
+        value.AddMember("{{propName}}", temp{{propName|UpperCamelCase}}, allocator);
+    }
+    {%-endfor%}
+}

@@ -1,0 +1,68 @@
+{%-import 'loader.jinja2' as loader-%}
+{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%macro NestedObjectName(name) -%}
+    {{className}}::{{-name | UpperCamelCase-}}
+{%-endmacro%}
+{%-macro ObjectType(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-loader.Reference(resolver, propSchema['$ref'], usings)-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+{%-set optionList -%}
+{%-for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+{{ObjectType(optionName, s)}}{%if not loop.last%}, {%endif-%}
+{%-endfor -%}
+{%-endset%}
+
+
+{%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
+{{loader.Class('cpp', resolver, [className], usings, optionName, s) }}
+{%-endfor%}
+
+
+{{className}}::{{Name}}(const boost::variant<{{optionList}}>& variant) : _value(variant)
+{
+
+}
+
+boost::variant<{{optionList}}> {{className}}::Get() const
+{
+    return _value;
+}
+
+void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
+{
+    _value = variant;
+}
+
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
+{
+    {%for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+    try
+    {
+        auto obj = {{ObjectType(optionName, s)}}::FromJson(json);
+        return {{className}}(obj);
+    }
+    catch (...)
+    {
+        // {{optionName}} wasn't able to deserialize{%if not loop.last%}
+        // but there are other option to try{%endif%}
+    }
+    {%endfor %}
+
+    // Didn't deserialize
+    throw std::runtime_error("JSON didn't conform to schema");
+}
+
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
+{
+    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%if not loop.first%}
+    else {%endif%}if (_value.which() == {{loop.index - 1}})
+    {
+        boost::get<{{ObjectType(optionName, s)}}>(_value).ToJson(value, allocator);
+    }
+    {%-endfor %}
+}

@@ -1,0 +1,79 @@
+{%macro NestedObjectName(name) -%}
+    {{-name | UpperCamelCase-}}
+{%-endmacro%}
+{%-macro ObjectType(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-loader.Reference(resolver, propSchema['$ref'])-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+{%-macro ObjectName(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-resolver.GetName(propSchema['$ref'])|UpperCamelCase-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+
+/*! \class {{Name}}
+ * \brief An object containing the union of {%for s in schema.oneOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
+ {%-if schema.description -%}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    {%-import 'loader.jinja2' as loader%}
+    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    {{loader.Class('hpp', resolver, [Name], [], componentName, s) | indent(4) }}
+    
+    {%endfor%}
+
+    /*! Constructor for {{Name}}
+     * Requires instances of all components.  The data from each component is copied into storage for this class.
+     {%-for s in schema.allOf -%}
+     {%-set componentName%}Component{{loop.index}}{%endset-%}
+     * \param {{componentName|camelCase}} Instance of {{ObjectType(componentName, s)}}
+     {%-endfor%}
+     */
+    {{Name}}({%-for s in schema.allOf -%}
+        {%-set componentName%}Component{{loop.index}}{%endset-%}
+        const {{ObjectType(componentName, s)}}& {{componentName|camelCase}}{%if not loop.last%}, {%endif-%}
+    {%-endfor%});
+    virtual ~{{Name}}() = default;
+
+    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    /*! \fn {{ObjectType(componentName, s)}} Get{{ObjectName(componentName, s)}}() const
+     * \brief returns the {{ObjectType(componentName, s)}} component of the {{Name}} object
+     */
+    {{ObjectType(componentName, s)}} Get{{ObjectName(componentName, s)}}() const;
+
+    /*! \fn void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
+     * \brief Sets the {{ObjectType(componentName, s)}} component of {{Name}} object.
+     * \param component is copied into the storage for this class.
+     */
+    void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component);
+    {%endfor%}
+
+    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+     * \brief Deserializes JSON into a new instance of the {{Name}} object.
+     * \param json is the RapidJSON value which must be of object type and conforming to the schema.
+     * \throw If any of the components don't deserialize correctly according to their schemas.
+     * \returns {{Name}}
+     */
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
+     * \brief Serializes the combined (allof) object to JSON
+     * \param value is the RapidJSON value which will be modified to contain the serialization
+     * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     */
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    {{ObjectType(componentName, s)}} {{componentName|privatize}};
+    {%-endfor%}
+};

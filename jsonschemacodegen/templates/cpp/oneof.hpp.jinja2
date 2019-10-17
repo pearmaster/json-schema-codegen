@@ -1,0 +1,43 @@
+{%-import 'loader.jinja2' as loader-%}
+{%macro NestedObjectName(name) -%}
+    {{-name | UpperCamelCase-}}
+{%-endmacro%}
+{%-macro ObjectType(propName, propSchema) -%}
+    {%-if '$ref' in propSchema -%}
+        {{-loader.Reference(resolver, propSchema['$ref'])-}}
+    {%-else-%}
+        {{-NestedObjectName(propName)-}}
+    {%-endif-%}
+{%-endmacro%}
+{%-set optionList -%}
+{%-for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+{{ObjectType(optionName, s)}}{%if not loop.last%}, {%endif-%}
+{%-endfor -%}
+{%-endset%}
+/*! {{Name}} is a wrapper around one of {{schema.oneOf|length}} different types.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
+    {{loader.Class('hpp', resolver, [Name], [], optionName, s) | indent(4) }}
+    
+    {%endfor%}
+
+    {{Name}}(const boost::variant<{{optionList}}>& variant);
+    virtual ~{{Name}}() = default;
+
+    boost::variant<{{optionList}}> Get() const;
+
+    void Set(const boost::variant<{{optionList}}>& variant);
+
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    boost::variant<{{optionList}}> _value;
+};

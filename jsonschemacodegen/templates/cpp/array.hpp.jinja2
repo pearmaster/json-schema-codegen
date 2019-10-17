@@ -1,0 +1,46 @@
+{%-import 'loader.jinja2' as loader-%}
+/*! {{Name}} is a wrapper around an array.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    {%-if schema.GetItemSchema()['$ref'] %}
+    // items uses reference
+    {%-set itemtype = loader.Reference(resolver, schema.GetItemSchema()['$ref']) %}
+    {%-else%}
+
+    {%-set itemtype = 'Item'%}
+    {{loader.Class('hpp', resolver, [Name], [], 'Item', schema['items']) | indent(4) }}
+    {%-endif%}
+
+    {%-if schema.maxItems is defined %}
+    static constexpr int MAX_ITEMS = {{schema.maxItems}};
+    {%-endif%}
+    {%-if schema.minItems is defined %}
+    static constexpr int MIN_ITEMS = {{schema.minItmes}};
+    {%-endif%}
+
+    {{Name}}(std::vector<{{itemtype}}> arr);
+
+    {%-if schema.minItems is not defined or schema.minItems == 0 %}
+    {{Name}}();
+    {%-endif%}
+
+    virtual ~{{Name}}() = default;
+
+    void SetArray(const std::vector<{{itemtype}}>& arr);
+
+    std::vector<{{itemtype}}> GetArray() const;
+
+    void Append(const {{itemtype}}& item);
+
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    std::vector<{{itemtype}}> _arr;
+};

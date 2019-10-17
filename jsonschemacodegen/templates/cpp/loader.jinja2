@@ -1,0 +1,29 @@
+{%-macro Class(filetype, resolver, ns, usings, Name, schema) %}
+{%-if schema.oneOf is defined -%}
+{%-include 'oneof.'+filetype+'.jinja2'-%}
+{%-elif schema.allOf is defined -%}
+{%-include 'allof.'+filetype+'.jinja2'-%}
+{%-elif schema.anyOf is defined -%}
+{%-include 'anyof.'+filetype+'.jinja2'-%}
+{%-elif 'type' not in schema-%}
+{%-elif schema.type == 'integer' or schema.type == 'number'-%}
+{%-include 'numeric.'+filetype+'.jinja2'-%}
+{%-elif schema.type == 'array'-%}
+{%-include 'array.'+filetype+'.jinja2'-%}
+{%-elif schema.type == 'object'-%}
+{%-include 'object.'+filetype+'.jinja2'-%}
+{%-elif schema.type == 'boolean'-%}
+{%-include 'bool.'+filetype+'.jinja2'-%}
+{%-elif schema.type == 'null'-%}
+{%-include 'null.'+filetype+'.jinja2'-%}
+{%-elif schema.type == 'string' and schema.enum is not defined-%}
+{%-include 'string.'+filetype+'.jinja2'-%}
+{%-elif schema.type == 'string' and schema.enum is defined-%}
+{%-include 'string_enum.'+filetype+'.jinja2'-%}
+{%-else-%}
+//FIXME.  Type was {{schema.type-}}
+{%-endif-%}
+{%-endmacro-%}
+{%-macro Reference(resolver, ref, usings=[]) %}
+{{-resolver.GetNamespace(ref, usings, '::')-}}{{-resolver.GetName(ref)-}}
+{%-endmacro-%}
