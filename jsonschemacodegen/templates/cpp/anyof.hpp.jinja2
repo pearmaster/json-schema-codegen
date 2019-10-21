@@ -16,7 +16,7 @@
     {%-endif-%}
 {%-endmacro%}
 
-/*! {{Name}} is an object containing the union of {%for s in schema.oneOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}
+/*! {{Name}} is an object containing the optional union of {%for s in schema.oneOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}
  {%-if schema.description %}
  * {{schema.description}}
  {%-endif%}
@@ -30,16 +30,37 @@ public:
     
     {%endfor%}
 
+    /*! Constructor for {{Name}}
+     * Since all components are optional, this is an empty constructor.
+     */
     {{Name}}();
     virtual ~{{Name}}() = default;
 
     {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    /*! \fn boost::optional<{{ObjectType(componentName, s)}}> Get{{ObjectName(componentName, s)}}() const
+     * \brief Gets the {{ObjectType(componentName, s)}} component of the {{Name}} object, if present.
+     */
     boost::optional<{{ObjectType(componentName, s)}}> Get{{ObjectName(componentName, s)}}() const;
+
+    /*! \fn void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
+     * \brief Sets the {{ObjectType(componentName, s)}} component of {{Name}} object.
+     * \param {{ObjectType(componentName, s)}} component is copied into the storage for this class.
+     */
     void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component);
     {%endfor%}
 
+    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+     * \brief Deserializes JSON into a new instance of the {{Name}} object.
+     * \param json is the RapidJSON value which must be of object type and conforming to the schema.
+     * \returns {{Name}}
+     */
     static {{Name}} FromJson(const rapidjson::Value& json);
 
+    /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
+     * \brief Serializes the combination of any set components to JSON
+     * \param value is the RapidJSON value which will be modified to contain the serialization
+     * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:

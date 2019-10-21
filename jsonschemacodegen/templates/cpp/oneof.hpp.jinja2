@@ -26,16 +26,33 @@ public:
     {{loader.Class('hpp', resolver, [Name], [], optionName, s) | indent(4) }}
     
     {%endfor%}
-
+    /*! Constructor.  Must be initialized with an instance of one of these: {{optionList}}
+     */
     {{Name}}(const boost::variant<{{optionList}}>& variant);
     virtual ~{{Name}}() = default;
 
+    /*! Gets a variant object containing whatever instance of whatever object has been set.
+     */
     boost::variant<{{optionList}}> Get() const;
 
+    /*! Sets the variant object.
+     * \fn void Set(const boost::variant<{{optionList}}>& variant)
+     * \param const boost::variant<{{optionList}}>& variant.  An instance of one of these types must be passed: {{optionList}}
     void Set(const boost::variant<{{optionList}}>& variant);
 
+    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+     * \brief Deserializes a JSON value into a new instance of {{Name}}.
+     * \param json is the RapidJSON value.
+     * \throw If the JSON didn't validate according to the schema of one of the component objects.
+     * \returns {{Name}}
+     */
     static {{Name}} FromJson(const rapidjson::Value& json);
 
+    /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
+     * \brief Sets 'value' to whatever variant object is set
+     * \param value is the RapidJSON value which will be modified to contain the serialization
+     * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:

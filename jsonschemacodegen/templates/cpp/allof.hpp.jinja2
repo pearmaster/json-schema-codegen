@@ -17,7 +17,7 @@
 {%-endmacro%}
 
 /*! \class {{Name}}
- * \brief An object containing the union of {%for s in schema.oneOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
+ * \brief An object containing the mandatory union of {%for s in schema.oneOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
  {%-if schema.description -%}
  * {{schema.description}}
  {%-endif%}
@@ -52,7 +52,7 @@ public:
 
     /*! \fn void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
      * \brief Sets the {{ObjectType(componentName, s)}} component of {{Name}} object.
-     * \param component is copied into the storage for this class.
+     * \param {{ObjectType(componentName, s)}} component is copied into the storage for this class.
      */
     void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component);
     {%endfor%}

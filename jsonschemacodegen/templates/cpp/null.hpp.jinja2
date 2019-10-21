@@ -1,4 +1,4 @@
-/*! {{Name}} is a wrapper around a boolean.
+/*! {{Name}} is a wrapper around "null".
  {%-if schema.description %}
  * {{schema.description}}
  {%-endif%}
@@ -6,14 +6,32 @@
 class {{Name}}
 {
 public:
+    /*! Constructor
+     */
     {{Name}}();
 
     virtual ~{{Name}}() = default;
 
+    /*! \fn boost::none_t Get() const
+     * \brief returns boost::none which represents "null"
+     * This is pointless because it never returns anything other than boost::none
+     * \returns boost::none
+     */
     boost::none_t Get() const;
 
+    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+     * \brief Deserializes a JSON "null" value into a new instance of {{Name}}.
+     * \param json is the RapidJSON value which must be of "null" type.
+     * \throw If the JSON isn't a null
+     * \returns {{Name}}
+     */
     static {{Name}} FromJson(const rapidjson::Value& json);
 
+    /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
+     * \brief Sets 'value' to null
+     * \param value is the RapidJSON value which will be modified to contain the serialization
+     * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:

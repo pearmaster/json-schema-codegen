@@ -23,22 +23,49 @@ public:
     {%endfor%}
 
     {%-if schema.RequiredList() | length > 0 %}
+    /*! Constructor that sets required properties.
+     */
     {{Name}}({%for propName, propSchema in schema.RequiredList()%}const {{ObjectType(propName, propSchema)}}& {{propName | camelCase}}{%if not loop.last%}, {%endif%}{%endfor%});
     {%-else%}
+    /*! Constructor that initializes all properties to their defaults.
+     */
     {{Name}}();
     {%-endif%}
     virtual ~{{Name}}() = default;
     {%for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required%}
+    /*! Returns the optional '{{propName}}' property of the object
+     * \fn {{ObjectType(propName, propSchema)}} Get{{propName | UpperCamelCase}}() const
+     * \returns {{ObjectType(propName, propSchema)}} Required property value
+     */
     {{ObjectType(propName, propSchema)}} Get{{propName | UpperCamelCase}}() const;
     {%-else%}
+    /*! Returns the optional '{{propName}}' property of the object
+     * \fn boost::optional<{{ObjectType(propName, propSchema)}}> Get{{propName | UpperCamelCase}}() const
+     * \returns boost::optional<{{ObjectType(propName, propSchema)}}> Optional property value
+     */
     boost::optional<{{ObjectType(propName, propSchema)}}> Get{{propName | UpperCamelCase}}() const;
     {%-endif%}
+    /*! Sets the '{{propName}}' property of the object.
+     * \fn void Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
+     * \param const {{ObjectType(propName, propSchema)}}& value to Set
+     */
     void Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value);
     {%endfor%}
 
+    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+     * \brief Deserializes a JSON "object" value into a new instance of {{Name}}.
+     * \param json is the RapidJSON value which must be of "object" type.
+     * \throw If the JSON didn't validate according to the schema
+     * \returns {{Name}}
+     */
     static {{Name}} FromJson(const rapidjson::Value& json);
 
+    /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
+     * \brief Sets 'value' to a JSON object
+     * \param value is the RapidJSON value which will be modified to contain the serialization
+     * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:

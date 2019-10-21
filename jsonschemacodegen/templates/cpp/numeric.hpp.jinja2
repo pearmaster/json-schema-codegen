@@ -23,26 +23,61 @@ public:
     static constexpr int VALUE_MULTIPLE_OF = {{schema.multipleOf}};
     {%-endif%}
 
+    /*! Constructor
+     * \param {{cpptype}} value the initial value
+     */
     {{Name}}({{cpptype}} value);
 
     {%-if schema.default is defined %}
+    /*! Default value constructor.
+     * This structure is initialized with the value '{{schema.default}}'
+     */
     {{Name}}();
     {%-endif%}
 
     virtual ~{{Name}}() = default;
 
+    /*!
+     * Cast to {{cpptype}} operator
+     */
     operator {{cpptype}}() const;
     
+    /*! Assignment from {{cpptype}} operator
+     */
     {{Name}}& operator=({{cpptype}} value);
 
+    /*! Sets the {{cpptype}} value.
+     * \fn void Set({{cpptype}} value)
+     * \param {{cpptype}} value new value
+     */
     void Set({{cpptype}} value);
 
+    /*! Gets the value.
+     * \fn {{cpptype}} Get() const
+     * \return {{cpptype}} value
+     */
     {{cpptype}} Get() const;
 
+    /*! Validates that a value meets schema requirements.
+     * \fn void Validate({{cpptype}} testValue)
+     * \param {{cpptype}} testValue to validate
+     * \throw if passed value is invalid
+     */
     static void Validate({{cpptype}} testValue);
 
+    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+     * \brief Deserializes a JSON "{{schema.type}}" value into a new instance of {{Name}}.
+     * \param json is the RapidJSON value which must be of "null" type.
+     * \throw If the JSON isn't a {{schema.type}}
+     * \returns {{Name}}
+     */ 
     static {{Name}} FromJson(const rapidjson::Value& json);
 
+    /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
+     * \brief Sets 'value' to a {{schema.type}}
+     * \param value is the RapidJSON value which will be modified to contain the serialization
+     * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:

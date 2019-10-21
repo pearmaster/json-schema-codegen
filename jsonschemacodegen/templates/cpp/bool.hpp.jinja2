@@ -6,24 +6,53 @@
 class {{Name}}
 {
 public:
+    /*! \fn {{Name}}(bool value)
+     * \brief Constructor with initial value
+     * \param bool value initial value
+     */
     {{Name}}(bool value);
 
     {%-if schema.default is defined %}
+    /*! \fn {{Name}}()
+     * \brief Constructor that uses default value of {{schema.default}}
+     */
     {{Name}}();
     {%-endif%}
 
     virtual ~{{Name}}() = default;
 
+    /*! Cast to bool operator
+     */
     operator bool() const;
     
+    /*! Assign from bool operator
+     */
     {{Name}}& operator=(bool value);
 
+    /*! \fn void Set(bool value)
+     * \brief reset value to new bool
+     * \param bool value new value
+     */
     void Set(bool value);
 
+    /*! \fn bool Get() const
+     * \brief get current boolean value
+     */
     bool Get() const;
 
+    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+     * \brief Deserializes JSON into a new instance of the {{Name}} object.
+     * \param json is the RapidJSON value which must be a boolean type.
+     * \throw If the JSON data isn't a boolean
+     * \returns {{Name}}
+     */
     static {{Name}} FromJson(const rapidjson::Value& json);
 
+    /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
+     * \brief Serializes boolean value to JSON
+     * \param value is the RapidJSON value which will be modified to contain the serialization
+     * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:
