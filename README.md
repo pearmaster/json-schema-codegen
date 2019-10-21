@@ -4,7 +4,7 @@ This python library consumes JSON-Schema and generates C++ code.  It generates s
 
 ## Supported Schema Features
 
-Schemas (and sub-schemas) that are boolean or schemas without `type` are not currently supported.
+A C++ class is generated for each schema node according to the schema's `type` property.  Schemas without a `type` property, with the exception of combining operators `*Of`, are not supported.
 
 * type: string
     * minLength
@@ -38,7 +38,19 @@ Schemas (and sub-schemas) that are boolean or schemas without `type` are not cur
 
 #### References
 
-`$ref` references are supported for array items, object properties, allOf, anyOf, and oneOf.  However, the caller must provide a class which translates the reference into a class name and namespace. 
+`$ref` references are supported for array items, object properties, allOf, anyOf, and oneOf.  However, the caller must provide a "resolver" class which translates the reference into a class name and namespace. 
+
+## C++ Requirements
+
+* boost (boost::optional and boost::variant among others)
+* rapidjson
+* C++11
+
+## Python Requirements
+
+* python 3.7
+* jinja2
+* stringcase
 
 ## Installation
 
