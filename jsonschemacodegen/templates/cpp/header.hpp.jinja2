@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <cstdint>
 {%-for dep in deps|sort|reverse %}
 {%-if 'rapidjson' not in dep %}{# rapidjson should go last and always #}
 #include {{dep}}
