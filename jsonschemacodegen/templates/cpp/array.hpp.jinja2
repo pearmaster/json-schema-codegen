@@ -44,7 +44,7 @@ public:
      {%-if schema.minItems is defined or schema.maxItems is defined %}
      * \throw std::out_of_range if the length of the vector is incorrect
      {%-endif%}
-     *\
+     */
     void SetArray(const std::vector<{{itemtype}}>& arr);
 
     /*! \fn std::vector<{{itemtype}}> GetArray() const
