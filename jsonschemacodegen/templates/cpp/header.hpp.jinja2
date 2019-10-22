@@ -4,16 +4,18 @@
 
 #pragma once
 
-{%-for dep in deps %}
-{%-if 'rapidjson' in dep %}
+{%-for dep in deps|sort|reverse %}
+{%-if 'rapidjson' not in dep %}{# rapidjson should go last and always #}
+#include {{dep}}
+{%-endif-%}
+{%-endfor%}
+
 // FIXME: Somehow rapidjson provides a copy of inttypes.h that conflicts
 // with what breakpad needs.  This flag gets things to compile, but
 // we probably need to look into the issue further, especially if we
 // ever try to use 64-bit ints.
 #define RAPIDJSON_NO_INT64DEFINE
-{%endif%}
-#include {{dep}}
-{%-endfor%}
+#include "rapidjson/document.h"
 
 {%for n in ns %}
 namespace {{n}} {
