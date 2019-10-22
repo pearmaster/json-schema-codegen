@@ -18,8 +18,9 @@ class {{Name}}
 {
 public:
     {%-for propName, propSchema in schema.properties.items() %}
+    {%-if '$ref' not in propSchema %}
     {{loader.Class('hpp', resolver, [Name], [], NestedObjectName(propName), propSchema) | indent(4) }}
-    
+    {%-endif%}
     {%endfor%}
 
     {%-if schema.RequiredList() | length > 0 %}
