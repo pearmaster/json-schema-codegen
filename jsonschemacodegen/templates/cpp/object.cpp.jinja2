@@ -37,23 +37,19 @@
 }
 {%endif%}
 
-{%-for propName, propSchema in schema.RequiredList() %}
+{%-for propName, propSchema in schema.properties.items() %}
+{%-if propName in schema.required%}
+
 {{ObjectType(propName, propSchema)}} {{className}}::Get{{propName | UpperCamelCase}}() const
 {
     return {{propName | privatize}};
 }
-
-void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
-{
-    {{propName | privatize}}.Set(value);
-}
-{%-endfor%}
-{%-for propName, propSchema in schema.UnRequiredList() %}
+{%else%}
 boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propName | UpperCamelCase}}() const
 {
     return {{propName | privatize}};
 }
-
+{%endif%}
 void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
 {
     {{propName | privatize}} = value;

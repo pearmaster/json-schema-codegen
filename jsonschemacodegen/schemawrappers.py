@@ -47,6 +47,7 @@ class ObjectSchema(SchemaBase):
             incs.update(ps.CppIncludes(resolver))
         return incs
 
+    # TODO: Need something that specifies that this is 'required' for init
     def RequiredList(self):
         theList = []
         for propName, propSchema in self.data['properties'].items():
@@ -54,6 +55,7 @@ class ObjectSchema(SchemaBase):
                 theList.append((propName, SchemaFactory(propSchema)))
         return theList
 
+    # TODO: Need something that specifies that this is 'required' for init
     def UnRequiredList(self):
         theList = []
         for propName, propSchema in self.data['properties'].items():

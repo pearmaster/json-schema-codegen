@@ -34,12 +34,12 @@ public:
     virtual ~{{Name}}() = default;
     {%for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required%}
-    /*! Returns the optional '{{propName}}' property of the object
+    /*! Returns the required '{{propName}}' property of the object
      * \fn {{ObjectType(propName, propSchema)}} Get{{propName | UpperCamelCase}}() const
      * \returns {{ObjectType(propName, propSchema)}} Required property value
      */
     {{ObjectType(propName, propSchema)}} Get{{propName | UpperCamelCase}}() const;
-    {%-else%}
+    {%else%}
     /*! Returns the optional '{{propName}}' property of the object
      * \fn boost::optional<{{ObjectType(propName, propSchema)}}> Get{{propName | UpperCamelCase}}() const
      * \returns boost::optional<{{ObjectType(propName, propSchema)}}> Optional property value
