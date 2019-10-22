@@ -5,8 +5,10 @@
 {%-include 'allof.'+filetype+'.jinja2'-%}
 {%-elif schema.anyOf is defined -%}
 {%-include 'anyof.'+filetype+'.jinja2'-%}
-{%-elif '$ref' in schema %}
+{%-elif '$ref' in schema -%}
+{%-if filetype == 'hpp' -%}
 {%-include 'ref.hpp.jinja2'-%}
+{%-endif-%}
 {%-elif 'type' not in schema-%}
 {%-elif schema.type == 'integer' or schema.type == 'number'-%}
 {%-include 'numeric.'+filetype+'.jinja2'-%}

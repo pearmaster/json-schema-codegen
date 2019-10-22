@@ -2,6 +2,6 @@
 {%-set refName = loader.Reference(resolver, schema['$ref'])-%}
 /*! {{Name}} is an alias of {{refName}}.
  */
-using {{refName}} as {{Name}};
+using {{Name}} = {{refName}};
 
 {{''}}
