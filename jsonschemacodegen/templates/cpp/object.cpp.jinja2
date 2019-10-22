@@ -80,24 +80,25 @@ void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName
     return newInstance;
 }
 
-void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const //{{rapidjson}}
+void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
 {
     if (!value.IsObject())
     {
         value.SetObject();
     }
-    {%-for propName, propSchema in schema.RequiredList()%}
+
+    {%-for propName, propSchema in schema.properties.items() %}
+    {%-if propName in schema.required%}
     {{rapidjson}}Value temp{{propName|UpperCamelCase}};
     {{propName|privatize}}.ToJson(temp{{propName|UpperCamelCase}}, allocator);
     value.AddMember("{{propName}}", temp{{propName|UpperCamelCase}}, allocator);
-    {%-endfor%}
-
-    {%-for propName, propSchema in schema.UnRequiredList()%}
+    {%else%}
     if ({{propName|privatize}})
     {
         {{rapidjson}}Value temp{{propName|UpperCamelCase}};
         {{propName|privatize}}->ToJson(temp{{propName|UpperCamelCase}}, allocator);
         value.AddMember("{{propName}}", temp{{propName|UpperCamelCase}}, allocator);
     }
+    {%endif%}
     {%-endfor%}
 }
