@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-with open("requirements.txt", "w") as fp:
-    requirements = fh.read().split('\n')
+with open("requirements.txt", "r") as fp:
+    requirements = fp.read().split('\n')
 
 setup(name='json-schema-codegen',
       version='0.0.5',
