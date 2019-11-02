@@ -27,6 +27,7 @@ public:
     operator Value() const;
     
     {{Name}}& operator=(Value value);
+    friend std::ostream& operator<<(std::ostream& os, const {{Name}}& v);
 
     void Set(Value value);
 
@@ -36,6 +37,7 @@ public:
     static Value StringToEnum(const std::string& str);
 
     static {{Name}} FromJson(const rapidjson::Value& json);
+    static {{Name}} FromString(const std::string& str);
 
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 

@@ -83,8 +83,11 @@ class StringEnumSchema(StringSchema):
 
 
 class NumberSchema(SchemaBase):
-    pass
 
+    def CppIncludes(self, resolver=None):
+        incs = super().CppIncludes(resolver=resolver)
+        incs.add("<boost/lexical_cast.hpp>")
+        return incs
 
 class BooleanSchema(SchemaBase):
     pass

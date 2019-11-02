@@ -27,6 +27,12 @@
     return *this;
 }
 
+{{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& num)
+{
+    os << num._value;
+    return os;
+}
+
 void {{className}}::Set({{cpptype}} value)
 {
     Validate(value);
@@ -66,6 +72,11 @@ void {{className}}::Validate({{cpptype}} testValue)
 
     {{className}} newObject(json.Get{{cpptype | UpperCamelCase}}());
     return newObject;
+}
+
+{{className}} {{className}}::FromString(const {{std}}string& str)
+{
+    return {{className}}({{resolver.ResolveNamespace(usings, ['boost'], '::')}}lexical_cast<{{cpptype}}>(str));
 }
 
 void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const

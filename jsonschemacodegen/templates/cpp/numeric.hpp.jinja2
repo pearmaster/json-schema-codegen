@@ -46,6 +46,10 @@ public:
      */
     {{Name}}& operator=({{cpptype}} value);
 
+    /*! Stream operator.
+    */
+    friend std::ostream& operator<<(std::ostream& os, const {{Name}}& str);
+
     /*! Sets the {{cpptype}} value.
      * \fn void Set({{cpptype}} value)
      * \param {{cpptype}} value new value
@@ -72,6 +76,14 @@ public:
      * \returns {{Name}}
      */ 
     static {{Name}} FromJson(const rapidjson::Value& json);
+
+    /*! \fn {{Name}} FromString(const std::string& str)
+     * \brief Performs a "lexical cast" on the string to create a new {{Name}} object
+     * \param const std::string& str stringified representation of a {{schema.type}}
+     * \throw If the string cannot be cast or does not JSON-schema validate
+     * \return {{Name}}
+     */
+    static {{Name}} FromString(const std::string& str);
 
     /*! \fn ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator)
      * \brief Sets 'value' to a {{schema.type}}

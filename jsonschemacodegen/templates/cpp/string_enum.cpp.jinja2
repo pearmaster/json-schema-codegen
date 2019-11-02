@@ -25,6 +25,12 @@
     return *this;
 }
 
+{{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& v)
+{
+    os << EnumToString(v._value);
+    return os;
+}
+
 void {{className}}::Set({{enumType}} value)
 {
     _value = value;
@@ -69,6 +75,11 @@ void {{className}}::Set({{enumType}} value)
 
     {{std}}string testValue = json.GetString();
     return {{className}}(StringToEnum(testValue));
+}
+
+{{className}} {{className}}::FromString(const {{std}}string& str)
+{
+    return {{className}}(StringToEnum(str));
 }
 
 void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const

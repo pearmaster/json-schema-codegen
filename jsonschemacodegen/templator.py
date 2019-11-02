@@ -50,9 +50,6 @@ class Generator(object):
         def AddLeadingUnderscore(s: str):
             return "_%s" % (s)
 
-        def Privatize(s: str):
-            return AddLeadingUnderscore(stringcase.camelcase(s))
-
         def QuoteIfString(s: str, condition):
             if condition == 'string' or isinstance(condition, str):
                 return '"%s"' % (s)
@@ -60,11 +57,6 @@ class Generator(object):
 
         def Enumify(s: str):
             return stringcase.constcase(s)
-
-        def Deref(s: str, b: bool=True):
-            if not b:
-                return s
-            return "(*%s)" % (s)
 
         if self.jinjaEnvironment is None:
             env = jinja2.Environment(loader=jinja2.PackageLoader(self.templatePkg, ''))
@@ -81,19 +73,20 @@ class Generator(object):
             env.filters['quotestring'] = QuoteIfString
             env.filters['dir'] = dir # For debug
             env.filters['enumify'] = Enumify
-            env.filters['privatize'] = Privatize
-            env.filters['deref'] = Deref
             env.tests['oftype'] = IsOfType
             env.tests['refToObj'] = ReferencePointsToObject
             self.jinjaEnvironment = env
         return self.jinjaEnvironment
 
+    def GetRenderedTemplate(self, template_name, **kwargs):
+        template = self.GetJinjaEnvironment().get_template(template_name)
+        rendered = template.render(kwargs)
+        return rendered
+
     def RenderTemplate(self, template_name, output_name = None, **kwargs):
         output_filename = output_name or ".".join(template_name.split(".")[:-1])
         output_file = os.path.join(self.outputDir, output_filename)
-        print("Creating %s" % (output_file))
-        template = self.GetJinjaEnvironment().get_template(template_name)
-        rendered = template.render(kwargs)
+        rendered = self.GetRenderedTemplate(template_name, **kwargs)
         with open(output_file, "w") as fp:
             fp.write(rendered)
         self.generatedFiles.append(output_filename)

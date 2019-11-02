@@ -14,6 +14,7 @@ public:
     {%-endif%}
 
     {{Name}}(const std::string& value);
+    {{Name}}(const char* value);
 
     {%-if schema.default is defined %}
     {{Name}}();
@@ -24,14 +25,18 @@ public:
     operator std::string() const;
     
     {{Name}}& operator=(const std::string& value);
+    {{Name}}& operator=(const char* value);
+    friend std::ostream& operator<<(std::ostream& os, const {{Name}}& str);
 
     void Set(const std::string& value);
+    void Set(const char* value);
 
     std::string Get() const;
 
     static void Validate(const std::string& testValue);
 
     static {{Name}} FromJson(const rapidjson::Value& json);
+    static {{Name}} FromString(const std::string& str);
 
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 

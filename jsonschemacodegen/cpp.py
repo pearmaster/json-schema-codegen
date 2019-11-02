@@ -1,7 +1,6 @@
 import json
 import abc
 import stringcase
-import importlib.resources
 
 from . import templator
 from . import schemawrappers
@@ -108,3 +107,4 @@ class GeneratorFromSchema(object):
             deps=self.GetDeps(args['schema']), 
             resolver=self.resolver, 
             **args)
+
