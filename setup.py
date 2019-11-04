@@ -15,9 +15,14 @@ setup(name='json-schema-codegen',
       long_description=long_description,
       long_description_content_type="text/markdown",
       license='GPLv2',
-      packages=['jsonschemacodegen', 'jsonschemacodegen.templates.cpp'],
+      packages=[
+          'jsonschemacodegen',
+          'jsonschemacodegen.templates.cpp',
+          'jsonschemacodegen.templates.python'
+      ],
       package_data={
-            'jsonschemacodegen.templates.cpp': ['*.jinja2']
+            'jsonschemacodegen.templates.cpp': ['*.jinja2'],
+            'jsonschemacodegen.templates.python': ['*.jinja2'],
       },
       zip_safe=False,
       install_requires=requirements,

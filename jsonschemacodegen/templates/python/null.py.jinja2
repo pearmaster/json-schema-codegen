@@ -1,0 +1,11 @@
+class {{Name}}(object):
+
+    def __init__(self, data):
+        if data is not None:
+            raise ValueError("Expected None")
+
+    def Get(self):
+        return None
+
+    def Serializable(self):
+        return self.Get()

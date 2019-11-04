@@ -1,0 +1,46 @@
+{%-import 'loader.jinja2' as loader%}
+from collections import UserList
+{%-if schema.items is defined%}
+{%-if '$ref' in schema.items%}
+{%-set itemType = resolver.ClassName(schema.items['$ref'])%}
+{{resolver.IncludeStatement(schema.items['$ref'])}}
+{%-endif%}
+{%-endif%}
+
+class {{Name}} (UserList):
+    {%if schema.items is defined%}
+    {%if '$ref' not in schema.items%}
+    {%set itemType = 'self.Item'%}
+    {{loader.Class(resolver, 'Item', schema.items)}}
+    {%endif%}
+    {%endif%}
+    
+    def __init__(self, theList):
+        if isinstance(theList, {{Name}}):
+            super().__init__(theList.data)
+        else:
+            {%-if schema.minItems is defined%}
+            if len(theList) < {{schema.minItems}}:
+                raise ValueError("Provided array is too short")
+            {%-endif%}
+            {%-if schema.maxItems is defined%}
+            if len(theList) > {{schema.maxItems}}
+                raise ValueError("Provided array is too long")
+            {%-endif%}
+            super().__init__([{{itemType}}(x) for x in theList])
+
+    def Append(self, newValue):
+        {%-if schema.maxItems is defined%}
+        if (len(theList)+1) > {{schema.maxItems}}
+            raise ValueError("Appending would make the array too long")
+        {%-endif%}
+        self.data.append({{itemType}}(newValue))
+        return self
+
+    def Serializable(self):
+        return self.data
+
+if __name__ == '__main__':
+    import json
+    t = {{Name}}(['a', 'b', 'c'])
+    print(json.dumps(t, default=lambda x: x.Serializable()))

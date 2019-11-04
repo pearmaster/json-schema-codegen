@@ -1,0 +1,55 @@
+{%-import 'loader.jinja2' as loader%}
+from collections import UserDict
+{%-for prop in schema.properties.values()%}
+{%-if '$ref' in prop%}
+{{resolver.IncludeStatement(schema.items['$ref'])}}
+{%-endif%}
+{%-endfor%}
+
+{%-macro PropertyType(propName, propSchema)-%}
+{%-if '$ref' in propSchema-%}
+{{resolver.ClassName(propSchema['$ref'])}}
+{%-else-%}
+self.{{propClassName}}
+{%-endif-%}
+{%-endmacro%}
+
+class {{Name}}(UserDict):
+
+    {%-for propName, propSchema in schema.properties.items()%}
+    {%-if '$ref' not in prop%}
+    {%-set propClassName%}{{propName|PascalCase}}Property{%endset%}
+    {{loader.Class(resolver, propClassName, propSchema)}}
+    {%-endif%}
+    {%-endfor%}
+
+    def __init__(self, data):
+        {%-for propName, propSchema in schema.properties.items()%}
+        {%-set propClassName%}{{propName|PascalCase}}Property{%endset%}
+        try:
+            if not isinstance(data["{{propName}}"], {{PropertyType(propName, propSchema)}}):
+                data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(data["{{propName}}"])
+        except KeyError:
+            {%-if propName in schema.properties.required%}
+            raise ValueError("Missing property '{{propName}}'")
+            {%-else%}
+            pass
+            {%-endif%}
+        {%-endfor%}
+
+        super().__init__(data)
+    
+    {%-for propName, propSchema in schema.properties.items()%}
+    def Get{{propName|PascalCase}}(self):
+        return self.data["{{propName}}"]
+    
+    def Set{{propName|PascalCase}}(self, newValue):
+        if not isinstance(newValue, {{PropertyType(propName, propSchema)}}):
+            data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(newValue)
+        else:
+            data["{{propName}}"] = newValue
+        return self
+    {%-endfor%}
+
+    def Serializable(self):
+        return self.data

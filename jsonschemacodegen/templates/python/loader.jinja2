@@ -1,0 +1,27 @@
+{%-macro Class(resolver, Name, schema) %}
+{%-if schema.oneOf is defined -%}
+{%-include 'oneof.py.jinja2'-%}
+{%-elif schema.allOf is defined -%}
+{%-include 'allof.py.jinja2'-%}
+{%-elif schema.anyOf is defined -%}
+{%-include 'anyof.py.jinja2'-%}
+{%-elif '$ref' in schema -%}
+// FIXME
+{%-elif 'type' not in schema-%}
+{%-elif schema.type == 'integer'
+    or schema.type == 'number'
+    or schema.type == 'boolean'
+    or schema.type == 'string'-%}
+{%-include 'primative.py.jinja2'-%}
+{%-elif schema.type == 'array'-%}
+{%-include 'array.py.jinja2'-%}
+{%-elif schema.type == 'object'-%}
+{%-include 'object.py.jinja2'-%}
+{%-elif schema.type == 'null'-%}
+{%-include 'null.py.jinja2'-%}
+{%-elif schema.type == 'string'-%}
+{%-include 'string.py.jinja2'-%}
+{%-else-%}
+//FIXME.  Type was {{schema.type-}}
+{%-endif-%}
+{%-endmacro-%}

@@ -1,0 +1,89 @@
+{%-if schema.pattern is defined%}
+import re
+{%-endif%}
+
+{%macro ToPythonType(schemaType)-%}
+{%-if schemaType == 'string'-%}
+str
+{%-elif schemaType == 'integer'-%}
+int
+{%-elif schemaType == 'number'-%}
+float
+{%-elif schemaType == 'boolean'-%}
+bool
+{%-endif-%}
+{%-endmacro%}
+
+{%macro FormatValue(schemaType, value)}
+{%-if schemaType == 'string'-%}"{{value}}"{%endif-%}
+{%-elif schemaType == 'boolean'-%}
+    {%-if value or value == 'true'%}True{%endif-%}
+    {%-if not value or value == 'false'%}False{%endif-%}
+{%-else-%
+    {{-value-}}
+{%-endif-%}}
+{%endmacro%}
+
+{%macro ValidateValue(schema, varName)%}
+if not isinstance({{varName}}, {{ToPythonType(schema.type)}}):
+    raise ValueError("Passed value was not a {{schema.type}}")
+{%-if schema.maxLength is defined%}
+if len({{varName}}) > {{schema.maxLength}}:
+    raise ValueError("Value length is greater than maximum of {{schema.maxLength}}")
+{%-endif%} {#maxLength#}
+{%-if schema.minLength is defined%}
+if len({{varName}}) < {{schema.minLength}}:
+    raise ValueError("Value length is less than minimum of {{schema.minLength}}")
+{%-endif%} {#minLength#}
+{%-if schema.minimum is defined%}
+if {{varName}} < {{schema.minimum}}:
+    raise ValueError("Value is less than the minimum of {{schema.minimum}}")
+{%-endif%} {#minimum#}
+{%-if schema.maximum is defined%}
+if {{varName}} > {{schema.maximum}}:
+    raise ValueError("Value is more than the maximum of {{schema.maximum}}")
+{%-endif%} {#maximum#}
+{%-if schema.exclusiveMinimum is defined%}
+if {{varName}} <= {{schema.exclusiveMinimum}}:
+    raise ValueError("Value is less than the minimum of {{schema.exclusiveMinimum}}")
+{%-endif%} {#minimum#}
+{%-if schema.maximum is defined%}
+if {{varName}} >= {{schema.maximum}}:
+    raise ValueError("Value is more than the maximum of {{schema.exclusiveMaximum}}")
+{%-endif%} {#maximum#}
+{%-if schema.multipleOf is defined%}
+if ({{varName}} % {{schema.multipleOf}}) != 0:
+    raise ValueError("Value is not a multiple of {{schema.multipleOf}}")
+{%-endif%} {#maximum#}
+{%-if schema.enum is defined%}
+if {{varName}} not in [{%for v in schema.enum%}{{FormatValue(v)}}, {%endif%}]:
+    raise ValueError("Value is not an acceptible value")
+{%-endif%} {#enum#}
+{%-if schema.pattern is defined%}
+pattern = r"{{schema.pattern}}"
+if re.match(pattern, {{varName}) is None:
+    raise ValueError("Value did not match the established regular expression")
+{%-endif%}
+{%endmacro%}
+
+class {{Name}}(object):
+
+    def __init__(self, value{%if schema.default is defined%}={{FormatValue(schema.default)}}{%endif%}):
+        self.Set(Value)
+
+    def _Validate(self, value):
+        {{ValidateValue(schema, 'value')}}
+
+    def Set(self, newValue):
+        if isinstance(newValue, {{Name}}):
+            self._value = newValue._value
+        else:
+            self.Validate(newValue)
+            self._value = newValue
+        return self
+
+    def Get(self):
+        return self._value
+
+    def Serializable(self):
+        return self.Get()
