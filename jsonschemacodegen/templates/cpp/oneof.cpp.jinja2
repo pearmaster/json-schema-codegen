@@ -1,4 +1,4 @@
-{%-import 'loader.jinja2' as loader-%}
+{%-import 'loader.jinja2' as loader with context-%}
 {%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
 {%macro NestedObjectName(name) -%}
     {{className}}::{{-name | UpperCamelCase-}}

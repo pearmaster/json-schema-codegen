@@ -108,10 +108,15 @@ class ArraySchema(SchemaBase):
         incs.update(self.GetItemSchema().CppIncludes(resolver))
         return incs
 
+
 class CombinatorSchemaBase(SchemaBase):
     
+    def __init__(self, name, initialdata):
+        super().__init__(initialdata)
+        self.name = name
+
     def GetComponents(self):
-        return [SchemaFactory(s) for s in [x for x in self.data.values()][0]]
+        return [SchemaFactory(s) for s in self.data[self.name]]
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -124,10 +129,11 @@ class CombinatorSchemaBase(SchemaBase):
             return self.GetComponents()
         raise KeyError()
 
+
 class OneOfSchema(CombinatorSchemaBase):
     
     def __init__(self, initialdata):
-        super().__init__(initialdata)
+        super().__init__('oneOf', initialdata)
         assert(isinstance(self.data['oneOf'], list))
 
     def CppIncludes(self, resolver=None):
@@ -139,14 +145,14 @@ class OneOfSchema(CombinatorSchemaBase):
 class AllOfSchema(CombinatorSchemaBase):
 
     def __init__(self, initialdata):
-        super().__init__(initialdata)
+        super().__init__('allOf', initialdata)
         assert(isinstance(self.data['allOf'], list))
 
 
 class AnyOfSchema(CombinatorSchemaBase):
 
     def __init__(self, initialdata):
-        super().__init__(initialdata)
+        super().__init__('anyOf', initialdata)
         assert(isinstance(self.data['anyOf'], list))
 
 

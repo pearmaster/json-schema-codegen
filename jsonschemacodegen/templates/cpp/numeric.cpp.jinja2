@@ -26,12 +26,15 @@
     Set(value);
     return *this;
 }
-
+{%for origNs in originalNamespace %}
+namespace {{origNs}} {
+{%-endfor%} 
 {{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& num)
 {
     os << num._value;
     return os;
 }
+{%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 
 void {{className}}::Set({{cpptype}} value)
 {

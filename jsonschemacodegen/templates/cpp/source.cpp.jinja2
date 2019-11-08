@@ -6,9 +6,10 @@
 #include {{dep}}
 {%-endfor%}
 
+{%-set originalNamespace=ns%}
 {%for using in usings %}
 using namespace {{using | join("::") }};
 {%-endfor%}
 
-{%-from 'loader.jinja2' import Class%}
+{%-from 'loader.jinja2' import Class with context%}
 {{-Class('cpp', resolver, ns, usings, Name, schema)}}

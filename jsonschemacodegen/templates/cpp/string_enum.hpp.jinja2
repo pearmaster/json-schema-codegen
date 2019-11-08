@@ -14,7 +14,7 @@ public:
         {%-endfor%}
     };
 
-    static constexpr int ENUM_MAX = {{schema.enum | length}};
+    static constexpr int VALUE_ENUM_OPTION_COUNT = {{schema.enum | length}};
 
     {{Name}}(Value value);
 

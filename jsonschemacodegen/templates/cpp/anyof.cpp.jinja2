@@ -17,7 +17,7 @@
     {%-endif-%}
 {%-endmacro%}
 
-{%import 'loader.jinja2' as loader%}
+{%import 'loader.jinja2' as loader with context%}
 {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
 {{loader.Class('cpp', resolver, [className], usings, componentName, s) }}
 {%-endfor%}

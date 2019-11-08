@@ -34,12 +34,15 @@
     Set(value);
     return *this;
 }
-
+{%for origNs in originalNamespace %}
+namespace {{origNs}} {
+{%-endfor%}  
 {{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& str)
 {
     os << str._value;
     return os;
 }
+{%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 
 void {{className}}::Set(const {{std}}string& value)
 {
@@ -47,11 +50,10 @@ void {{className}}::Set(const {{std}}string& value)
     _value = value;
 }
 
-void {{className}}::Set(const {{std}}string& value)
+void {{className}}::Set(const char* value)
 {
-    {{std}}string strValue(value);
-    Validate(strValue);
-    _value = strValue;
+    Validate(value);
+    _value = value;
 }
 
 {{std}}string {{className}}::Get() const

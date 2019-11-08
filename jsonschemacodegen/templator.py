@@ -50,12 +50,17 @@ class Generator(object):
         def AddLeadingUnderscore(s: str):
             return "_%s" % (s)
 
+        def Privatize(s: str):
+            return AddLeadingUnderscore(stringcase.camelcase(s))
+
         def QuoteIfString(s: str, condition):
             if condition == 'string' or isinstance(condition, str):
                 return '"%s"' % (s)
             return s
 
         def Enumify(s: str):
+            if s[0].isnumeric():
+                return "_"+stringcase.constcase(s)
             return stringcase.constcase(s)
 
         if self.jinjaEnvironment is None:
@@ -72,6 +77,7 @@ class Generator(object):
             env.filters['underscore'] = AddLeadingUnderscore
             env.filters['quotestring'] = QuoteIfString
             env.filters['dir'] = dir # For debug
+            env.filters['privatize'] = Privatize
             env.filters['enumify'] = Enumify
             env.tests['oftype'] = IsOfType
             env.tests['refToObj'] = ReferencePointsToObject
