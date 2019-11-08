@@ -1,4 +1,4 @@
-{%import 'loader.jinja2' as loader-%}
+{%import 'loader.jinja2' as loader with context-%}
 {%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
 {%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
 {%-if schema.GetItemSchema()['$ref'] %}
@@ -7,7 +7,6 @@
 {%-else%}
 {%-set itemtype = className+'::Item'%}
 
-{%import 'loader.jinja2' as loader%}
 {{loader.Class('cpp', 
                resolver, 
                resolver.AppendToNamespace(ns, Name), 

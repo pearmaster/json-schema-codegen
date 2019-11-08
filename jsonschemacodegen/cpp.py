@@ -86,6 +86,7 @@ class GeneratorFromSchema(object):
         return schema.CppIncludes(self.resolver)
 
     def Generate(self, schema, class_name, filename_base):
+        retval = [None, None]
         srcGenerator = templator.Generator('jsonschemacodegen.templates.cpp', self.output_dir['src'])
         headerGenerator = templator.Generator('jsonschemacodegen.templates.cpp', self.output_dir['header'])
         args = {
@@ -94,17 +95,21 @@ class GeneratorFromSchema(object):
         }
         headerFilename = "%s.hpp" % (filename_base)
         if '$ref' not in schema:
+            srcFileName = "%s.cpp" % (filename_base)
             srcGenerator.RenderTemplate("source.cpp.jinja2", 
-                "%s.cpp" % (filename_base), 
+                srcFileName, 
                 deps=["\"%s\"" % (headerFilename)], 
                 usings=self.usings,
-                ns=self.namespace, 
+                ns=self.namespace,
                 resolver=self.resolver,
                 **args)
+            retval[0] = srcFileName
         headerGenerator.RenderTemplate("header.hpp.jinja2", 
             headerFilename, 
-            ns=self.namespace, 
+            ns=self.namespace,
             deps=self.GetDeps(args['schema']), 
             resolver=self.resolver, 
             **args)
+        retval[1] = headerFilename
+        return tuple(retval)
 

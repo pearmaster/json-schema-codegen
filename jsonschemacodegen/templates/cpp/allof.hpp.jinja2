@@ -15,9 +15,20 @@
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
+{%-macro ComponentName(parentName, schema, i)-%}
+{%-if 'title' in schema -%}
+    {{-schema.title|UpperCamelCase-}}
+    {%-if schema.title|UpperCamelCase == parentName|UpperCamelCase-%}Component{%-endif-%}
+    {%-if 'properties' in schema and schema.title in schema.properties-%}Object{%-endif-%}
+{%-elif 'oneOf' in schema%}
+    {{-''-}}OneOfComponent{{-i-}}
+{%-else-%}
+    {{-''-}}Component{{-i-}}
+{%-endif-%}
+{%-endmacro%}
 
 /*! \class {{Name}}
- * \brief An object containing the mandatory union of {%for s in schema.oneOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
+ * \brief An object containing the mandatory union of {%for s in schema.oneOf %}{{ObjectType(ComponentName(Name, s, loop.index), s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
  {%-if schema.description -%}
  * {{schema.description}}
  {%-endif%}
@@ -26,25 +37,25 @@ class {{Name}}
 {
 public:
     {%-import 'loader.jinja2' as loader%}
-    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
-    {{loader.Class('hpp', resolver, [Name], [], componentName, s) | indent(4) }}
+    {%-for s in schema.allOf %}
+    {{loader.Class('hpp', resolver, [Name], [], ComponentName(Name, s, loop.index), s) | indent(4) }}
     
     {%endfor%}
 
     /*! Constructor for {{Name}}
      * Requires instances of all components.  The data from each component is copied into storage for this class.
      {%-for s in schema.allOf -%}
-     {%-set componentName%}Component{{loop.index}}{%endset-%}
+     {%-set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset-%}
      * \param {{componentName|camelCase}} Instance of {{ObjectType(componentName, s)}}
      {%-endfor%}
      */
     {{Name}}({%-for s in schema.allOf -%}
-        {%-set componentName%}Component{{loop.index}}{%endset-%}
+        {%-set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset-%}
         const {{ObjectType(componentName, s)}}& {{componentName|camelCase}}{%if not loop.last%}, {%endif-%}
     {%-endfor%});
     virtual ~{{Name}}() = default;
 
-    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    {%-for s in schema.allOf %}{%set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset%}
     /*! \fn {{ObjectType(componentName, s)}} Get{{ObjectName(componentName, s)}}() const
      * \brief returns the {{ObjectType(componentName, s)}} component of the {{Name}} object
      */
@@ -73,7 +84,7 @@ public:
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:
-    {%-for s in schema.allOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    {%-for s in schema.allOf %}{%set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset%}
     {{ObjectType(componentName, s)}} {{componentName|privatize}};
     {%-endfor%}
 };

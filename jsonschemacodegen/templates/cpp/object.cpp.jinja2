@@ -11,7 +11,7 @@
     {%-endif-%}
 {%-endmacro%}
 
-{%import 'loader.jinja2' as loader%}
+{%import 'loader.jinja2' as loader with context%}
 {%-for propName, propSchema in schema.RequiredList() %}
 {{loader.Class('cpp', resolver, [className], usings, propName|UpperCamelCase, propSchema) }}
 {%-endfor%}
@@ -25,7 +25,7 @@
         const {{ObjectType(propName, propSchema)}}& {{propName | camelCase}}{%if not loop.last%}, {%endif%}
     {%-endfor%}){{' : '}}
     {%-for propName, propSchema in schema.RequiredList()-%}
-        {{propName | privatize}}({{propName | camelCase}}){%if not loop.last%}, {%endif%}
+        {{propName|privatize}}({{propName | camelCase}}){%if not loop.last%}, {%endif%}
     {%-endfor%}
 {
 
