@@ -56,7 +56,7 @@ void {{className}}::Validate({{cpptype}} testValue)
     if (testValue <= {{schema.exclusiveMinimum}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMinimum}}");
     {%-endif%}
     {%-if schema.maximum is defined %}
-    if (testValue < {{schema.maximum}}) throw {{std}}invalid_argument("The '{{Name}}' value was more than {{schema.maximum}}");
+    if (testValue > {{schema.maximum}}) throw {{std}}invalid_argument("The '{{Name}}' value was more than {{schema.maximum}}");
     {%-endif%}
     {%-if schema.exclusiveMaximum is defined %}
     if (testValue >= {{schema.exclusiveMaximum}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMaximum}}");
