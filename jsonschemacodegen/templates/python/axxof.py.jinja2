@@ -1,0 +1,75 @@
+{%-import 'loader.jinja2' as loader%}
+from collections import UserDict
+{%-macro Combination(schema)-%}
+    {%-if 'allOf' in schema-%}
+        allOf
+    {%-elif 'anyOf' in schema-%}
+        anyOf
+    {%-endif-%}
+{%-endmacro-%}
+
+{%-macro ComponentType(schema, index)-%}
+    {%-if '$ref' in schema-%}
+        {{resolver.ClassName(schema['$ref'])}}
+    {%-else-%}
+        self.Component{{index}}
+    {%-endif-%}
+{%-endmacro%}
+
+{%-for comp in schema[Combination(schema)]%}
+{%-if '$ref' in comp%}
+{{resolver.IncludeStatement(comp['$ref'])}}
+{%-endif%}
+{%-endfor%}
+
+class {{Name}}(object):
+
+    {%-for comp in schema[Combination(schema)]%}
+    {%-if '$ref' not in comp%}
+    {%-set compClassName%}Component{{loop.index}}{%endset%}
+    {{loader.Class(resolver, compClassName, comp) |indent(4)}}
+    {%-endif%}
+    {%-endfor%}
+
+    def __init__(self, initial):
+        if isinstance(initial, {{Name}}):
+            {%-for compSchema in schema[Combination(schema)]%}
+            self._component{{loop.index}} = initial._component{{loop.index}}
+            {%-endfor%}
+        elif isinstance(initial, dict):
+        {%-if Combination(schema) == 'allOf'%}
+            {%-for compSchema in schema[Combination(schema)]%}
+            self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(initial)
+            {%-endfor%}
+        {%-elif Combination(schema) == 'anyOf'%}
+            {%-for compSchema in schema[Combination(schema)]%}
+            try:
+                self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(initial)
+            except TypeError:
+                self._component{{loop.index}} = None
+            {%-endfor%}
+        {%-endif%}
+        else:
+            raise TypeError("Didn't pass an valid representation of {{Name}}")
+
+    {%-for compSchema in schema[Combination(schema)]%}
+    def GetComponent{{loop.index}}(self) -> {{ComponentType(compSchema, loop.index)}}:
+        return self._component{{loop.index}}
+
+    def SetComponent{{loop.index}}(self, data):
+        if isinstance(data, {{ComponentType(compSchema, loop.index)}}):
+            self._component{{loop.index}} = data
+        elif isinstance(data, dict):
+            self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(data)
+        else:
+            raise TypeError("Didn't pass an valid representation of {{ComponentType(compSchema, loop.index)}}")
+    {%endfor%}
+
+    def Serializable(self):
+        obj = {}
+        {%-for compSchema in schema[Combination(schema)]%}
+        if self._component{{loop.index}} is not None:
+            obj.update(self._component{{loop.index}}.Serializable())
+        {%-endfor%}
+        return obj
+

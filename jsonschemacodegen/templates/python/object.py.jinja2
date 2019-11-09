@@ -19,7 +19,7 @@ class {{Name}}(UserDict):
     {%-for propName, propSchema in schema.properties.items()%}
     {%-if '$ref' not in prop%}
     {%-set propClassName%}{{propName|PascalCase}}Property{%endset%}
-    {{loader.Class(resolver, propClassName, propSchema)}}
+    {{loader.Class(resolver, propClassName, propSchema) |indent(4)}}
     {%-endif%}
     {%-endfor%}
 

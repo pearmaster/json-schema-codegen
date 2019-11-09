@@ -21,7 +21,7 @@ class GeneratorFromSchema(object):
             "Name": class_name,
             "schema": schemawrappers.SchemaFactory(schema),
         }
-        generator.RenderTemplate("array.py.jinja2", 
+        generator.RenderTemplate("array.py.jinja2", output_name="{}.py".format(filename_base),
             **args)
 
 

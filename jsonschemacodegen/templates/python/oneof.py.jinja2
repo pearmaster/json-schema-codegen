@@ -1,0 +1,54 @@
+{%-import 'loader.jinja2' as loader%}
+from collections import UserDict
+
+{%-macro ComponentType(schema, index)-%}
+    {%-if '$ref' in schema-%}
+        {{resolver.ClassName(schema['$ref'])}}
+    {%-else-%}
+        self.Component{{index}}
+    {%-endif-%}
+{%-endmacro%}
+
+{%-for comp in schema['oneOf']%}
+{%-if '$ref' in comp%}
+{{resolver.IncludeStatement(comp['$ref'])}}
+{%-endif%}
+{%-endfor%}
+
+class {{Name}}(object):
+
+    {%-for comp in schema['oneOf']%}
+    {%-if '$ref' not in comp%}
+    {%-set compClassName%}Component{{loop.index}}{%endset%}
+    {{loader.Class(resolver, compClassName, comp) |indent(4)}}
+    {%-endif%}
+    {%-endfor%}
+
+    def __init__(self, initial):
+        self.Set(initial)
+
+    def Get(self):
+        return self._value
+
+    def Set(self, data):
+        if isinstance(data, {{Name}}):
+            self._value = data._value
+            self._type = data._type
+        else:
+            self._type = None
+            self._value = None
+            {%-for compSchema in schema['oneOf']%}
+            if self._type is None:
+                try:
+                    self._value = {{ComponentType(compSchema, loop.index)}}(data)
+                except TypeError:
+                    pass
+                else:
+                    self._type = {{ComponentType(compSchema, loop.index)}}
+            {%-endfor%}
+        if self._type is None:
+            raise TypeError("Provided data did not match one of the required formats")
+
+    def Serializable(self):
+        return self._value.Serializable()
+

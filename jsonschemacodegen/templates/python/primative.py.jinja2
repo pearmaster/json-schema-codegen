@@ -14,17 +14,17 @@ bool
 {%-endif-%}
 {%-endmacro%}
 
-{%macro FormatValue(schemaType, value)}
-{%-if schemaType == 'string'-%}"{{value}}"{%endif-%}
+{%-macro FormatValue(schemaType, value)%}
+{%-if schemaType == 'string'-%}"{{value}}"
 {%-elif schemaType == 'boolean'-%}
     {%-if value or value == 'true'%}True{%endif-%}
     {%-if not value or value == 'false'%}False{%endif-%}
-{%-else-%
+{%-else-%}
     {{-value-}}
-{%-endif-%}}
-{%endmacro%}
+{%-endif-%}
+{%-endmacro%}
 
-{%macro ValidateValue(schema, varName)%}
+{%-macro ValidateValue(schema, varName)%}
 if not isinstance({{varName}}, {{ToPythonType(schema.type)}}):
     raise ValueError("Passed value was not a {{schema.type}}")
 {%-if schema.maxLength is defined%}
@@ -56,15 +56,15 @@ if ({{varName}} % {{schema.multipleOf}}) != 0:
     raise ValueError("Value is not a multiple of {{schema.multipleOf}}")
 {%-endif%} {#maximum#}
 {%-if schema.enum is defined%}
-if {{varName}} not in [{%for v in schema.enum%}{{FormatValue(v)}}, {%endif%}]:
+if {{varName}} not in [{%for v in schema.enum%}{{FormatValue(v)}}, {%endfor%}]:
     raise ValueError("Value is not an acceptible value")
 {%-endif%} {#enum#}
 {%-if schema.pattern is defined%}
 pattern = r"{{schema.pattern}}"
-if re.match(pattern, {{varName}) is None:
+if re.match(pattern, {{varName}}) is None:
     raise ValueError("Value did not match the established regular expression")
 {%-endif%}
-{%endmacro%}
+{%-endmacro%}
 
 class {{Name}}(object):
 
@@ -72,17 +72,17 @@ class {{Name}}(object):
         self.Set(Value)
 
     def _Validate(self, value):
-        {{ValidateValue(schema, 'value')}}
+        {{-ValidateValue(schema, 'value') | indent(8)}}
 
     def Set(self, newValue):
         if isinstance(newValue, {{Name}}):
             self._value = newValue._value
         else:
-            self.Validate(newValue)
+            self._Validate(newValue)
             self._value = newValue
         return self
 
-    def Get(self):
+    def Get(self) -> {{ToPythonType(schema.type)}}:
         return self._value
 
     def Serializable(self):
