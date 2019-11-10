@@ -1,11 +1,19 @@
-{%-import 'loader.jinja2' as loader%}
+{%-import 'loader.jinja2' as loader-%}
 from collections import UserDict
+
+{%-macro ComponentName(schema, index)-%}
+{%-if 'title' in schema-%}
+    {{schema.title|PascalCase}}Option
+{%-else-%}
+    Option{{index}}
+{%-endif-%}
+{%-endmacro-%}
 
 {%-macro ComponentType(schema, index)-%}
     {%-if '$ref' in schema-%}
         {{resolver.ClassName(schema['$ref'])}}
     {%-else-%}
-        self.Component{{index}}
+        self.{{ComponentName(schema, index)}}
     {%-endif-%}
 {%-endmacro%}
 
@@ -16,22 +24,32 @@ from collections import UserDict
 {%-endfor%}
 
 class {{Name}}(object):
-
+    """This represents one of {{schema['oneOf'] | length}} options"
+    {%-for comp in schema['oneOf']%}
+      * {{ComponentName(comp, loop.index)}}
+    {%-endfor%}
+    """
     {%-for comp in schema['oneOf']%}
     {%-if '$ref' not in comp%}
-    {%-set compClassName%}Component{{loop.index}}{%endset%}
-    {{loader.Class(resolver, compClassName, comp) |indent(4)}}
+    {{loader.Class(resolver, ComponentName(comp, loop.index), comp) |indent(4)}}
     {%-endif%}
     {%-endfor%}
 
     def __init__(self, initial):
+        """Constructor.  Some initial data for one of the options must be passed.
+        """
         self.Set(initial)
 
     def Get(self):
+        """Gets one of the supported option objects.
+        """
         return self._value
 
     def Set(self, data):
-        if isinstance(data, {{Name}}):
+        """ Must pass an object or data for one of the supported
+        option types.
+        """
+        if isinstance(data, type(self)):
             self._value = data._value
             self._type = data._type
         else:
@@ -41,14 +59,17 @@ class {{Name}}(object):
             if self._type is None:
                 try:
                     self._value = {{ComponentType(compSchema, loop.index)}}(data)
-                except TypeError:
+                except (ValueError, TypeError):
                     pass
                 else:
                     self._type = {{ComponentType(compSchema, loop.index)}}
             {%-endfor%}
         if self._type is None:
-            raise TypeError("Provided data did not match one of the required formats")
+            raise ValueError("Provided data did not match one of the required formats")
 
     def Serializable(self):
+        """ Returns an object that can be JSON serialized.
+        For example, use: `json.dumps(thisObject, default=lambda a: a.Serializable())`
+        """
         return self._value.Serializable()
 

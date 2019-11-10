@@ -1,7 +1,9 @@
 class {{Name}}(object):
+    """ This represents a JSON NULL value.
+    """
 
-    def __init__(self, data):
-        if data is not None:
+    def __init__(self, data=None):
+        if not isinstance(data, type(self)) and data is not None:
             raise ValueError("Expected None")
 
     def Get(self):

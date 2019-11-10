@@ -16,37 +16,6 @@ class Generator(object):
         def IsOfType(obj, theType):
             return theType in str(type(obj))
 
-        def ReferencePointsToObject(ref):
-            val = False
-            if hasattr(ref, 'ref') and hasattr(ref, 'Resolve'):
-                resolved = ref.Resolve()
-                if hasattr(resolved, 'type'):
-                    return resolved.type == 'object'
-            return val
-
-        def Bold(s: str):
-            if s and s is not None and s != 'None' and len(s) > 0:
-                return "**%s**" % (s)
-            else:
-                return ''
-
-        def Italics(s: str):
-            if s and s is not None and s != 'None' and len(s) > 0:
-                return "_%s_" % (s)
-            else:
-                return ''
-
-        def CppLineEnd(s: str):
-            s = str(s)
-            if s and s is not None and s != 'None' and len(s) > 0:
-                return "%s;" % (s)
-            else:
-                return ''
-
-        def BlockQuote(s: str, level=1):
-            lines = str.split("\n")
-            return "\n".join([">"+l for l in lines])
-
         def AddLeadingUnderscore(s: str):
             return "_%s" % (s)
 
@@ -66,21 +35,17 @@ class Generator(object):
         if self.jinjaEnvironment is None:
             env = jinja2.Environment(loader=jinja2.PackageLoader(self.templatePkg, ''))
             env.filters['UpperCamelCase'] = stringcase.pascalcase
+            env.filters['PascalCase'] = lambda s: stringcase.pascalcase(stringcase.snakecase(s))
             env.filters['CONST_CASE'] = lambda s : stringcase.constcase(str(s))
             env.filters['snake_case'] = stringcase.snakecase
             env.filters['camelCase'] = stringcase.camelcase
-            env.filters['bold'] = Bold
-            env.filters['italics'] = Italics
-            env.filters['blockquote'] = BlockQuote
-            env.filters['semicolon'] = CppLineEnd
-            env.filters['type'] = type
-            env.filters['underscore'] = AddLeadingUnderscore
+            env.filters['type'] = type # For debugging
+
             env.filters['quotestring'] = QuoteIfString
             env.filters['dir'] = dir # For debug
             env.filters['privatize'] = Privatize
             env.filters['enumify'] = Enumify
             env.tests['oftype'] = IsOfType
-            env.tests['refToObj'] = ReferencePointsToObject
             self.jinjaEnvironment = env
         return self.jinjaEnvironment
 

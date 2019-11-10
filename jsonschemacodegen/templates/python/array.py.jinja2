@@ -1,4 +1,4 @@
-{%-import 'loader.jinja2' as loader%}
+{%-import 'loader.jinja2' as loader-%}
 from collections import UserList
 {%-if 'items' in schema%}
 {%-if '$ref' in schema['items']%}
@@ -8,15 +8,19 @@ from collections import UserList
 {%-endif%}
 
 class {{Name}} (UserList):
-    {%if 'items' in schema%}
-    {%if '$ref' not in schema['items']%}
-    {%set itemType = 'self.Item'%}
+    """ This represents a JSON array.
+    """
+    {%-if 'items' in schema%}
+    {%-if '$ref' not in schema['items']%}
+    {%-set itemType = 'self.Item'%}
     {{loader.Class(resolver, 'Item', schema['items']) |indent(4)}}
-    {%endif%}
-    {%endif%}
+    {%-endif%}
+    {%-endif%}
     
-    def __init__(self, theList):
-        if isinstance(theList, {{Name}}):
+    def __init__(self, theList=[]):
+        """Initializer for array.
+        """
+        if isinstance(theList, type(self)):
             super().__init__(theList.data)
         else:
             {%-if schema.minItems is defined%}

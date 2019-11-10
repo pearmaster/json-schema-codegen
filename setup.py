@@ -7,11 +7,11 @@ with open("requirements.txt", "r") as fp:
     requirements = fp.read().split('\n')
 
 setup(name='json-schema-codegen',
-      version='0.0.7',
+      version='0.0.8',
       url='http://github.com/pearmaster/json-schema-codegen',
       author='Jacob Brunson',
       author_email='pypi@jacobbrunson.com',
-      description="Generate C++ structures from JSON-Schema",
+      description="Generate C++ or Python structures from JSON-Schema",
       long_description=long_description,
       long_description_content_type="text/markdown",
       license='GPLv2',

@@ -67,15 +67,17 @@ if re.match(pattern, {{varName}}) is None:
 {%-endmacro%}
 
 class {{Name}}(object):
+    """ This class is a schema-validating wrapper around a {{schema.type}}.
+    """
 
     def __init__(self, value{%if schema.default is defined%}={{FormatValue(schema.default)}}{%endif%}):
-        self.Set(Value)
+        self.Set(value)
 
     def _Validate(self, value):
         {{-ValidateValue(schema, 'value') | indent(8)}}
 
     def Set(self, newValue):
-        if isinstance(newValue, {{Name}}):
+        if isinstance(newValue, type(self)):
             self._value = newValue._value
         else:
             self._Validate(newValue)

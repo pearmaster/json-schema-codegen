@@ -23,6 +23,8 @@ from collections import UserDict
 {%-endfor%}
 
 class {{Name}}(object):
+    """This combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
+    """
 
     {%-for comp in schema[Combination(schema)]%}
     {%-if '$ref' not in comp%}
@@ -31,29 +33,51 @@ class {{Name}}(object):
     {%-endif%}
     {%-endfor%}
 
-    def __init__(self, initial):
-        if isinstance(initial, {{Name}}):
+    def __init__(self, *args):
+        """Initialzation for {{Name}} which combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
+        """
+        {%-for compSchema in schema[Combination(schema)]%}
+        self._component{{loop.index}} = None
+        {%-endfor%}
+        if len(args) == 1 and isinstance(args[0], type(self)):
             {%-for compSchema in schema[Combination(schema)]%}
-            self._component{{loop.index}} = initial._component{{loop.index}}
+            self._component{{loop.index}} = args[0]._component{{loop.index}}
             {%-endfor%}
-        elif isinstance(initial, dict):
-        {%-if Combination(schema) == 'allOf'%}
-            {%-for compSchema in schema[Combination(schema)]%}
-            self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(initial)
-            {%-endfor%}
-        {%-elif Combination(schema) == 'anyOf'%}
+        elif len(args) == 1:
             {%-for compSchema in schema[Combination(schema)]%}
             try:
-                self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(initial)
-            except TypeError:
-                self._component{{loop.index}} = None
+                self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(args[0])
+            except:
+                {%-if Combination(schema) == 'allOf'%}
+                raise ValueError("Could not find {{ComponentType(compSchema, loop.index)}} in data")
+                {%-else%}
+                pass
+                {%-endif%}
             {%-endfor%}
-        {%-endif%}
         else:
-            raise TypeError("Didn't pass an valid representation of {{Name}}")
+            {%-for compSchema in schema[Combination(schema)]%}
+            self._component{{loop.index}} = None
+            {%-endfor%}
+            for arg in args:
+                {%-for compSchema in schema[Combination(schema)]%}
+                if self._component{{loop.index}} is None:
+                    if isinstance(arg, {{ComponentType(compSchema, loop.index)}}):
+                        self._component{{loop.index}} = arg
+                    else:
+                        try:
+                            self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(arg)
+                        except:
+                            pass
+                {%-endfor%}
+        {%-if Combination(schema) == 'allOf'%}
+        {%-for compSchema in schema['allOf']%}
+        if self._component{{loop.index}} is None:
+            raise ValueError("Did not provide data for {{ComponentType(compSchema, loop.index)}}")
+        {%-endfor%}
+        {%endif%}
 
     {%-for compSchema in schema[Combination(schema)]%}
-    def GetComponent{{loop.index}}(self) -> {{ComponentType(compSchema, loop.index)}}:
+    def GetComponent{{loop.index}}(self):
         return self._component{{loop.index}}
 
     def SetComponent{{loop.index}}(self, data):
@@ -62,7 +86,7 @@ class {{Name}}(object):
         elif isinstance(data, dict):
             self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(data)
         else:
-            raise TypeError("Didn't pass an valid representation of {{ComponentType(compSchema, loop.index)}}")
+            raise ValueError("Didn't pass an valid representation of {{ComponentType(compSchema, loop.index)}}")
     {%endfor%}
 
     def Serializable(self):
