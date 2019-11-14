@@ -2,7 +2,7 @@
 from collections import UserDict
 {%-for prop in schema.properties.values()%}
 {%-if '$ref' in prop%}
-{{resolver.IncludeStatement(schema.items['$ref'])}}
+{{resolver.IncludeStatement(prop['$ref'])}}
 {%-endif%}
 {%-endfor%}
 
