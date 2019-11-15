@@ -3,8 +3,8 @@ import random
 
 class GeneratorFromSchema(object):
 
-    def __init__(self, resolver=None):
-        self.resolver = resolver
+    def __init__(self, loader=None):
+        self.loader = loader
         self.includeMode = 'all'
 
     def GetExampleOr(self, schema, default):
@@ -42,26 +42,29 @@ class GeneratorFromSchema(object):
         minItems = 'minItems' in schema and schema['minItems'] or defaultMin
         for _ in range(0, minItems):
             base.append(self.GetThing(schema['items']))
+        return base
 
     def GetThing(self, schema, base=None):
         base = base or {}
         if '$ref' in schema:
-            schema = self.resolver.Resolve(schema['$ref'])
+            schema = self.loader.GetSchema(reference=schema['$ref'])
         if 'allOf' in schema:
-            obj = {}
+            obj = base
             for opt in schema['allOf']:
-                self.GetThing(opt, base=obj)
+                obj = self.GetThing(opt, base=obj)
             return obj
         elif 'anyOf' in schema:
-            obj = {}
+            obj = base
             if self.includeMode == 'required':
                 return obj
             for opt in schema['anyOf']:
-                self.GetThing(opt, base=obj)
+                obj = self.GetThing(opt, base=obj)
             return obj
         elif 'oneOf' in schema:
             thing = self.GetThing(random.choice(schema['oneOf']))
             return thing
+        elif 'type' not in schema:
+            raise NotImplementedError(schema)
         elif schema['type'] in ['integer', 'number']:
             return self.GetNumber(schema)
         elif schema['type'] == 'string':
@@ -71,7 +74,7 @@ class GeneratorFromSchema(object):
         elif schema['type'] == 'boolean':
             return self.GetExampleOr(schema, True)
         elif schema['type'] == 'object':
-            return self.GetObject(schema)
+            return self.GetObject(schema, base)
         elif schema['type'] == 'array':
             return self.GetArray(schema)
         else:
@@ -82,13 +85,17 @@ class GeneratorFromSchema(object):
         examples = set()
         for _ in range(0, run):
             thing = self.GetThing(schema)
-            examples.add(json.dumps(thing))
+            examples.add(json.dumps(thing, sort_keys=True))
         return examples
 
     def GenerateFull(self, schema, run=100) -> set:
+        schemaJsonText = json.dumps(schema)
+        run = max(2, schemaJsonText.count('oneOf')) * 4
         return self.GenerateSome(schema, run, 'all')
 
     def GenerateLimited(self, schema, run=2) -> set:
+        schemaJsonText = json.dumps(schema)
+        run = max(1, schemaJsonText.count('oneOf')) * 2
         return self.GenerateSome(schema, run, 'required')
     
     def Generate(self, schema) -> list:
