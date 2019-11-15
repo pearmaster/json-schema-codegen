@@ -59,7 +59,7 @@ A C++ class is generated for each schema node according to the schema's `type` p
 ### Dependencies of the C++ generated code
 
 * boost (boost::optional and boost::variant among others)
-* rapidjson
+* rapidjson 1.1
 * C++11
 
 ### Usage
