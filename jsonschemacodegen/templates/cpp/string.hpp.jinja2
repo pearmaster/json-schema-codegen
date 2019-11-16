@@ -7,37 +7,109 @@ class {{Name}}
 {
 public:
     {%-if schema.maxLength is defined %}
+    /*! The maximum length of the contained string.
+     * Trying to set a string longer than this length will throw.
+     * It is useful to use this value in a static_assert statement
+     * to ensure it is consistant with external requirements.
+     */
     static constexpr int MAX_LENGTH = {{schema.maxLength}};
     {%-endif%}
     {%-if schema.minLength is defined %}
+    /*! The minimum length of the contained string.
+     * Trying to set a string shorter than this length will throw.
+     * It is useful to use this value in a static_assert statement
+     * to ensure it is consistant with external requirements.
+     */
     static constexpr int MIN_LENGTH = {{schema.minLength}};
     {%-endif%}
 
+    /*! Constructor.
+     * \param value initial value of {{Name}} instance.
+     */
     {{Name}}(const std::string& value);
+
+    /*! Constructor.
+     * \param value initial value of {{Name}} instance.
+     */
     {{Name}}(const char* value);
 
     {%-if schema.default is defined %}
+    /*! Constructor that sets the objects value to "{{schema.default}}"".
+     */
     {{Name}}();
     {%-endif%}
 
+    /*! Default destructor.
+     */
     virtual ~{{Name}}() = default;
 
+    /*! Operator to case a {{Name}} instance to a string.
+     */
     operator std::string() const;
     
+    /*! Assignment operator to set the value of the {{Name}} instance.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     * \return referance to the {{Name}} instance
+     */
     {{Name}}& operator=(const std::string& value);
+
+    /*! Assignment operator to set the value of the {{Name}} instance.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     * \return referance to the {{Name}} instance
+     */
     {{Name}}& operator=(const char* value);
+
+    /*! Provide the string value of the {{Name}} instance to a stream.
+     * \param os the stream object
+     * \str an instance of {{Name}}
+     * \return the same ostream input object
+     */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& str);
 
+    /*! Set the value of the string.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     */
     void Set(const std::string& value);
+
+    /*! Set the value of the string.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     */
     void Set(const char* value);
 
+    /*! Get the contained string.
+     * \return The contained string.
+     */
     std::string Get() const;
 
+    /*! Validate that the provided string meets schema constraints.
+     * \param testValue string for evaluation
+     * \throw if the string doesn't meet requirements
+     */
     static void Validate(const std::string& testValue);
 
+    /*! Create a new {{Name}} object from a JSON structure.
+     * \throw if the JSON structure doesn't match the schema constraints.
+     * \return new {{Name}} object containing values from the JSON.
+     * \param json JSON structure to use for creating new {{Name}} object.
+     */
     static {{Name}} FromJson(const rapidjson::Value& json);
+
+    /*! Create a new {{Name}} object from the string.
+     * The string must meet the schema's constraints.
+     * \return new {{Name}} object containing the string.
+     * \param str the string that will be contained in the new {{Name}} object.
+     * \throw if the string didn't meet the schema's constraints.
+     */
     static {{Name}} FromString(const std::string& str);
 
+    /*! Serialize the {{Name}} instance into a JSON object.
+     * \param value is modified to be a string type containing the instance's string value.
+     * \param allocator is used for rapidjson allocation.
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:
