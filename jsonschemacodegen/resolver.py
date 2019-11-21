@@ -36,6 +36,7 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
         return (pkg, parts[-2], stringcase.pascalcase(parts[-1]))
 
     def _get_reference_parts(self, reference) -> dict:
+        assert('#' in reference), "Reference '{}' seemed malformed".format(reference)
         url, path = reference.split('#')
         theType, name = path.split('/')[-2:]
         return {
