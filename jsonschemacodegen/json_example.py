@@ -5,13 +5,13 @@ import abc
 class SchemaResolverBaseClass(abc.ABC):
 
     @abc.abstractmethod
-    def get_schema(self, reference):
+    def get_schema(self, reference, root=None):
         """Given a reference, returns a wrapped schema object.
         """
         pass
 
     @abc.abstractmethod
-    def get_json(self, reference) -> dict:
+    def get_json(self, reference, root=None) -> dict:
         pass
 
     @abc.abstractmethod
@@ -38,12 +38,12 @@ class GeneratorFromSchema(object):
     def GetNumber(self, schema):
         return self.GetExampleOr(schema, schema['type'] == 'integer' and 1 or 3.14)
 
-    def GetObject(self, schema, base=None):
+    def GetObject(self, root, schema, base=None):
         base = base or {}
         for propName, propSchema in schema['properties'].items():
             if (self.includeMode == 'required') and (('required' not in schema) or (propName not in schema['required'])):
                 continue
-            thing = self.GetThing(propSchema)
+            thing = self.GetThing(root, propSchema)
             base[propName] = thing
         default = None
         if 'default' in schema:
@@ -54,32 +54,35 @@ class GeneratorFromSchema(object):
             base.update(default)
         return base
 
-    def GetArray(self, schema):
+    def GetArray(self, root, schema):
         base = []
         defaultMin = self.includeMode == 'all' and 1 or 0
         minItems = 'minItems' in schema and schema['minItems'] or defaultMin
         for _ in range(0, minItems):
-            base.append(self.GetThing(schema['items']))
+            base.append(self.GetThing(root, schema['items']))
         return base
 
-    def GetThing(self, schema, base=None):
+    def GetThing(self, root, schema, base=None):
+        root_doc = root
         base = base or {}
         if '$ref' in schema:
-            schema = self.resolver.get_schema(reference=schema['$ref'])
+            if len(schema['$ref'].split('#')[0]) > 0:
+                root_doc = self.resolver.get_document(schema['$ref'])
+            schema = self.resolver.get_schema(reference=schema['$ref'], root=root)
         if 'allOf' in schema:
             obj = base
             for opt in schema['allOf']:
-                obj = self.GetThing(opt, base=obj)
+                obj = self.GetThing(root_doc, opt, base=obj)
             return obj
         elif 'anyOf' in schema:
             obj = base
             if self.includeMode == 'required':
                 return obj
             for opt in schema['anyOf']:
-                obj = self.GetThing(opt, base=obj)
+                obj = self.GetThing(root_doc, opt, base=obj)
             return obj
         elif 'oneOf' in schema:
-            thing = self.GetThing(random.choice(schema['oneOf']))
+            thing = self.GetThing(root_doc, random.choice(schema['oneOf']))
             return thing
         elif 'type' not in schema:
             raise NotImplementedError(schema)
@@ -92,32 +95,32 @@ class GeneratorFromSchema(object):
         elif schema['type'] == 'boolean':
             return self.GetExampleOr(schema, True)
         elif schema['type'] == 'object':
-            return self.GetObject(schema, base)
+            return self.GetObject(root_doc, schema, base)
         elif schema['type'] == 'array':
-            return self.GetArray(schema)
+            return self.GetArray(root_doc, schema)
         else:
             raise NotImplementedError
 
-    def GenerateSome(self, schema, run, includeMode) -> set:
+    def GenerateSome(self, root, schema, run, includeMode) -> set:
         self.includeMode = (includeMode in ['all', 'required']) and includeMode or 'all'
         examples = set()
         for _ in range(0, run):
-            thing = self.GetThing(schema)
+            thing = self.GetThing(root, schema)
             examples.add(json.dumps(thing, sort_keys=True))
         return examples
 
-    def GenerateFull(self, schema, run=100) -> set:
+    def GenerateFull(self, root, schema, run=100) -> set:
         schemaJsonText = json.dumps(schema)
         run = max(2, schemaJsonText.count('oneOf')) * 4
-        return self.GenerateSome(schema, run, 'all')
+        return self.GenerateSome(root, schema, run, 'all')
 
-    def GenerateLimited(self, schema, run=2) -> set:
+    def GenerateLimited(self, root, schema, run=2) -> set:
         schemaJsonText = json.dumps(schema)
         run = max(1, schemaJsonText.count('oneOf')) * 2
-        return self.GenerateSome(schema, run, 'required')
+        return self.GenerateSome(root, schema, run, 'required')
     
-    def Generate(self, schema) -> list:
-        full = self.GenerateFull(schema)
-        full.update(self.GenerateLimited(schema))
+    def Generate(self, root, schema) -> list:
+        full = self.GenerateFull(root, schema)
+        full.update(self.GenerateLimited(root, schema))
         return [json.loads(s) for s in full]
 

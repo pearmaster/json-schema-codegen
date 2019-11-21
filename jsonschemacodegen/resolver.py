@@ -6,6 +6,9 @@ from . import schemawrappers
 import yaml
 from copy import copy
 
+class TreeWalkerException(Exception):
+    pass
+
 class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.SchemaResolverBaseClass):
 
     def __init__(self, uri, root=None):
@@ -104,6 +107,8 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
     def _walk_through_tree(self, tree, path) -> dict:
         walker = tree
         for p in [p for p in path.split('/') if len(p) > 0]:
+            if p not in walker:
+                raise TreeWalkerException("Could not resolve {} from {}".format(path, tree['id']))
             walker = walker[p]
         return walker
 
@@ -116,17 +121,16 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
             else:
                 return yaml.load(fp, Loader=yaml.FullLoader)
 
-    def get_json(self, reference) -> dict:
+    def get_json(self, reference, root=None) -> dict:
         parts = self._get_reference_parts(reference)
-        uri = parts['uri']
-        if not uri:
-            if not self.root:
-                uri = self.uri
-            else:
-                return self._walk_through_tree(self.root, parts['path'])
-        raw = self.get_document(uri)
-        return self._walk_through_tree(raw, parts['path'])
+        if parts['uri']:
+            root_doc = self.get_document(parts['uri'])
+        elif root is not None:
+            root_doc = root
+        else:
+            root_doc = self.root
+        return self._walk_through_tree(root_doc, parts['path'])
 
-    def get_schema(self, reference) -> schemawrappers.SchemaBase:
-        return schemawrappers.SchemaFactory(self.get_json(reference))
+    def get_schema(self, reference, root=None) -> schemawrappers.SchemaBase:
+        return schemawrappers.SchemaFactory(self.get_json(reference, root=root))
 

@@ -29,5 +29,5 @@ if __name__ == '__main__':
         ]
     }
     generator = GeneratorFromSchema()
-    examples = generator.Generate(schema)
+    examples = generator.Generate(schema, schema)
     print(examples)
