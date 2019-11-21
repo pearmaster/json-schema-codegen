@@ -3,7 +3,6 @@
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-if schema.GetItemSchema()['$ref'] %}
 // Array uses items reference
-FIXME
 {%-set itemtype = loader.Reference(resolver, schema.GetItemSchema()['$ref']) %}
 {%-else%}
 {%-set itemtype = className+'::Item'%}
