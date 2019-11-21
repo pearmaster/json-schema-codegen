@@ -1,5 +1,6 @@
 {%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif-%}
 /*! {{Name}} is a wrapper around a {{schema.type}}.
+ * \brief wrapper around {{cpptype}}
  {%-if schema.description %}
  * {{schema.description}}
  {%-endif%}

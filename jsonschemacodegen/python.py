@@ -5,43 +5,28 @@ import stringcase
 from . import templator
 from . import schemawrappers
 
+class ResolverBaseClass(abc.ABC):
 
-class SimpleResolver(object):
+    @abc.abstractmethod
+    def py_include_statement(self, reference):
+        """Should return the include statement needed to acquire the object representing the
+        schema pointed to at `reference`.  Example, "from schema_foo import Foo"
+        """
+        pass
 
-    def __init__(self, loader=None):
-        self.loader = loader
+    @abc.abstractmethod
+    def py_class_name(self, reference):
+        """Should return the class name for the object representing the schema pointed to at `reference`.
+        For example, "schema_foo.Foo"
+        """
+        pass
 
-    def ReferenceParts(self, reference):
-        url, path = reference.split('#')
-        theType, name = path.split('/')[-2:]
-        return {
-            "url": url,
-            "path": path,
-            "type": theType,
-            "PascalType": stringcase.pascalcase(theType),
-            "name": name,
-            "PascalName": stringcase.pascalcase(name),
-            "pkg": url is not None and url.split(".")[0] or None,
-        }
-
-    def IncludeStatement(self, reference):
-        ref = self.ReferenceParts(reference)
-        if ref['pkg'] is not None:
-            return "import {pkg}.{type}_{name}".format(**ref)
-        else:
-            return "import {type}_{name}".format(**ref)
-
-    def ClassName(self, reference):
-        ref = self.ReferenceParts(reference)
-        if ref['pkg'] is not None:
-            return "{pkg}.{type}_{name}.{PascalName}".format(**ref)
-        else:
-            return "{type}_{name}.{PascalName}".format(**ref)
-
-    def FileName(self, reference):
-        ref = self.ReferenceParts(reference)
-        return "{type}_{name}.py".format(**ref)
-
+    @abc.abstractmethod
+    def py_filename(self, reference):
+        """Should return the name of the filename holding the python class representing the schema pointed to
+        at `reference`.  For example, "schema_foo.py"
+        """
+        pass
 
 
 class GeneratorFromSchema(object):
@@ -59,6 +44,11 @@ class GeneratorFromSchema(object):
             "Name": class_name,
             "schema": schemawrappers.SchemaFactory(schema),
         }
-        generator.RenderTemplate("file.py.jinja2", output_name=filename_base, resolver=self.resolver, **args)
+        return generator.RenderTemplate("file.py.jinja2", output_name="{}.py".format(filename_base), resolver=self.resolver, **args)
 
+    def GenerateFromPath(self, schema, path):
+        assert(self.resolver)
+        class_name = self.resolver.py_class_name(path).split('.')[-1]
+        filename_base = self.resolver.py_filename(path)
+        return self.Generate(schema, class_name, filename_base)
 

@@ -1,4 +1,4 @@
-{%-macro Class(filetype, resolver, ns, usings, Name, schema) %}
+{%-macro Class(filetype, resolver, ns, Name, schema) %}
 {%-if schema.oneOf is defined -%}
 {%-include 'oneof.'+filetype+'.jinja2'-%}
 {%-elif schema.allOf is defined -%}
@@ -28,6 +28,6 @@
 //FIXME.  Type was {{schema.type-}}
 {%-endif-%}
 {%-endmacro-%}
-{%-macro Reference(resolver, ref, usings=[]) %}
-{{-resolver.GetNamespace(ref, usings, '::')-}}{{-resolver.GetName(ref)-}}
+{%-macro Reference(resolver, ref) %}
+{{-resolver.cpp_get_ns_name(ref)-}}
 {%-endmacro-%}

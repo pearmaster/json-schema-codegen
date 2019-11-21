@@ -2,7 +2,7 @@
 from collections import UserDict
 {%-for prop in schema.properties.values()%}
 {%-if '$ref' in prop%}
-{{resolver.IncludeStatement(prop['$ref'])}}
+{{resolver.py_include_statement(prop['$ref'])}}
 {%-endif%}
 {%-endfor%}
 
@@ -12,7 +12,7 @@ from collections import UserDict
 
 {%-macro PropertyType(propName, propSchema)-%}
 {%-if '$ref' in propSchema-%}
-{{resolver.ClassName(propSchema['$ref'])}}
+{{resolver.py_class_name(propSchema['$ref'])}}
 {%-else-%}
 self.{{PropertyClassName(propName)}}
 {%-endif-%}

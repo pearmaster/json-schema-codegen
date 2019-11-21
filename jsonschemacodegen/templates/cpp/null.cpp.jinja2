@@ -1,4 +1,4 @@
-{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {{className}}::{{Name}}()
 {
 }
@@ -8,7 +8,7 @@ boost::none_t {{className}}::Get() const
     return boost::none;
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
 {
     if (!(json.IsNull()))
     {
@@ -18,7 +18,7 @@ boost::none_t {{className}}::Get() const
     return {{className}}();
 }
 
-void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
 {
     value.SetNull();  
 }

@@ -10,7 +10,7 @@
 {%-endmacro%}
 {%-macro ObjectName(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-resolver.GetName(propSchema['$ref'])|UpperCamelCase-}}
+        {{-resolver.cpp_get_name(propSchema['$ref'])|UpperCamelCase-}}
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
@@ -22,13 +22,15 @@
     {%-if 'properties' in schema and schema.title in schema.properties-%}Object{%-endif-%}
 {%-elif 'oneOf' in schema%}
     {{-''-}}OneOfComponent{{-i-}}
+{%-elif 'type' in schema and schema['type'] == 'object' and schema['properties'] | length == 1 -%}
+    {{-schema.PropertyKeys()[0] | UpperCamelCase-}}Component
 {%-else-%}
     {{-''-}}Component{{-i-}}
 {%-endif-%}
 {%-endmacro%}
 
 /*! \class {{Name}}
- * \brief An object containing the mandatory union of {%for s in schema.oneOf %}{{ObjectType(ComponentName(Name, s, loop.index), s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
+ * \brief Mandatory union of: {%for s in schema.allOf %}{{ObjectName(ComponentName(Name, s, loop.index), s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
  {%-if schema.description -%}
  * {{schema.description}}
  {%-endif%}
@@ -38,8 +40,9 @@ class {{Name}}
 public:
     {%-import 'loader.jinja2' as loader%}
     {%-for s in schema.allOf %}
-    {{loader.Class('hpp', resolver, [Name], [], ComponentName(Name, s, loop.index), s) | indent(4) }}
-    
+    {%-if '$ref' not in s %}
+    {{loader.Class('hpp', resolver, [Name], ComponentName(Name, s, loop.index), s) | indent(4) }}
+    {%-endif%}
     {%endfor%}
 
     /*! Constructor for {{Name}}
@@ -63,7 +66,7 @@ public:
 
     /*! \fn void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
      * \brief Sets the {{ObjectType(componentName, s)}} component of {{Name}} object.
-     * \param {{ObjectType(componentName, s)}} component is copied into the storage for this class.
+     * \param component is copied into the storage for this class.
      */
     void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component);
     {%endfor%}

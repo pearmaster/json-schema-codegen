@@ -5,7 +5,7 @@
     {%-set itemtype = 'Item'-%}
 {%-endif%}
 /*! \class {{Name}}
- * \brief {{Name}} is a wrapper around an array containing {{itemtype}}
+ * \brief Wrapper around an array containing {{itemtype}}
  {%-if schema.description %}
  * {{schema.description}}
  {%-endif%}
@@ -14,7 +14,7 @@ class {{Name}}
 {
 public:
     {%-if schema.GetItemSchema()['$ref'] is not defined %}
-    {{loader.Class('hpp', resolver, [Name], [], 'Item', schema['items']) | indent(4) }}
+    {{loader.Class('hpp', resolver, [Name], 'Item', schema['items']) | indent(4) }}
     {%-endif%}
 
     {%-if schema.maxItems is defined %}

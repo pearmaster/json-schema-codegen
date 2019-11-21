@@ -2,8 +2,8 @@
 from collections import UserList
 {%-if 'items' in schema%}
 {%-if '$ref' in schema['items']%}
-{%-set itemType = resolver.ClassName(schema['items']['$ref'])%}
-{{resolver.IncludeStatement(schema['items']['$ref'])}}
+{%-set itemType = resolver.py_class_name(schema['items']['$ref'])%}
+{{resolver.py_include_statement(schema['items']['$ref'])}}
 {%-endif%}
 {%-endif%}
 

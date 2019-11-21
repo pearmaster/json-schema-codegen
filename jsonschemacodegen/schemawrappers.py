@@ -11,14 +11,20 @@ class SchemaBase(collections.UserDict):
             "<exception>"
         }
 
+    def Resolve(self, resolver):
+        return self
+
 
 class Reference(SchemaBase):
 
     def CppIncludes(self, resolver):
         incs = super().CppIncludes(resolver=resolver)
         if resolver:
-            incs.update({'"'+resolver.GetHeader(self.data['$ref'])+'"'})
+            incs.update({'"'+resolver.cpp_get_header(self.data['$ref'])+'"'})
         return incs
+
+    def Resolve(self, resolver):
+        return resolver.get_schema(self.data['$ref'])
 
 
 class ObjectSchema(SchemaBase):
@@ -33,6 +39,12 @@ class ObjectSchema(SchemaBase):
         for n, p in self.data['properties'].items():
             props[n] = SchemaFactory(p)
         return props
+
+    def PropertyKeys(self):
+        return [a for a in self.data['properties'].keys()]
+
+    def PropertyValues(self):
+        return [a for a in self.data['properties'].values()]
 
     def __getitem__(self, key):
         if key == 'properties':

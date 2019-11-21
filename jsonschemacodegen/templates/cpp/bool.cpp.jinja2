@@ -1,5 +1,6 @@
-{%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
-{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set std = resolver.cpp_resolve_namespace(['std']) %}
+{%-set rapidjson = resolver.cpp_resolve_namespace(['rapidjson']) %}
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {{className}}::{{Name}}(bool value)
 {
     Set(value);
@@ -34,7 +35,7 @@ bool {{className}}::Get() const
     return _value;
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{{className}} {{className}}::FromJson(const {{rapidjson}}Value& json)
 {
     if (!(json.IsBool()))
     {
@@ -45,7 +46,7 @@ bool {{className}}::Get() const
     return newObject;
 }
 
-void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'],  '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
 {
     value.SetBool(_value); 
 }

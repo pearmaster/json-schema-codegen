@@ -1,17 +1,17 @@
-{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%macro NestedObjectName(name) -%}
     {{className}}::{{-name | UpperCamelCase-}}
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-loader.Reference(resolver, propSchema['$ref'], usings)-}}
+        FIXME
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
 {%-macro ObjectName(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-resolver.GetName(propSchema['$ref'])|UpperCamelCase-}}
+        {{-resolver.cpp_get_name(propSchema['$ref'])|UpperCamelCase-}}
     {%-else-%}
         {{-propName | UpperCamelCase-}}
     {%-endif-%}
@@ -19,7 +19,7 @@
 
 {%import 'loader.jinja2' as loader with context%}
 {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
-{{loader.Class('cpp', resolver, [className], usings, componentName, s) }}
+{{loader.Class('cpp', resolver, [className], componentName, s) }}
 {%-endfor%}
 
 

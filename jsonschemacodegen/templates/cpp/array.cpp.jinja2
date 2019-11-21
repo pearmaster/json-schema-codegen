@@ -1,21 +1,21 @@
 {%import 'loader.jinja2' as loader with context-%}
-{%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
-{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set std = resolver.cpp_resolve_namespace(['std']) %}
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-if schema.GetItemSchema()['$ref'] %}
 // Array uses items reference
-{%-set itemtype = loader.Reference(resolver, schema.GetItemSchema()['$ref'], usings) %}
+FIXME
+{%-set itemtype = loader.Reference(resolver, schema.GetItemSchema()['$ref']) %}
 {%-else%}
 {%-set itemtype = className+'::Item'%}
 
 {{loader.Class('cpp', 
                resolver, 
-               resolver.AppendToNamespace(ns, Name), 
-               usings,
+               resolver.append_to_namespace(ns, Name), 
                'Item', 
                schema.GetItemSchema()) }}
 {%endif%}
 
-{{className}}::{{Name}}({{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}> arr)
+{{className}}::{{Name}}({{resolver.cpp_resolve_namespace(['std'])}}vector<{{itemtype}}> arr)
 {
 
 }
@@ -27,7 +27,7 @@
 }
 {%-endif%}
 
-void {{className}}::SetArray(const {{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}>& arr)
+void {{className}}::SetArray(const {{resolver.cpp_resolve_namespace(['std'])}}vector<{{itemtype}}>& arr)
 {
     {%-if schema.maxItems is defined %}
     if (arr.size() > {{schema.maxItems}})
@@ -44,7 +44,7 @@ void {{className}}::SetArray(const {{resolver.ResolveNamespace(usings, ['std'], 
     _arr = arr;
 }
 
-{{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}> {{className}}::GetArray() const
+{{resolver.cpp_resolve_namespace(['std'])}}vector<{{itemtype}}> {{className}}::GetArray() const
 {
     return _arr;
 }
@@ -60,13 +60,13 @@ void {{className}}::Append(const {{itemtype}}& item)
     _arr.push_back(item);
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
 {
     if (!json.IsArray())
     {
         throw std::invalid_argument("The '{{className}}' document JSON wasn't an array");
     }
-    {{resolver.ResolveNamespace(usings, ['std'], '::')}}vector<{{itemtype}}> arr;
+    {{resolver.cpp_resolve_namespace(['std'])}}vector<{{itemtype}}> arr;
     for (auto& v : json.GetArray())
     {
         arr.push_back({{itemtype}}::FromJson(v));
@@ -74,12 +74,12 @@ void {{className}}::Append(const {{itemtype}}& item)
     return {{className}}(arr);
 }
 
-void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
 {
     value.SetArray();
     for (const {{itemtype}}& el : _arr)
     {
-        {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value elementValue;
+        {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value elementValue;
         el.ToJson(elementValue, allocator);
         value.PushBack(elementValue, allocator);
     }

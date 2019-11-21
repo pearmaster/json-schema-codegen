@@ -11,7 +11,7 @@ from collections import UserDict
 
 {%-macro ComponentType(schema, index)-%}
     {%-if '$ref' in schema-%}
-        {{resolver.ClassName(schema['$ref'])}}
+        {{resolver.py_class_name(schema['$ref'])}}
     {%-else-%}
         self.{{ComponentName(schema, index)}}
     {%-endif-%}
@@ -19,7 +19,7 @@ from collections import UserDict
 
 {%-for comp in schema['oneOf']%}
 {%-if '$ref' in comp%}
-{{resolver.IncludeStatement(comp['$ref'])}}
+{{resolver.py_include_statement(comp['$ref'])}}
 {%-endif%}
 {%-endfor%}
 

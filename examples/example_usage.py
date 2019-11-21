@@ -1,8 +1,9 @@
 import jsonschemacodegen.cpp as cpp
+from jsonschemacodegen.resolver import SimpleResolver
 
 if __name__ == '__main__':
-    simpleResolver = cpp.SimpleResolver()
-    output_dir = "/tmp"
+    simpleResolver = SimpleResolver("myproject")
+    output_dir = "output"
 
     # The generated C++ class will be in the namespace foo::bar (ie foo::bar::ClassName)
     namespace = ["foo", "bar"]
@@ -13,9 +14,7 @@ if __name__ == '__main__':
     
     generator = cpp.GeneratorFromSchema(src_output_dir=output_dir,
         header_output_dir=output_dir, 
-        resolver=simpleResolver,
-        namespace=namespace,
-        src_usings=usings)
+        resolver=simpleResolver)
 
     schema = {
         "type": "object",
@@ -98,7 +97,7 @@ if __name__ == '__main__':
         }
     }
 
-    generator.Generate(schema, 'ExampleObject', 'example_object')
+    print("Generated {}".format(generator.Generate(schema, "myproject#/example/object")))
 
     schemaWithRefs = {
         "oneOf": [
@@ -126,5 +125,5 @@ if __name__ == '__main__':
             {"$ref": "#/components/schemas/localObject"},
         ]
     }
-    generator.Generate(schemaWithRefs, 'ExampleWithRefs', 'example_object2')
+    print("Generated {}".format(generator.Generate(schemaWithRefs, "myproject#/example/objectFoo")))
 

@@ -1,17 +1,17 @@
-{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%macro NestedObjectName(name) -%}
     {{className}}::{{-name | UpperCamelCase-}}
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-loader.Reference(resolver, propSchema['$ref'], usings)-}}
+        FIXME
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
 {%-macro ObjectName(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-resolver.GetName(propSchema['$ref'])|UpperCamelCase-}}
+        {{-resolver.cpp_get_name(propSchema['$ref'])|UpperCamelCase-}}
     {%-else-%}
         {{-propName | UpperCamelCase-}}
     {%-endif-%}
@@ -23,6 +23,8 @@
     {%-if 'properties' in schema and schema.title in schema.properties-%}Object{%-endif-%}
 {%-elif 'oneOf' in schema%}
     {{-''-}}OneOfComponent{{-i-}}
+{%-elif 'type' in schema and schema['type'] == 'object' and schema['properties'] | length == 1 -%}
+    {{-schema.PropertyKeys()[0] | UpperCamelCase-}}Component
 {%-else-%}
     {{-''-}}Component{{-i-}}
 {%-endif-%}
@@ -30,7 +32,7 @@
 
 {%import 'loader.jinja2' as loader with context%}
 {%-for s in schema.allOf %}{%set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset%}
-{{loader.Class('cpp', resolver, [className], usings, componentName, s) }}
+{{loader.Class('cpp', resolver, [className], componentName, s) }}
 {%-endfor%}
 
 

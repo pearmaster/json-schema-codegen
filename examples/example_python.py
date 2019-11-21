@@ -1,7 +1,6 @@
 from jsonschemacodegen import python as pygen
 import json
 
-
 if __name__ == '__main__':
     schema = {
         "type": "array",
@@ -53,6 +52,9 @@ if __name__ == '__main__':
     if True:
         generator = pygen.GeneratorFromSchema('output')
         generator.Generate(schema, 'Example', 'example')
+
+    with open('output/__init__.py', 'w') as fp:
+        pass
 
     from output import example
 

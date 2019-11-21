@@ -1,7 +1,7 @@
 {%-if schema.type == 'integer'%}{%-set rjtype = 'int'%}{%-else%}{%-set rjtype = 'number'%}{%-endif-%}
 {%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif%}
-{%-set std = resolver.ResolveNamespace(usings, ['std'], '::') %}
-{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set std = resolver.cpp_resolve_namespace(['std']) %}
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 
 {{className}}::{{Name}}({{cpptype}} value)
 {
@@ -66,7 +66,7 @@ void {{className}}::Validate({{cpptype}} testValue)
     {%-endif%}
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& json)
+{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
 {
     if (!(json.Is{{rjtype | UpperCamelCase}}()))
     {
@@ -79,10 +79,10 @@ void {{className}}::Validate({{cpptype}} testValue)
 
 {{className}} {{className}}::FromString(const {{std}}string& str)
 {
-    return {{className}}({{resolver.ResolveNamespace(usings, ['boost'], '::')}}lexical_cast<{{cpptype}}>(str));
+    return {{className}}({{resolver.cpp_resolve_namespace(['boost'])}}lexical_cast<{{cpptype}}>(str));
 }
 
-void {{className}}::ToJson({{resolver.ResolveNamespace(usings, ['rapidjson'], '::')}}Value& value, {{resolver.ResolveNamespace(usings, ['rapidjson', 'Value'], '::')}}AllocatorType& allocator) const
+void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
 {
     value.Set{{cpptype | UpperCamelCase}}(_value); 
 }

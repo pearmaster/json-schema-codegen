@@ -10,6 +10,7 @@
     {%-endif-%}
 {%-endmacro%}
 /*! {{Name}} is a wrapper around an object.
+ * \brief Wrapper around object with properties: {%for propName in schema.properties.keys() %}{{propName}}{%if not loop.last%}, {%endif%}{%endfor%}
  {%-if schema.description %}
  * {{schema.description}}
  {%-endif%}
@@ -19,7 +20,7 @@ class {{Name}}
 public:
     {%-for propName, propSchema in schema.properties.items() %}
     {%-if '$ref' not in propSchema %}
-    {{loader.Class('hpp', resolver, [Name], [], NestedObjectName(propName), propSchema) | indent(4) }}
+    {{loader.Class('hpp', resolver, [Name], NestedObjectName(propName), propSchema) | indent(4) }}
     {%-endif%}
     {%endfor%}
 
@@ -31,7 +32,19 @@ public:
     /*! Constructor that initializes all properties to their defaults.
      */
     {{Name}}();
+    {%if schema['properties'] | length == 1 %}
+    {%-set propName = schema.PropertyKeys()[0] %}
+    {%-set propSchema = schema.PropertyValues()[0] %}
+    /*! Constructor for initializing object's single property.
+     * \param {{propName | camelCase}} property to initialize.
+    */
+    {{Name}}(const {{ObjectType(propName, propSchema)}}& {{propName | camelCase}});
     {%-endif%}
+
+    {%-endif%}
+
+    /*! Destructor.
+     */
     virtual ~{{Name}}() = default;
     {%for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required%}
@@ -47,12 +60,13 @@ public:
      */
     boost::optional<{{ObjectType(propName, propSchema)}}> Get{{propName | UpperCamelCase}}() const;
     {%-endif%}
+
     /*! Sets the '{{propName}}' property of the object.
      * \fn void Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
-     * \param const {{ObjectType(propName, propSchema)}}& value to Set
+     * \param value the value which is set as the {{propName}} property.
      */
     void Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value);
-    {%endfor%}
+    {%-endfor%}
 
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes a JSON "object" value into a new instance of {{Name}}.

@@ -7,7 +7,7 @@ with open("requirements.txt", "r") as fp:
     requirements = fp.read().split('\n')
 
 setup(name='json-schema-codegen',
-      version='0.0.9',
+      version='0.1.0',
       url='http://github.com/pearmaster/json-schema-codegen',
       author='Jacob Brunson',
       author_email='pypi@jacobbrunson.com',

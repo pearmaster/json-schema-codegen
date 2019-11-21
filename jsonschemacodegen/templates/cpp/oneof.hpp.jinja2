@@ -23,7 +23,7 @@ class {{Name}}
 {
 public:
     {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
-    {{loader.Class('hpp', resolver, [Name], [], optionName, s) | indent(4) }}
+    {{loader.Class('hpp', resolver, [Name], optionName, s) | indent(4) }}
     
     {%endfor%}
     /*! Constructor.  Must be initialized with an instance of one of these: {{optionList}}

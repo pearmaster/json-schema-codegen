@@ -3,20 +3,21 @@
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-loader.Reference(resolver, propSchema['$ref'])-}}
+        {{-resolver.loader.Reference(resolver, propSchema['$ref'])-}}
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
 {%-macro ObjectName(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-resolver.GetName(propSchema['$ref'])|UpperCamelCase-}}
+        {{-resolver.cpp_get_name(propSchema['$ref'])|UpperCamelCase-}}
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
 
-/*! {{Name}} is an object containing the optional union of {%for s in schema.oneOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}
+/*! \class {{Name}}
+ * \brief Optional union of: {%for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectName(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}
  {%-if schema.description %}
  * {{schema.description}}
  {%-endif%}
@@ -26,7 +27,7 @@ class {{Name}}
 public:
     {%-import 'loader.jinja2' as loader%}
     {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
-    {{loader.Class('hpp', resolver, [Name], [], componentName, s) | indent(4) }}
+    {{loader.Class('hpp', resolver, [Name], componentName, s) | indent(4) }}
     
     {%endfor%}
 

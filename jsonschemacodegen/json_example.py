@@ -1,10 +1,20 @@
 import json
 import random
+import abc
+
+class SchemaResolverBaseClass(abc.ABC):
+
+    @abc.abstractmethod
+    def get_schema(self, reference):
+        """Given a reference, returns a wrapped schema object.
+        """
+        pass
+
 
 class GeneratorFromSchema(object):
 
-    def __init__(self, loader=None):
-        self.loader = loader
+    def __init__(self, resolver=None):
+        self.resolver = resolver
         self.includeMode = 'all'
 
     def GetExampleOr(self, schema, default):
@@ -47,7 +57,7 @@ class GeneratorFromSchema(object):
     def GetThing(self, schema, base=None):
         base = base or {}
         if '$ref' in schema:
-            schema = self.loader.GetSchema(reference=schema['$ref'])
+            schema = self.resolver.get_schema(reference=schema['$ref'])
         if 'allOf' in schema:
             obj = base
             for opt in schema['allOf']:
@@ -103,35 +113,3 @@ class GeneratorFromSchema(object):
         full.update(self.GenerateLimited(schema))
         return [json.loads(s) for s in full]
 
-
-if __name__ == '__main__':
-    schema3 = {
-        "type": "object",
-        "properties": {
-            "outerstr": {"type":"string", "example":"example outer string"},
-            "outerbool": {"type":"boolean", "examples": [False,True]},
-            "something": {
-                "oneOf": [
-                    {"type": "integer", "examples":[12,2,3]},
-                    {
-                        "type": "object",
-                        "properties": {
-                            "innerone": {
-                                "oneOf": [
-                                    {"type": "integer", "examples":[4,5,6]},
-                                    {"type": "boolean"}
-                                ]
-                            },
-                            "innertwo": {"type": "string", "example": "inner two"}
-                        }
-                    }
-                ]
-            }
-        },
-        "required": [
-            "outerbool"
-        ]
-    }
-    generator = GeneratorFromSchema()
-    examples = generator.Generate(schema3)
-    print(examples)

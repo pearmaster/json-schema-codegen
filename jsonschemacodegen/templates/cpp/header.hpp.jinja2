@@ -23,7 +23,7 @@ namespace {{n}} {
 {%-endfor%}
 
 {%from 'loader.jinja2' import Class%}
-{{Class('hpp', resolver, ns, [], Name, schema)}}
+{{Class('hpp', resolver, ns, Name, schema)}}
 
 {%-for n in ns|reverse %}
 } // end ns {{n}}

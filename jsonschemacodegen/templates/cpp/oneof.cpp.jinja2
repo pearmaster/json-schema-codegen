@@ -1,11 +1,11 @@
 {%-import 'loader.jinja2' as loader with context-%}
-{%-set className = resolver.ResolveNamespace(usings, ns, '::')+Name%}
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%macro NestedObjectName(name) -%}
     {{className}}::{{-name | UpperCamelCase-}}
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-loader.Reference(resolver, propSchema['$ref'], usings)-}}
+        {{-loader.Reference(resolver, propSchema['$ref'])-}}
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
@@ -18,7 +18,7 @@
 
 
 {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
-{{loader.Class('cpp', resolver, [className], usings, optionName, s) }}
+{{loader.Class('cpp', resolver, [className], optionName, s) }}
 {%-endfor%}
 
 
