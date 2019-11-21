@@ -10,6 +10,14 @@ class SchemaResolverBaseClass(abc.ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def get_json(self, reference) -> dict:
+        pass
+
+    @abc.abstractmethod
+    def get_document(self, reference):
+        pass
+
 
 class GeneratorFromSchema(object):
 

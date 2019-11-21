@@ -6,7 +6,7 @@
 {%-elif schema.anyOf is defined -%}
 {%-include 'axxof.py.jinja2'-%}
 {%-elif '$ref' in schema -%}
-// FIXME
+# This object makes use of an external schema specified at {{schema['$ref']}}
 {%-elif 'type' not in schema-%}
 {%-elif schema.type == 'integer'
     or schema.type == 'number'
@@ -22,6 +22,6 @@
 {%-elif schema.type == 'string'-%}
 {%-include 'primative.py.jinja2'-%}
 {%-else-%}
-//FIXME.  Type was {{schema.type-}}
+# FIXME.  Unable to generate a schema with type '{{schema.type}}'
 {%-endif-%}
 {%-endmacro-%}

@@ -6,6 +6,7 @@
 {%-elif schema.anyOf is defined -%}
 {%-include 'anyof.'+filetype+'.jinja2'-%}
 {%-elif '$ref' in schema -%}
+// An object representing {{schema['$ref']}} is used in this structure
 {%-if filetype == 'hpp' -%}
 {%-include 'ref.hpp.jinja2'-%}
 {%-endif-%}
@@ -25,7 +26,7 @@
 {%-elif schema.type == 'string' and schema.enum is defined-%}
 {%-include 'string_enum.'+filetype+'.jinja2'-%}
 {%-else-%}
-//FIXME.  Type was {{schema.type-}}
+// FIXME: Failed at attempt to generate object for schema of type {{schema.type-}}
 {%-endif-%}
 {%-endmacro-%}
 {%-macro Reference(resolver, ref) %}

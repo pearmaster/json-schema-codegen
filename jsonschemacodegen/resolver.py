@@ -103,25 +103,30 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
 
     def _walk_through_tree(self, tree, path) -> dict:
         walker = tree
-        for p in path:
+        for p in [p for p in path.split('/') if len(p) > 0]:
             walker = walker[p]
         return walker
 
-    def _get_document(self, uri, encoding=None) -> dict:
+    def get_document(self, uri, encoding=None) -> dict:
+        if '#' in uri:
+            uri = uri.split('#')[0]
         with open(uri, 'r') as fp:
             if encoding == 'json' or (encoding is None and 'json' in uri):
                 return json.load(f)
             else:
                 return yaml.load(fp, Loader=yaml.FullLoader)
 
-    def get_schema(self, reference) -> schemawrappers.SchemaBase:
+    def get_json(self, reference) -> dict:
         parts = self._get_reference_parts(reference)
         uri = parts['uri']
         if not uri:
             if not self.root:
                 uri = self.uri
             else:
-                return schemawrappers.SchemaFactory(self._walk_through_tree(self.root, parts['path']))
-        raw = self._get_document(uri)
-        return schemawrappers.SchemaFactory(self._walk_through_tree(raw, parts['path']))
+                return self._walk_through_tree(self.root, parts['path'])
+        raw = self.get_document(uri)
+        return self._walk_through_tree(raw, parts['path'])
+
+    def get_schema(self, reference) -> schemawrappers.SchemaBase:
+        return schemawrappers.SchemaFactory(self.get_json(reference))
 

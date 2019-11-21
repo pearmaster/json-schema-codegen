@@ -56,7 +56,7 @@ if ({{varName}} % {{schema.multipleOf}}) != 0:
     raise ValueError("Value is not a multiple of {{schema.multipleOf}}")
 {%-endif%} {#maximum#}
 {%-if schema.enum is defined%}
-if {{varName}} not in [{%for v in schema.enum%}{{FormatValue(v)}}, {%endfor%}]:
+if {{varName}} not in [{%for v in schema.enum%}{{FormatValue(schema.type, v)}}, {%endfor%}]:
     raise ValueError("Value is not an acceptible value")
 {%-endif%} {#enum#}
 {%-if schema.pattern is defined%}
@@ -70,7 +70,7 @@ class {{Name}}(object):
     """ This class is a schema-validating wrapper around a {{schema.type}}.
     """
 
-    def __init__(self, value{%if schema.default is defined%}={{FormatValue(schema.default)}}{%endif%}):
+    def __init__(self, value{%if schema.default is defined%}={{FormatValue(schema.type, schema.default)}}{%endif%}):
         self.Set(value)
 
     def _Validate(self, value):
