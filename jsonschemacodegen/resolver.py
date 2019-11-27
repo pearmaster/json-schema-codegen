@@ -108,7 +108,8 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
         walker = tree
         for p in [p for p in path.split('/') if len(p) > 0]:
             if p not in walker:
-                raise TreeWalkerException("Could not resolve {} from {}".format(path, tree['id']))
+                treeId = 'id' in tree and tree['id'] or 'UNKNOWN'
+                raise TreeWalkerException("Could not resolve {} from {}".format(path, treeId))
             walker = walker[p]
         return walker
 
