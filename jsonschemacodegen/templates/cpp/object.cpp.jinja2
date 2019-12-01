@@ -68,6 +68,11 @@ void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName
 
 {{className}} {{className}}::FromJson(const {{rapidjson}}Value& json)
 {
+    if (!(json.IsObject()))
+    {
+        throw std::invalid_argument("The '{{className}}' document JSON wasn't an object");
+    }
+    {##}
     {%-for propName, propSchema in schema.RequiredList()-%}
     if (!json.HasMember("{{propName}}"))
     {
