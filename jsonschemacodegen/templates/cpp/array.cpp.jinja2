@@ -16,7 +16,7 @@
 
 {{className}}::{{Name}}({{resolver.cpp_resolve_namespace(['std'])}}vector<{{itemtype}}> arr)
 {
-
+    SetArray(arr);
 }
 
 {%if schema.minItems is not defined or schema.minItems == 0 -%}

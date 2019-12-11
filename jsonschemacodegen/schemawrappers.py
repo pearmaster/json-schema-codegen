@@ -31,8 +31,10 @@ class ObjectSchema(SchemaBase):
 
     def __init__(self, initialdata):
         super().__init__(initialdata)
-        assert('properties' in self.data)
-        assert(isinstance(self.data['properties'], dict))
+        if 'properties' in self.data:
+            assert(isinstance(self.data['properties'], dict))
+        else:
+            self.data['properties'] = dict()
 
     def GetPropertySchemas(self):
         props = {}

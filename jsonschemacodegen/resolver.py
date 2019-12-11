@@ -118,6 +118,7 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
             uri = uri.split('#')[0]
         with open(uri, 'r') as fp:
             if encoding == 'json' or (encoding is None and 'json' in uri):
+                import json
                 return json.load(f)
             else:
                 return yaml.load(fp, Loader=yaml.FullLoader)
