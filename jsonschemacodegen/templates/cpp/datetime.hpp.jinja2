@@ -1,0 +1,133 @@
+/*! {{Name}} is a wrapper around a {{schema.format}} implemented as a {{schema.type}}.
+ {%-if schema.description %}
+ * {{schema.description}}
+ {%-endif%}
+ */
+class {{Name}}
+{
+public:
+    /*! Constructor.
+     * \param value ISO8601 string representation of {{schema.format}} to be used for the initial value of {{Name}} instance.
+     */
+    {{Name}}(const std::string& value);
+
+    /*! Constructor.
+     * \param value ISO8601 string representation of {{schema.format}} to be used for the initial value of {{Name}} instance.
+     */
+    {{Name}}(const char* value);
+
+    {%-if schema.default is defined %}
+    /*! Constructor that uses the default value of "{{schema.default}}".
+     */
+    {%-else%}
+    /*! Constructor that sets the objects value to the current date and time.
+     */
+    {%-endif%}
+    {{Name}}();
+
+    /*! Copy Constructor.
+     * \param other is the source of the time for the new object.
+     */
+    {{Name}}(const {{Name}}& other);
+
+    /*! Default destructor.
+     */
+    virtual ~{{Name}}() = default;
+
+    /*! Operator to cast a {{Name}} instance to a string formatted as a ISO8601.
+     */
+    operator std::string() const;
+    
+    /*! Assignment operator to set the value of the {{Name}} instance from a ISO8601 string.
+     * \param value the new ISO8601 string value.
+     * \throw if the passed string value isn't ISO8601 formatted.
+     * \return reference to the {{Name}} instance
+     */
+    {{Name}}& operator=(const std::string& value);
+
+    /*! Assignment operator to set the value of the {{Name}} instance from a ISO8601 string.
+     * \param value the new ISO8601 string value.
+     * \throw if the passed string value isn't ISO8601 formatted.
+     * \return reference to the {{Name}} instance
+     */
+    {{Name}}& operator=(const char* value);
+
+    /*! Assignment operator to set the value of the {{Name}} instance from a boost ptime.
+     * \param value boost ptime object.
+     * \return reference to the {{Name}} instance
+     */
+    {{Name}}& operator=(const boost::posix_time::ptime& value);
+
+    /*! Provide the string value of the {{Name}} instance to a stream.
+     * \param os the stream object
+     * \param str an instance of {{Name}}
+     * \return the same ostream input object
+     */
+    friend std::ostream& operator<<(std::ostream& os, const {{Name}}& str);
+
+    /*! Set the value of the {{schema.format}}.
+     * \param value ISO8601 {{schema.format}} representation.
+     * \throw if the passed string isn't ISO8601 formatted.
+     */
+    void Set(const std::string& value);
+
+    /*! Set the value of the {{schema.format}}.
+     * \param value ISO8601 {{schema.format}} representation.
+     * \throw if the passed string isn't ISO8601 formatted.
+     */
+    void Set(const char* value);
+
+    /*! Sets the encapsulated time object.
+     * \param datetime new time value
+     */
+    void Set(const boost::posix_time::ptime& datetime);
+
+    /*! Sets the encapsulated time object to represent the time this is called.
+     */
+    void SetNow();
+
+    /*! Sets the encapsulated time object to always represent the current time. 
+     * If this is called, repeated calles to Get() will always return time at the moment that Get() is called.
+     */
+    void SetCurrent{{schema.format | PascalCase}}();
+
+    /*! Get the ISO8601 representation of the {{schema.format}}.
+     * \return ISO8601 representation of the {{schema.format}}.
+     */
+    std::string GetString() const;
+
+    /*!
+     * Determines if calling Get() will return a fixed time or always the current time.
+     * \return true if calling Get() will always return the current time.  False indicates that calling Get() will return a static time.
+     */
+    bool IsCurrentTime() const;
+
+    /*! Returns boost time object.
+     * \return The contained time, either static or dynamic current time.
+     */
+    boost::posix_time::ptime Get() const;
+
+    /*! Create a new {{Name}} object from a JSON string.
+     * \throw if the JSON string wasn't ISO8601 {{schema.format}} formatted.
+     * \return new {{Name}} object containing values from the JSON.
+     * \param json JSON structure to use for creating new {{Name}} object.
+     */
+    static {{Name}} FromJson(const rapidjson::Value& json);
+
+    /*! Create a new {{Name}} object from the string.
+     * The string must be ISO8601 {{schema.format}} formatted.
+     * \return new {{Name}} object containing the string.
+     * \param str the string that will be contained in the new {{Name}} object.
+     * \throw if the string didn't meet the schema's constraints.
+     */
+    static {{Name}} FromString(const std::string& str);
+
+    /*! Serialize the {{Name}} instance into a JSON string.
+     * \param value is modified to be a string type containing an ISO8601 {{schema.format}}.
+     * \param allocator is used for rapidjson allocation.
+     */
+    void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+
+private:
+    boost::optional<boost::posix_time::ptime> _value;
+};

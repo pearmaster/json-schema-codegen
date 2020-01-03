@@ -11,10 +11,14 @@
 }
 
 {%-if schema.default is defined %}
-{%set emptyConstructor = true %}
 {{className}}::{{Name}}()
 {
     Set("{{schema.default}}");
+}
+{%-elif schema.format is defined and schema.format == 'uuid'%}
+{{className}}::{{Name}}()
+{
+    SetUuid();
 }
 {%-endif%}
 
@@ -55,6 +59,15 @@ void {{className}}::Set(const char* value)
     Validate(value);
     _value = value;
 }
+
+{%-if schema.format is defined and schema.format == 'uuid'%}
+void {{className}}::SetUuid()
+{
+    boost::uuids::random_generator generator;
+    boost::uuids::uuid uuid = generator();
+    Set(boost::uuids::to_string(uuid));
+}
+{%-endif%}
 
 {{std}}string {{className}}::Get() const
 {

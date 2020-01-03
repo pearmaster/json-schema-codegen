@@ -26,6 +26,8 @@ A C++ class is generated for each schema node according to the schema's `type` p
     * minLength
     * maxLength
     * pattern
+    * format=date-time (enforces ISO8601 format)
+    * format=uuid (enables string object to be populated with a uuid)
 * type: string with enum
 * type: integer
     * maximum

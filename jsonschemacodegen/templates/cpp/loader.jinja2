@@ -22,7 +22,11 @@
 {%-elif schema.type == 'null'-%}
 {%-include 'null.'+filetype+'.jinja2'-%}
 {%-elif schema.type == 'string' and schema.enum is not defined-%}
+{%-if schema.format == 'date-time'-%}
+{%-include 'datetime.'+filetype+'.jinja2'-%}
+{%-else-%}
 {%-include 'string.'+filetype+'.jinja2'-%}
+{%-endif-%}
 {%-elif schema.type == 'string' and schema.enum is defined-%}
 {%-include 'string_enum.'+filetype+'.jinja2'-%}
 {%-else-%}

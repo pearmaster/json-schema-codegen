@@ -33,8 +33,12 @@ public:
      */
     {{Name}}(const char* value);
 
-    {%-if schema.default is defined %}
-    /*! Constructor that sets the objects value to "{{schema.default}}"".
+    {%-if schema.default is defined%}
+    /*! Constructor that sets the objects value to "{{schema.default}}".
+     */
+    {{Name}}();
+    {%-elif schema.format is defined and schema.format == 'uuid'%}
+    /*! Constructor that sets the objects value to a new unique UUID.
      */
     {{Name}}();
     {%-endif%}
@@ -43,21 +47,21 @@ public:
      */
     virtual ~{{Name}}() = default;
 
-    /*! Operator to case a {{Name}} instance to a string.
+    /*! Operator to cast a {{Name}} instance to a string.
      */
     operator std::string() const;
     
     /*! Assignment operator to set the value of the {{Name}} instance.
      * \param value the new string value.
      * \throw if the passed string value doesn't meet schema validation.
-     * \return referance to the {{Name}} instance
+     * \return reference to the {{Name}} instance
      */
     {{Name}}& operator=(const std::string& value);
 
     /*! Assignment operator to set the value of the {{Name}} instance.
      * \param value the new string value.
      * \throw if the passed string value doesn't meet schema validation.
-     * \return referance to the {{Name}} instance
+     * \return reference to the {{Name}} instance
      */
     {{Name}}& operator=(const char* value);
 
@@ -79,6 +83,10 @@ public:
      * \throw if the passed string value doesn't meet schema validation.
      */
     void Set(const char* value);
+
+    {%-if schema.format is defined and schema.format == 'uuid'%}
+    void SetUuid();
+    {%-endif%}
 
     /*! Get the contained string.
      * \return The contained string.

@@ -1,0 +1,120 @@
+{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
+{%-set std = resolver.cpp_resolve_namespace(['std']) %}
+{{className}}::{{Name}}(const {{std}}string& value)
+{
+    Set(value);
+}
+
+{{className}}::{{Name}}(const char* value)
+{
+    Set(value);
+}
+
+{{className}}::{{Name}}()
+{
+    {%-if schema.default is defined %}
+    Set("{{schema.default}}");
+    {%-endif%}
+}
+
+{{className}}::{{Name}}(const {{Name}}& other)
+{
+    _value = other._value;
+}
+
+{{className}}::operator {{std}}string() const
+{
+    return GetString();
+}
+
+{{className}}& {{className}}::operator=(const {{std}}string& value)
+{
+    Set(value);
+    return *this;
+}
+
+{{className}}& {{className}}::operator=(const char* value)
+{
+    Set(value);
+    return *this;
+}
+
+{{className}}& {{className}}::operator=(const boost::posix_time::ptime& value)
+{
+    Set(value);
+    return *this;
+}
+{%for origNs in originalNamespace %}
+namespace {{origNs}} {
+{%-endfor%}  
+{{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& obj)
+{
+    os << obj.GetString();
+    return os;
+}
+{%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
+
+void {{className}}::Set(const {{std}}string& value)
+{
+    Set(boost::posix_time::time_from_string(value));
+}
+
+void {{className}}::Set(const char* value)
+{
+    Set(std::string(value));
+}
+
+void {{className}}::Set(const boost::posix_time::ptime& datetime)
+{
+    _value = datetime;
+}
+
+void {{className}}::SetNow()
+{
+    Set(boost::posix_time::microsec_clock::universal_time());
+}
+
+void {{className}}::SetCurrent{{schema.format | PascalCase}}()
+{
+    _value = boost::none;
+}
+
+std::string {{className}}::GetString() const
+{
+    return boost::posix_time::to_iso_extended_string(Get());
+}
+
+bool {{className}}::IsCurrentTime() const
+{
+    return !(_value);
+}
+
+boost::posix_time::ptime {{className}}::Get() const
+{
+    if (IsCurrentTime())
+    {
+        return boost::posix_time::microsec_clock::universal_time();
+    }
+    return *_value;
+}
+
+{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
+{
+    if (!(json.IsString()))
+    {
+        throw std::invalid_argument("The '{{className}}' document JSON wasn't a string");
+    }
+
+    return {{className}}(json.GetString());
+}
+
+{{className}} {{className}}::FromString(const {{std}}string& str)
+{
+    return {{className}}(str);
+}
+
+void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
+{
+    std::string tempVal(GetString());
+    value.SetString(tempVal.c_str(), tempVal.size(), allocator);  
+}
