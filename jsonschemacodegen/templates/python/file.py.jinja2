@@ -1,2 +1,6 @@
+{%-if '$ref' in schema %}
+{%-include 'reference.py.jinja2'-%}
+{%-else%}
 {%-import 'loader.jinja2' as loader-%}
 {{loader.Class(resolver, Name, schema) }}
+{%-endif-%}

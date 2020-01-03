@@ -1,0 +1,5 @@
+{%-set itemType = resolver.py_class_name(schema['$ref'])%}
+{{resolver.py_include_statement(schema['$ref'])}}
+
+class {{Name}} ({{itemType}}):
+    pass

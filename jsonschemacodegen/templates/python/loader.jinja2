@@ -5,7 +5,7 @@
 {%-include 'axxof.py.jinja2'-%}
 {%-elif schema.anyOf is defined -%}
 {%-include 'axxof.py.jinja2'-%}
-{%-elif '$ref' in schema -%}
+{%-elif '$ref' in schema %}
 # This object makes use of an external schema specified at {{schema['$ref']}}
 {%-elif 'type' not in schema-%}
 {%-elif schema.type == 'integer'
