@@ -1,6 +1,7 @@
 import json
 import random
 import abc
+from copy import copy
 
 class SchemaResolverBaseClass(abc.ABC):
 
@@ -24,14 +25,17 @@ class GeneratorFromSchema(object):
     def __init__(self, resolver=None):
         self.resolver = resolver
         self.includeMode = 'all'
+        self.seed = 0
 
     def GetExampleOr(self, schema, default):
         if 'example' in schema:
             return schema['example']
         elif 'examples' in schema:
-            return schema['examples'][0]
+            exampleList = sorted(schema['examples'])
+            return exampleList[0]
         elif 'enum' in schema:
-            return schema['enum'][0]
+            enums = sorted(schema['enum'])
+            return enums[0]
         else:
             return default
 
@@ -82,6 +86,7 @@ class GeneratorFromSchema(object):
                 obj = self.GetThing(root_doc, opt, base=obj)
             return obj
         elif 'oneOf' in schema:
+            random.seed(self.seed)
             thing = self.GetThing(root_doc, random.choice(schema['oneOf']))
             return thing
         elif 'type' not in schema:
@@ -104,19 +109,20 @@ class GeneratorFromSchema(object):
     def GenerateSome(self, root, schema, run, includeMode) -> set:
         self.includeMode = (includeMode in ['all', 'required']) and includeMode or 'all'
         examples = set()
-        for _ in range(0, run):
+        for i in range(0, run):
+            self.seed = i
             thing = self.GetThing(root, schema)
             examples.add(json.dumps(thing, sort_keys=True))
         return examples
 
     def GenerateFull(self, root, schema, run=100) -> set:
         schemaJsonText = json.dumps(schema)
-        run = max(2, schemaJsonText.count('oneOf')) * 4
+        run = max(2, schemaJsonText.count('oneOf')) * 10
         return self.GenerateSome(root, schema, run, 'all')
 
     def GenerateLimited(self, root, schema, run=2) -> set:
         schemaJsonText = json.dumps(schema)
-        run = max(1, schemaJsonText.count('oneOf')) * 2
+        run = max(1, schemaJsonText.count('oneOf')) * 5
         return self.GenerateSome(root, schema, run, 'required')
     
     def Generate(self, root, schema) -> list:
