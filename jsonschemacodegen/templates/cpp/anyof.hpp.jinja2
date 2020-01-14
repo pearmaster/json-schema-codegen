@@ -3,7 +3,7 @@
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-resolver.loader.Reference(resolver, propSchema['$ref'])-}}
+        {{-loader.Reference(resolver, propSchema['$ref'])-}}
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}

@@ -7,6 +7,7 @@
 {%-include 'anyof.'+filetype+'.jinja2'-%}
 {%-elif '$ref' in schema -%}
 // An object representing {{schema['$ref']}} is used in this structure
+{# -#}
 {%-if filetype == 'hpp' -%}
 {%-include 'ref.hpp.jinja2'-%}
 {%-endif-%}

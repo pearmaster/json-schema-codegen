@@ -14,7 +14,7 @@ class {{Name}}
 {
 public:
     {%-if schema.GetItemSchema()['$ref'] is not defined %}
-    {{loader.Class('hpp', resolver, [Name], 'Item', schema['items']) | indent(4) }}
+    {{loader.Class('hpp', resolver, [Name], 'Item', schema.GetItemSchema()) | indent(4) }}
     {%-endif%}
 
     {%-if schema.maxItems is defined %}
