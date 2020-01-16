@@ -1,0 +1,19 @@
+**number**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
+{%-if 'default' in schema%}
+ * Default value: `{{schema.default}}`
+{%-endif-%}
+{%-if 'minimum' in schema%}
+ * Greater than or equal to {{schema.minimum}}
+{%-endif-%}
+{%if 'maximum' in schema%}
+ * Less than or equal to {{schema.maximum}}
+{%-endif-%}
+{%if 'exclusiveMinimum' in schema%}
+ * Greater than {{schema.exclusiveMinimum}}
+{%-endif-%}
+{%if 'exclusiveMaximum' in schema%}
+ * Less than {{schema.maximum}}
+{%-endif-%}
+{%if 'multipleOf' in schema%}
+ * Multiple of {{schema.multipleOf}}
+{%-endif-%}

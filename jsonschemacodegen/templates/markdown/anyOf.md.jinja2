@@ -1,0 +1,5 @@
+{%-import 'schema.jinja2' as loader-%}
+An **object**{%if 'title' in schema%} - *{{schema.title}}*.  It is {%endif%} made up of properties from one or more of these groups:
+{%for s in schema.anyOf%}
+{{loader.Display(s.Resolve(resolver), resolver)}}
+{%endfor%}

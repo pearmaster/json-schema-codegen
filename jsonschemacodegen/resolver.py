@@ -123,7 +123,7 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
             else:
                 return yaml.load(fp, Loader=yaml.FullLoader)
 
-    def get_json(self, reference, root=None) -> dict:
+    def _get_root(self, reference, root):
         parts = self._get_reference_parts(reference)
         if parts['uri']:
             root_doc = self.get_document(parts['uri'])
@@ -131,8 +131,21 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
             root_doc = root
         else:
             root_doc = self.root
-        return self._walk_through_tree(root_doc, parts['path'])
+        return root_doc
+
+    def get_json(self, reference, root=None) -> dict:
+        parts = self._get_reference_parts(reference)
+        root_doc = self._get_root(reference, root)
+        try:
+            json_doc = self._walk_through_tree(root_doc, parts['path'])
+        except TreeWalkerException as e:
+            print(f"{self} Error in resolving {reference}: {e}")
+            raise
+        else:
+            return json_doc
 
     def get_schema(self, reference, root=None) -> schemawrappers.SchemaBase:
-        return schemawrappers.SchemaFactory(self.get_json(reference, root=root))
+        schema = schemawrappers.SchemaFactory(self.get_json(reference, root=root))
+        schema.root = self._get_root(reference, root)
+        return schema
 

@@ -18,11 +18,13 @@ setup(name='json-schema-codegen',
       packages=[
           'jsonschemacodegen',
           'jsonschemacodegen.templates.cpp',
-          'jsonschemacodegen.templates.python'
+          'jsonschemacodegen.templates.python',
+          'jsonschemacodegen.templates.markdown',
       ],
       package_data={
             'jsonschemacodegen.templates.cpp': ['*.jinja2'],
             'jsonschemacodegen.templates.python': ['*.jinja2'],
+            'jsonschemacodegen.templates.markdown': ['*.jinja2'],
       },
       zip_safe=False,
       install_requires=requirements,

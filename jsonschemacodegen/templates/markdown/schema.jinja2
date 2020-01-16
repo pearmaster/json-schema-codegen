@@ -1,0 +1,33 @@
+{%-macro Display(schema, resolver=None) %}
+{%-if schema.oneOf is defined -%}
+{%-include 'oneOf.md.jinja2'-%}
+{%-elif schema.allOf is defined -%}
+{%-include 'allOf.md.jinja2'-%}
+{%-elif schema.anyOf is defined -%}
+{%-include 'anyOf.md.jinja2'-%}
+{%-elif 'type' in schema %}
+{%-include schema.type+'.md.jinja2'-%}
+{%-else-%}
+{{schema}}
+{%-endif-%}
+{%-endmacro-%}
+{%-macro Property(propName, prop, required=False, resolver=None)%}
+<tr>
+<td>
+    
+**{{propName}}** {%if required %}(required){%endif%}
+    
+{%if 'title' in schema%}*{{schema.title}}*
+{%endif%}
+</td>
+<td>
+    
+{{Display(prop, resolver)}}
+
+</td><td>
+    
+{{prop.description}}
+
+</td>
+</tr>
+{%-endmacro-%}

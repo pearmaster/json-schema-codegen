@@ -1,0 +1,13 @@
+{%-import 'schema.jinja2' as loader-%}
+**Object**{%if 'title' in schema%} - *{{schema.title}}*.  Has{%else%} with{%endif%} these properties:
+<table>
+    <tr><th>Property Name</th><th>Type</th><th></th></tr>
+    {%-for s in schema.allOf%}
+        {%-set subSchema = s.Resolve(resolver)%}
+        {%-if 'properties' in subSchema%}
+        {%-for propName, prop in subSchema.properties.items() %}
+        {{loader.Property(propName, prop.Resolve(resolver), propName in subSchema.required, resolver)}}
+        {%-endfor%}
+        {%-endif%}
+    {%endfor%}
+</table>

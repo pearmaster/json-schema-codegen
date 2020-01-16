@@ -1,0 +1,23 @@
+**string**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
+{%-if 'enum' in schema-%}
+ * Value must be one of: {%for value in schema.enum%}`{{value}}` {%endfor%}
+{%-endif-%}
+{%-if 'minLength' in schema and 'maxLength' in schema%}
+ * Length between {{schema.minLength}}-{{schema.maxLength}}
+{%-elif 'minLength' in schema%}
+ * Length longer than {{schema.minLength}}
+{%-elif 'maxLength' in schema%}
+ * Length shorter than {{schema.maxLength}}
+{%-endif-%}
+{%-if 'pattern' in schema%}
+ * Meets this regular expression: `{{schema.pattern}}`
+{%-endif%}
+{%-if 'format' in schema-%}
+{%-if schema.format == 'uuid'%}
+ * Must be a **UUID**
+{%-elif schema.format == 'date-time'%}
+ * Must be a ISO 8601 Timestamp
+{%-else%}
+ * Format is `{{schema.format}}`
+{%-endif%}
+{%-endif%}

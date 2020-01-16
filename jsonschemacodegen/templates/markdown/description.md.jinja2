@@ -1,0 +1,4 @@
+{%-import 'schema.jinja2' as loader-%}
+{%-set resolvedSchema = schema.Resolve(resolver)-%}
+{{loader.Display(resolvedSchema, resolver)}}
+{%if 'description' in resolvedSchema%}{{resolvedSchema.description}}{%endif%}
