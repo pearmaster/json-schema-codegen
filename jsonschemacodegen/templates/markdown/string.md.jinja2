@@ -1,5 +1,5 @@
 **string**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
-{%-if 'enum' in schema-%}
+{%-if 'enum' in schema%}
  * Value must be one of: {%for value in schema.enum%}`{{value}}` {%endfor%}
 {%-endif-%}
 {%-if 'minLength' in schema and 'maxLength' in schema%}
