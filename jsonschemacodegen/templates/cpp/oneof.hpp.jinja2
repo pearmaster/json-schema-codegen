@@ -31,6 +31,13 @@ public:
     {{Name}}(const boost::variant<{{optionList}}>& variant);
     virtual ~{{Name}}() = default;
 
+    {%-set commonType = schema.GetCommonType()%}
+    {%-if commonType in ['boolean', 'integer', 'number', string]}%}
+    /*! Stream operator.
+    */
+    friend std::ostream& operator<<(std::ostream& os, const {{Name}}& inst);
+    {%-endif%}
+
     /*! Gets a variant object containing whatever instance of whatever object has been set.
      */
     boost::variant<{{optionList}}> Get() const;
@@ -40,6 +47,16 @@ public:
      * \param const boost::variant<{{optionList}}>& variant.  An instance of one of these types must be passed: {{optionList}}
      */
     void Set(const boost::variant<{{optionList}}>& variant);
+
+    {%-if commonType in ['boolean', 'integer', 'number', string]}%
+    /*! \fn {{Name}} FromString(const std::string& str)
+     * \brief Performs a "lexical cast" on the string to create a new {{Name}} object
+     * \param const std::string& str stringified representation of a {{schema.GetCommonType()}}
+     * \throw If the string cannot be cast or does not JSON-schema validate
+     * \return {{Name}}
+     */
+    static {{Name}} FromString(const std::string& str);
+    {%-endif%}
 
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes a JSON value into a new instance of {{Name}}.

@@ -27,6 +27,25 @@
 
 }
 
+{%set commonType = schema.GetCommonType()%}
+{%-if commonType in ['boolean', 'integer', 'number', string]}%}
+{%for origNs in originalNamespace %}
+namespace {{origNs}} {
+{%-endfor%} 
+{{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& inst)
+{
+    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%if not loop.first%}
+    else {%endif%}if (inst._value.which() == {{loop.index - 1}})
+    {
+        os << boost::get<{{ObjectType(optionName, s)}}>(inst_value);
+    }
+    {%-endfor %}
+    return os;
+}
+{%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
+{%-endif%}
+
 boost::variant<{{optionList}}> {{className}}::Get() const
 {
     return _value;
@@ -36,6 +55,27 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
 {
     _value = variant;
 }
+
+{%-if commonType in ['boolean', 'integer', 'number', string]}%}
+{{className}} {{className}}::FromString(const std::string& str)
+{
+    {%for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+    try
+    {
+        auto obj = {{ObjectType(optionName, s)}}::FromString(str);
+        return {{className}}(obj);
+    }
+    catch (...)
+    {
+        // {{optionName}} wasnt able to deserialize{%if not loop.last%}
+        // but there are other option to try{%endif%}
+    }
+    {%endfor %}
+
+    // Didnt deserialize
+    throw std::runtime_error("JSON didn't conform to schema");
+}
+{%-endif%}
 
 {{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
@@ -47,12 +87,12 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
     }
     catch (...)
     {
-        // {{optionName}} wasn't able to deserialize{%if not loop.last%}
+        // {{optionName}} wasnt able to deserialize{%if not loop.last%}
         // but there are other option to try{%endif%}
     }
     {%endfor %}
 
-    // Didn't deserialize
+    // Didnt deserialize
     throw std::runtime_error("JSON didn't conform to schema");
 }
 
