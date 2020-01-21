@@ -2,5 +2,7 @@
 {%-include 'reference.py.jinja2'-%}
 {%-else%}
 {%-import 'loader.jinja2' as loader-%}
+{%-import 'import.py.jinja2' as importer-%}
+{{importer.GetImports(resolver, schema)}}
 {{loader.Class(resolver, Name, schema) }}
 {%-endif-%}

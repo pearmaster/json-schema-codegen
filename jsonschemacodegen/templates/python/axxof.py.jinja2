@@ -1,5 +1,5 @@
 {%-import 'loader.jinja2' as loader%}
-from collections import UserDict
+
 {%-macro Combination(schema)-%}
     {%-if 'allOf' in schema-%}
         allOf
@@ -16,12 +16,6 @@ from collections import UserDict
     {%-endif-%}
 {%-endmacro%}
 
-{%-for comp in schema[Combination(schema)]%}
-{%-if '$ref' in comp%}
-{{resolver.py_include_statement(comp['$ref'])}}
-{%-endif%}
-{%-endfor%}
-
 class {{Name}}(object):
     """This combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
     """
@@ -34,7 +28,7 @@ class {{Name}}(object):
     {%-endfor%}
 
     def __init__(self, *args):
-        """Initialzation for {{Name}} which combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
+        """Initialization for {{Name}} which combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
         """
         {%-for compSchema in schema[Combination(schema)]%}
         self._component{{loop.index}} = None

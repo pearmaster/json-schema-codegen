@@ -1,9 +1,8 @@
 {%-import 'loader.jinja2' as loader-%}
-from collections import UserList
+
 {%-if 'items' in schema%}
 {%-if '$ref' in schema['items']%}
 {%-set itemType = resolver.py_class_name(schema['items']['$ref'])%}
-{{resolver.py_include_statement(schema['items']['$ref'])}}
 {%-endif%}
 {%-endif%}
 
@@ -20,6 +19,8 @@ class {{Name}} (UserList):
     def __init__(self, theList=[]):
         """Initializer for array.
         """
+        self.theList = theList
+
         if isinstance(theList, type(self)):
             super().__init__(theList.data)
         else:
@@ -28,14 +29,14 @@ class {{Name}} (UserList):
                 raise ValueError("Provided array is too short")
             {%-endif%}
             {%-if schema.maxItems is defined%}
-            if len(theList) > {{schema.maxItems}}
+            if len(theList) > {{schema.maxItems}}:
                 raise ValueError("Provided array is too long")
             {%-endif%}
             super().__init__([{{itemType}}(x) for x in theList])
 
     def Append(self, newValue):
         {%-if schema.maxItems is defined%}
-        if (len(theList)+1) > {{schema.maxItems}}
+        if (len(self.theList)+1) > {{schema.maxItems}}:
             raise ValueError("Appending would make the array too long")
         {%-endif%}
         self.data.append({{itemType}}(newValue))

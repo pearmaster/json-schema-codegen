@@ -1,10 +1,4 @@
 {%-import 'loader.jinja2' as loader-%}
-from collections import UserDict
-{%-for prop in schema.properties.values()%}
-{%-if '$ref' in prop%}
-{{resolver.py_include_statement(prop['$ref'])}}
-{%-endif%}
-{%-endfor%}
 
 {%-macro PropertyClassName(propName)-%}
 {{propName|PascalCase}}Property
@@ -30,7 +24,7 @@ class {{Name}}(UserDict):
 
     def __init__(self, data={}, **kwargs):
         """Initialization for the {{Name}} object.
-        It can be initializaed with an object, or by passing each
+        It can be initialized with an object, or by passing each
         object property as a keyword argument.
         """
         newData = {}
