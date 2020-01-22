@@ -3,15 +3,19 @@
 <table>
     <tr><th>Property Name</th><th>Type</th><th></th></tr>
     {%-for s in schema.allOf%}
-        {%-set subSchema = s.Resolve(resolver)%}
+        {%-set subSchema = s.Resolve(resolver).Resolve(resolver)%}
         {%-if 'properties' in subSchema%}
         {%-for propName, prop in subSchema.properties.items() %}
         {{loader.Property(propName, prop.Resolve(resolver), propName in subSchema.required, resolver)}}
         {%-endfor%}
-        {%-elif 'oneOf' in subSchema%}
-        <tr><td colspan="3">
-        {{loader.Display(subschema.oneOf, resolver)}}
-        </td></tr>
-        {%-endif%}
+        {%-else-%}
+<tr><td colspan="3">
+
+
+{{loader.Display(subSchema, resolver)}}
+
+
+</td></tr>
+        {%-endif-%}
     {%endfor%}
 </table>
