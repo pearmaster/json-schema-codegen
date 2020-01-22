@@ -5,8 +5,8 @@ class SchemaBase(collections.UserDict):
     def __init__(self, initialdata, root=None):
         super().__init__(initialdata)
         self.root = root
-    
-    def CppIncludes(self, resolver=None):
+
+    def CppIncludes(self, resolver):
         return {
             '"rapidjson/document.h"',
             "<exception>"
@@ -18,7 +18,7 @@ class SchemaBase(collections.UserDict):
 
 class Reference(SchemaBase):
 
-    def CppIncludes(self, resolver):
+    def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
         if resolver:
             incs.update({'"'+resolver.cpp_get_header(self.data['$ref'])+'"'})
@@ -156,6 +156,11 @@ class OneOfSchema(CombinatorSchemaBase):
         super().__init__('oneOf', initialdata, root)
         assert(isinstance(self.data['oneOf'], list))
 
+    def CppIncludes(self, resolver=None):
+        incs = super().CppIncludes(resolver=resolver)
+        incs.update({"<boost/variant.hpp>"})
+        return incs
+
     def GetCommonType(self, resolver):
         commonType = None
         for comp in self.GetComponents():
@@ -166,11 +171,6 @@ class OneOfSchema(CombinatorSchemaBase):
                 elif commonType != subSchema['type']:
                     return None
         return commonType
-
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
-        incs.update({"<boost/variant.hpp>"})
-        return incs
 
 
 class AllOfSchema(CombinatorSchemaBase):
@@ -204,7 +204,7 @@ def SchemaFactory(schema, root=None):
         elif schema['type'] == 'array':
             return ArraySchema(schema, root)
         else:
-             NotImplementedError
+            raise NotImplementedError
     elif 'allOf' in schema:
         return AllOfSchema(schema, root)
     elif 'anyOf' in schema:

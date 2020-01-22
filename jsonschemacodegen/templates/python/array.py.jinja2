@@ -1,11 +1,10 @@
 {%-import 'loader.jinja2' as loader-%}
-from collections import UserList
-{%-if 'items' in schema%}
-{%-if '$ref' in schema['items']%}
-{%-set itemType = resolver.py_class_name(schema['items']['$ref'])%}
-{{resolver.py_include_statement(schema['items']['$ref'])}}
-{%-endif%}
-{%-endif%}
+
+{%-if 'items' in schema-%}
+{%-if '$ref' in schema['items']-%}
+{%-set itemType = resolver.py_class_name(schema['items']['$ref'])-%}
+{%-endif-%}
+{%-endif-%}
 
 class {{Name}} (UserList):
     """ This represents a JSON array.
@@ -17,28 +16,30 @@ class {{Name}} (UserList):
     {%-endif%}
     {%-endif%}
     
-    def __init__(self, theList=[]):
+    def __init__(self, the_list=[]):
         """Initializer for array.
         """
-        if isinstance(theList, type(self)):
-            super().__init__(theList.data)
+        self.the_list = the_list
+
+        if isinstance(the_list, type(self)):
+            super().__init__(the_list.data)
         else:
             {%-if schema.minItems is defined%}
-            if len(theList) < {{schema.minItems}}:
+            if len(the_list) < {{schema.minItems}}:
                 raise ValueError("Provided array is too short")
             {%-endif%}
             {%-if schema.maxItems is defined%}
-            if len(theList) > {{schema.maxItems}}
+            if len(the_list) > {{schema.maxItems}}:
                 raise ValueError("Provided array is too long")
             {%-endif%}
-            super().__init__([{{itemType}}(x) for x in theList])
+            super().__init__([{{itemType}}(x) for x in the_list])
 
-    def Append(self, newValue):
+    def Append(self, new_value):
         {%-if schema.maxItems is defined%}
-        if (len(theList)+1) > {{schema.maxItems}}
+        if (len(self.the_list)+1) > {{schema.maxItems}}:
             raise ValueError("Appending would make the array too long")
         {%-endif%}
-        self.data.append({{itemType}}(newValue))
+        self.data.append({{itemType}}(new_value))
         return self
 
     def Serializable(self):

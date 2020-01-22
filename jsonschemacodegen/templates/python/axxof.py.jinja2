@@ -1,5 +1,5 @@
-{%-import 'loader.jinja2' as loader%}
-from collections import UserDict
+{%-import 'loader.jinja2' as loader-%}
+
 {%-macro Combination(schema)-%}
     {%-if 'allOf' in schema-%}
         allOf
@@ -14,13 +14,7 @@ from collections import UserDict
     {%-else-%}
         self.Component{{index}}
     {%-endif-%}
-{%-endmacro%}
-
-{%-for comp in schema[Combination(schema)]%}
-{%-if '$ref' in comp%}
-{{resolver.py_include_statement(comp['$ref'])}}
-{%-endif%}
-{%-endfor%}
+{%-endmacro-%}
 
 class {{Name}}(object):
     """This combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
@@ -34,7 +28,7 @@ class {{Name}}(object):
     {%-endfor%}
 
     def __init__(self, *args):
-        """Initialzation for {{Name}} which combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
+        """Initialization for {{Name}} which combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
         """
         {%-for compSchema in schema[Combination(schema)]%}
         self._component{{loop.index}} = None
@@ -73,10 +67,10 @@ class {{Name}}(object):
         {%-for compSchema in schema['allOf']%}
         if self._component{{loop.index}} is None:
             raise ValueError("Did not provide data for {{ComponentType(compSchema, loop.index)}}")
-        {%-endfor%}
-        {%endif%}
+        {%-endfor-%}
+        {%-endif%}
 
-    {%-for compSchema in schema[Combination(schema)]%}
+    {%for compSchema in schema[Combination(schema)]%}
     def GetComponent{{loop.index}}(self):
         return self._component{{loop.index}}
 
@@ -88,7 +82,6 @@ class {{Name}}(object):
         else:
             raise ValueError("Didn't pass an valid representation of {{ComponentType(compSchema, loop.index)}}")
     {%endfor%}
-
     def Serializable(self):
         obj = {}
         {%-for compSchema in schema[Combination(schema)]%}

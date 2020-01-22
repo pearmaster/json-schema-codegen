@@ -1,7 +1,3 @@
-{%-if schema.pattern is defined%}
-import re
-{%-endif%}
-
 {%macro ToPythonType(schemaType)-%}
 {%-if schemaType == 'string'-%}
 str
@@ -12,7 +8,7 @@ float
 {%-elif schemaType == 'boolean'-%}
 bool
 {%-endif-%}
-{%-endmacro%}
+{%-endmacro-%}
 
 {%-macro FormatValue(schemaType, value)%}
 {%-if schemaType == 'string'-%}"{{value}}"
@@ -57,14 +53,14 @@ if ({{varName}} % {{schema.multipleOf}}) != 0:
 {%-endif%} {#maximum#}
 {%-if schema.enum is defined%}
 if {{varName}} not in [{%for v in schema.enum%}{{FormatValue(schema.type, v)}}, {%endfor%}]:
-    raise ValueError("Value is not an acceptible value")
+    raise ValueError("Value is not an acceptable value")
 {%-endif%} {#enum#}
 {%-if schema.pattern is defined%}
 pattern = r"{{schema.pattern}}"
 if re.match(pattern, {{varName}}) is None:
     raise ValueError("Value did not match the established regular expression")
 {%-endif%}
-{%-endmacro%}
+{%-endmacro-%}
 
 class {{Name}}(object):
     """ This class is a schema-validating wrapper around a {{schema.type}}.
@@ -73,15 +69,16 @@ class {{Name}}(object):
     def __init__(self, value{%if schema.default is defined%}={{FormatValue(schema.type, schema.default)}}{%endif%}):
         self.Set(value)
 
-    def _Validate(self, value):
+    @staticmethod
+    def _Validate(value):
         {{-ValidateValue(schema, 'value') | indent(8)}}
 
-    def Set(self, newValue):
-        if isinstance(newValue, type(self)):
-            self._value = newValue._value
+    def Set(self, new_value):
+        if isinstance(new_value, type(self)):
+            self._value = new_value._value
         else:
-            self._Validate(newValue)
-            self._value = newValue
+            self._Validate(new_value)
+            self._value = new_value
         return self
 
     def Get(self) -> {{ToPythonType(schema.type)}}:

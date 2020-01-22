@@ -33,7 +33,8 @@ class Generator(object):
             return stringcase.constcase(s)
 
         if self.jinjaEnvironment is None:
-            env = jinja2.Environment(loader=jinja2.PackageLoader(self.templatePkg, ''))
+            env = jinja2.Environment(loader=jinja2.PackageLoader(self.templatePkg, ''),
+                                     extensions=['jinja2.ext.do'])
             env.filters['UpperCamelCase'] = stringcase.pascalcase
             env.filters['PascalCase'] = lambda s: stringcase.pascalcase(stringcase.snakecase(s))
             env.filters['CONST_CASE'] = lambda s : stringcase.constcase(str(s))

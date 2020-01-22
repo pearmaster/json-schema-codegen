@@ -1,5 +1,4 @@
 {%-import 'loader.jinja2' as loader-%}
-from collections import UserDict
 
 {%-macro ComponentName(schema, index)-%}
 {%-if 'title' in schema-%}
@@ -15,13 +14,7 @@ from collections import UserDict
     {%-else-%}
         self.{{ComponentName(schema, index)}}
     {%-endif-%}
-{%-endmacro%}
-
-{%-for comp in schema['oneOf']%}
-{%-if '$ref' in comp%}
-{{resolver.py_include_statement(comp['$ref'])}}
-{%-endif%}
-{%-endfor%}
+{%-endmacro-%}
 
 class {{Name}}(object):
     """This represents one of {{schema['oneOf'] | length}} options"

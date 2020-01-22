@@ -1,14 +1,8 @@
 {%-import 'loader.jinja2' as loader-%}
-from collections import UserDict
-{%-for prop in schema.properties.values()%}
-{%-if '$ref' in prop%}
-{{resolver.py_include_statement(prop['$ref'])}}
-{%-endif%}
-{%-endfor%}
 
 {%-macro PropertyClassName(propName)-%}
 {{propName|PascalCase}}Property
-{%-endmacro%}
+{%-endmacro-%}
 
 {%-macro PropertyType(propName, propSchema)-%}
 {%-if '$ref' in propSchema-%}
@@ -16,7 +10,7 @@ from collections import UserDict
 {%-else-%}
 self.{{PropertyClassName(propName)}}
 {%-endif-%}
-{%-endmacro%}
+{%-endmacro-%}
 
 class {{Name}}(UserDict):
     """This represents a JSON object.
@@ -30,15 +24,15 @@ class {{Name}}(UserDict):
 
     def __init__(self, data={}, **kwargs):
         """Initialization for the {{Name}} object.
-        It can be initializaed with an object, or by passing each
+        It can be initialized with an object, or by passing each
         object property as a keyword argument.
         """
-        newData = {}
+        new_data = {}
         {%-for propName, propSchema in schema.properties.items()%}
         try:
             prop = data["{{propName}}"] if ("{{propName}}" in data) else kwargs["{{propName}}"]
             if not isinstance(prop, {{PropertyType(propName, propSchema)}}):
-                newData["{{propName}}"] = {{PropertyType(propName, propSchema)}}(prop)
+                new_data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(prop)
         except KeyError:
             {%-if propName in schema.required%}
             raise ValueError("Missing property '{{propName}}'")
@@ -46,18 +40,18 @@ class {{Name}}(UserDict):
             pass
             {%-endif%}
         {%-endfor%}
-        super().__init__(newData)
+        super().__init__(new_data)
     
     {%-for propName, propSchema in schema.properties.items()%}
 
     def Get{{propName|PascalCase}}(self):
         return self.data["{{propName}}"]
     
-    def Set{{propName|PascalCase}}(self, newValue):
-        if not isinstance(newValue, {{PropertyType(propName, propSchema)}}):
-            self.data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(newValue)
+    def Set{{propName|PascalCase}}(self, new_value):
+        if not isinstance(new_value, {{PropertyType(propName, propSchema)}}):
+            self.data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(new_value)
         else:
-            self.data["{{propName}}"] = newValue
+            self.data["{{propName}}"] = new_value
         return self
     {%-endfor%}
 
