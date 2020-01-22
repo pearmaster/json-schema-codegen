@@ -11,13 +11,14 @@
 {{schema}}
 {%-endif-%}
 {%-endmacro-%}
+{#- -#}
 {%-macro Property(propName, prop, required=False, resolver=None)%}
 <tr>
 <td>
     
 **{{propName}}** {%if required %}(required){%endif%}
     
-{%if 'title' in schema%}*{{schema.title}}*
+{%if 'title' in prop%}*{{prop.title}}*
 {%endif%}
 </td>
 <td>

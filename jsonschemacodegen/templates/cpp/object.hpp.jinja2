@@ -39,7 +39,13 @@ public:
      * \param {{propName | camelCase}} property to initialize.
     */
     {{Name}}(const {{ObjectType(propName, propSchema)}}& {{propName | camelCase}});
-    {%-endif%}
+    {%if 'type' in propSchema and propSchema['type'] in ['boolean', 'integer', 'string', 'number'] %}
+    /*! Constructor for initializing object's single {{propSchema.type}} property.
+     * \param {{propName | camelCase}} value for initialization.
+    */
+    {{Name}}({{ {"boolean":"bool", "integer":"int", "string":"const std::string&", "number":"double"}[propSchema.type] }} {{propName | camelCase}});
+    {%-endif%} {# propschema type #}
+    {%-endif%} {# single property object #}
 
     {%-endif%}
 

@@ -21,14 +21,15 @@
 {{loader.Class('cpp', resolver, [className], optionName, s) }}
 {%-endfor%}
 
-
-{{className}}::{{Name}}(const boost::variant<{{optionList}}>& variant) : _value(variant)
+{%-for s in schema.oneOf %}
+{{className}}::{{Name}}(const {{ObjectType(optionName, s)}}& obj) : _value(obj)
 {
 
 }
+{%endfor%}
 
-{%set commonType = schema.GetCommonType()%}
-{%-if commonType in ['boolean', 'integer', 'number', string]}%}
+{%set commonType = schema.GetCommonType(resolver)%}
+{%-if commonType in ['boolean', 'integer', 'number', string] %}
 {%for origNs in originalNamespace %}
 namespace {{origNs}} {
 {%-endfor%} 
@@ -56,7 +57,7 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
     _value = variant;
 }
 
-{%-if commonType in ['boolean', 'integer', 'number', string]}%}
+{%-if commonType in ['boolean', 'integer', 'number', string] %}
 {{className}} {{className}}::FromString(const std::string& str)
 {
     {%for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}

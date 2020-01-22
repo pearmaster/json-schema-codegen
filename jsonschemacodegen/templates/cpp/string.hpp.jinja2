@@ -22,6 +22,9 @@ public:
      */
     static constexpr int MIN_LENGTH = {{schema.minLength}};
     {%-endif%}
+    {%-if schema.default is defined %}
+    static constexpr char DEFAULT_VALUE[] = "{{schema.default}}";
+    {%-endif%}
 
     /*! Constructor.
      * \param value initial value of {{Name}} instance.

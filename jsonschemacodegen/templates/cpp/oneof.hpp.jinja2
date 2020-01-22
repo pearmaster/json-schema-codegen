@@ -16,7 +16,9 @@
 {%-endset%}
 /*! {{Name}} is a wrapper around one of {{schema.oneOf|length}} different types.
  {%-if schema.description %}
- * {{schema.description}}
+ *
+ {{schema.description | indent(1) }}
+ *
  {%-endif%}
  */
 class {{Name}}
@@ -26,13 +28,16 @@ public:
     {{loader.Class('hpp', resolver, [Name], optionName, s) | indent(4) }}
     
     {%endfor%}
-    /*! Constructor.  Must be initialized with an instance of one of these: {{optionList}}
+
+    {%-for s in schema.oneOf %}
+    /*! Constructor that initializes the {{Name}} object with a {{ObjectType(optionName, s)}} instance.
      */
-    {{Name}}(const boost::variant<{{optionList}}>& variant);
+    {{Name}}(const {{ObjectType(optionName, s)}}& obj);
+    {%endfor%}
     virtual ~{{Name}}() = default;
 
-    {%-set commonType = schema.GetCommonType()%}
-    {%-if commonType in ['boolean', 'integer', 'number', string]}%}
+    {%-set commonType = schema.GetCommonType(resolver)%}
+    {%-if commonType in ['boolean', 'integer', 'number', string] %}
     /*! Stream operator.
     */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& inst);
@@ -48,10 +53,10 @@ public:
      */
     void Set(const boost::variant<{{optionList}}>& variant);
 
-    {%-if commonType in ['boolean', 'integer', 'number', string]}%
+    {%-if commonType in ['boolean', 'integer', 'number', string] %}
     /*! \fn {{Name}} FromString(const std::string& str)
      * \brief Performs a "lexical cast" on the string to create a new {{Name}} object
-     * \param const std::string& str stringified representation of a {{schema.GetCommonType()}}
+     * \param const std::string& str stringified representation of a {{schema.GetCommonType(resolver)}}
      * \throw If the string cannot be cast or does not JSON-schema validate
      * \return {{Name}}
      */

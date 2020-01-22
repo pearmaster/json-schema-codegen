@@ -7,6 +7,8 @@
 class {{Name}}
 {
 public:
+    /*! Enumeration of possible values
+     */
     enum class Value
     {
         {%-for opt in schema.enum %}
@@ -14,31 +16,77 @@ public:
         {%-endfor%}
     };
 
+    /*! The number of different values.
+     * If this list corresponds to a list of values, it may be good to static_assert on the length of both lists
+     */
     static constexpr int VALUE_ENUM_OPTION_COUNT = {{schema.enum | length}};
+    {%-if schema.default is defined %}
+    /*! This string represents the default JSON value.
+     */
+    static constexpr char DEFAULT_STRING[] = "{{schema.default}}";
+    {%-endif%}
 
+    /*! Constructor for {{Name}}.
+     * \param value initial value
+     */
     {{Name}}(Value value);
 
     {%-if schema.default is defined %}
+    /*! Constructor that initializes the object with the {{schema.default |enumify}} value.
+     */
     {{Name}}();
     {%-endif%}
 
+    /*! Default destructor.
+     */
     virtual ~{{Name}}() = default;
 
+    /*! Getter operator.
+     */
     operator Value() const;
     
+    /*! Assignment operator.
+     * \param value new value
+     */
     {{Name}}& operator=(Value value);
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& v);
 
+    /*! Sets the value to the provided enumerated Value.
+     * \param value new value.
+     */
     void Set(Value value);
 
+    /*! Get the enumerated Value.
+     */
     Value Get() const;
 
+    /*! Returns the json string value for the enumerated value.
+     * \param value is the value for which a string should be returned.
+     */
     static std::string EnumToString(Value value);
+
+    /*! Returns an enumerated value matching the provided string.
+     * \param str is the string to match.
+     * \throws if the provided string does not match an enumerated value.
+     */
     static Value StringToEnum(const std::string& str);
 
+    /*! Initializes a {{Name}} object from JSON.
+     * \param json JSON string value that maps to an enumerated value.
+     * \throws if the JSON value isn't one of the supported string values.
+     */
     static {{Name}} FromJson(const rapidjson::Value& json);
+
+    /*! Initializes a {{Name}} object from a string value.
+     * \param str must match one of the supported string values.
+     * \throws if the provided value isn't a supported value.
+     */
     static {{Name}} FromString(const std::string& str);
 
+    /*! Returns a JSON string representation of this object.
+     * \param value is modified with the JSON string representation.
+     * \param allocator is the rapidjson allocator object from the parent document.
+     */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
 private:

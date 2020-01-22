@@ -44,7 +44,12 @@
 
 }
 {%-endif%}
+{%if 'type' in propSchema and propSchema['type'] in ['boolean', 'integer', 'string', 'number'] %}
+{{className}}::{{Name}}({{ {"boolean":"bool", "integer":"int", "string":"const std::string&", "number":"double"}[propSchema.type] }} {{propName | camelCase}}) : {{Name}}({{ObjectType(propName, propSchema)}}({{propName | camelCase}}))
+{
 
+}
+{%-endif%} {# propschema type #}
 {%endif%}
 
 {%-for propName, propSchema in schema.properties.items() %}

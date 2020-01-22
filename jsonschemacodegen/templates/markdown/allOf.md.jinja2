@@ -8,6 +8,10 @@
         {%-for propName, prop in subSchema.properties.items() %}
         {{loader.Property(propName, prop.Resolve(resolver), propName in subSchema.required, resolver)}}
         {%-endfor%}
+        {%-elif 'oneOf' in subSchema%}
+        <tr><td colspan="3">
+        {{loader.Display(subschema.oneOf, resolver)}}
+        </td></tr>
         {%-endif%}
     {%endfor%}
 </table>
