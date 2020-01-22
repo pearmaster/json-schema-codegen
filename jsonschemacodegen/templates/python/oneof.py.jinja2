@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {%-import 'loader.jinja2' as loader-%}
 
 {%-macro ComponentName(schema, index)-%}
@@ -67,73 +66,3 @@ class {{Name}}(object):
         """
         return self._value.Serializable()
 
-=======
-{%-import 'loader.jinja2' as loader-%}
-
-{%-macro ComponentName(schema, index)-%}
-{%-if 'title' in schema-%}
-    {{schema.title|PascalCase}}Option
-{%-else-%}
-    Option{{index}}
-{%-endif-%}
-{%-endmacro-%}
-
-{%-macro ComponentType(schema, index)-%}
-    {%-if '$ref' in schema-%}
-        {{resolver.py_class_name(schema['$ref'])}}
-    {%-else-%}
-        self.{{ComponentName(schema, index)}}
-    {%-endif-%}
-{%-endmacro%}
-
-class {{Name}}(object):
-    """This represents one of {{schema['oneOf'] | length}} options"
-    {%-for comp in schema['oneOf']%}
-      * {{ComponentName(comp, loop.index)}}
-    {%-endfor%}
-    """
-    {%-for comp in schema['oneOf']%}
-    {%-if '$ref' not in comp%}
-    {{loader.Class(resolver, ComponentName(comp, loop.index), comp) |indent(4)}}
-    {%-endif%}
-    {%-endfor%}
-
-    def __init__(self, initial):
-        """Constructor.  Some initial data for one of the options must be passed.
-        """
-        self.Set(initial)
-
-    def Get(self):
-        """Gets one of the supported option objects.
-        """
-        return self._value
-
-    def Set(self, data):
-        """ Must pass an object or data for one of the supported
-        option types.
-        """
-        if isinstance(data, type(self)):
-            self._value = data._value
-            self._type = data._type
-        else:
-            self._type = None
-            self._value = None
-            {%-for compSchema in schema['oneOf']%}
-            if self._type is None:
-                try:
-                    self._value = {{ComponentType(compSchema, loop.index)}}(data)
-                except (ValueError, TypeError):
-                    pass
-                else:
-                    self._type = {{ComponentType(compSchema, loop.index)}}
-            {%-endfor%}
-        if self._type is None:
-            raise ValueError("Provided data did not match one of the required formats")
-
-    def Serializable(self):
-        """ Returns an object that can be JSON serialized.
-        For example, use: `json.dumps(thisObject, default=lambda a: a.Serializable())`
-        """
-        return self._value.Serializable()
-
->>>>>>> 73099cd5821bcaf12117b9c391c058e4544d9148
