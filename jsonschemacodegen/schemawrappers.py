@@ -2,9 +2,10 @@ import collections
 
 class SchemaBase(collections.UserDict):
 
-    def __init__(self, initialdata):
+    def __init__(self, initialdata, root=None):
         super().__init__(initialdata)
-    
+        self.root = root
+
     def CppIncludes(self, resolver):
         return {
             '"rapidjson/document.h"',
@@ -24,13 +25,13 @@ class Reference(SchemaBase):
         return incs
 
     def Resolve(self, resolver):
-        return resolver.get_schema(self.data['$ref'])
+        return resolver.get_schema(self.data['$ref'], self.root)
 
 
 class ObjectSchema(SchemaBase):
 
-    def __init__(self, initialdata):
-        super().__init__(initialdata)
+    def __init__(self, initialdata, root=None):
+        super().__init__(initialdata, root)
         if 'properties' in self.data:
             assert(isinstance(self.data['properties'], dict))
         else:
@@ -39,7 +40,7 @@ class ObjectSchema(SchemaBase):
     def GetPropertySchemas(self):
         props = {}
         for n, p in self.data['properties'].items():
-            props[n] = SchemaFactory(p)
+            props[n] = SchemaFactory(p, self.root)
         return props
 
     def PropertyKeys(self):
@@ -66,7 +67,7 @@ class ObjectSchema(SchemaBase):
         theList = []
         for propName, propSchema in self.data['properties'].items():
             if 'required' in self.data and propName in self.data['required'] and 'default' not in propSchema:
-                theList.append((propName, SchemaFactory(propSchema)))
+                theList.append((propName, SchemaFactory(propSchema, self.root)))
         return theList
 
     # TODO: Need something that specifies that this is 'required' for init
@@ -74,11 +75,11 @@ class ObjectSchema(SchemaBase):
         theList = []
         for propName, propSchema in self.data['properties'].items():
             if 'default' in propSchema:
-                theList.append((propName, SchemaFactory(propSchema)))
+                theList.append((propName, SchemaFactory(propSchema, self.root)))
             elif 'required' not in self.data:
-                theList.append((propName, SchemaFactory(propSchema)))
+                theList.append((propName, SchemaFactory(propSchema, self.root)))
             elif propName not in self.data['required']:
-                theList.append((propName, SchemaFactory(propSchema)))
+                theList.append((propName, SchemaFactory(propSchema, self.root)))
         return theList
 
 
@@ -119,7 +120,7 @@ class NullSchema(SchemaBase):
 class ArraySchema(SchemaBase):
     
     def GetItemSchema(self):
-        return SchemaFactory(self.data['items'])
+        return SchemaFactory(self.data['items'], self.root)
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -130,12 +131,12 @@ class ArraySchema(SchemaBase):
 
 class CombinatorSchemaBase(SchemaBase):
     
-    def __init__(self, name, initialdata):
-        super().__init__(initialdata)
+    def __init__(self, name, initialdata, root=None):
+        super().__init__(initialdata, root)
         self.name = name
 
     def GetComponents(self):
-        return [SchemaFactory(s) for s in self.data[self.name]]
+        return [SchemaFactory(s, self.root) for s in self.data[self.name]]
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -151,8 +152,8 @@ class CombinatorSchemaBase(SchemaBase):
 
 class OneOfSchema(CombinatorSchemaBase):
     
-    def __init__(self, initialdata):
-        super().__init__('oneOf', initialdata)
+    def __init__(self, initialdata, root=None):
+        super().__init__('oneOf', initialdata, root)
         assert(isinstance(self.data['oneOf'], list))
 
     def CppIncludes(self, resolver=None):
@@ -160,46 +161,57 @@ class OneOfSchema(CombinatorSchemaBase):
         incs.update({"<boost/variant.hpp>"})
         return incs
 
+    def GetCommonType(self, resolver):
+        commonType = None
+        for comp in self.GetComponents():
+            subSchema = comp.Resolve(resolver)
+            if 'type' in subSchema:
+                if commonType is None:
+                    commonType = subSchema['type']
+                elif commonType != subSchema['type']:
+                    return None
+        return commonType
+
 
 class AllOfSchema(CombinatorSchemaBase):
 
-    def __init__(self, initialdata):
-        super().__init__('allOf', initialdata)
+    def __init__(self, initialdata, root=None):
+        super().__init__('allOf', initialdata, root)
         assert(isinstance(self.data['allOf'], list))
 
 
 class AnyOfSchema(CombinatorSchemaBase):
 
-    def __init__(self, initialdata):
-        super().__init__('anyOf', initialdata)
+    def __init__(self, initialdata, root=None):
+        super().__init__('anyOf', initialdata, root)
         assert(isinstance(self.data['anyOf'], list))
 
 
-def SchemaFactory(schema):
+def SchemaFactory(schema, root=None):
     if 'type' in schema:
         if schema['type'] == 'string':
             if 'enum' in schema:
-                return StringEnumSchema(schema)
-            return StringSchema(schema)
+                return StringEnumSchema(schema, root)
+            return StringSchema(schema, root)
         elif schema['type'] == 'number' or schema['type'] == 'integer':
-            return NumberSchema(schema)
+            return NumberSchema(schema, root)
         elif schema['type'] == 'boolean':
-            return BooleanSchema(schema)
+            return BooleanSchema(schema, root)
         elif schema['type'] == 'null':
-            return NullSchema(schema)
+            return NullSchema(schema, root)
         elif schema['type'] == 'object':
-            return ObjectSchema(schema)
+            return ObjectSchema(schema, root)
         elif schema['type'] == 'array':
-            return ArraySchema(schema)
+            return ArraySchema(schema, root)
         else:
             raise NotImplementedError
     elif 'allOf' in schema:
-        return AllOfSchema(schema)
+        return AllOfSchema(schema, root)
     elif 'anyOf' in schema:
-        return AnyOfSchema(schema)
+        return AnyOfSchema(schema, root)
     elif 'oneOf' in schema:
-        return OneOfSchema(schema)
+        return OneOfSchema(schema, root)
     elif '$ref' in schema:
-        return Reference(schema)
+        return Reference(schema, root)
     else:
         raise NotImplementedError(str(schema))
