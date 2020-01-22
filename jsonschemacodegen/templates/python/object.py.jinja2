@@ -1,3 +1,64 @@
+<<<<<<< HEAD
+{%-import 'loader.jinja2' as loader-%}
+
+{%-macro PropertyClassName(propName)-%}
+{{propName|PascalCase}}Property
+{%-endmacro-%}
+
+{%-macro PropertyType(propName, propSchema)-%}
+{%-if '$ref' in propSchema-%}
+{{resolver.py_class_name(propSchema['$ref'])}}
+{%-else-%}
+self.{{PropertyClassName(propName)}}
+{%-endif-%}
+{%-endmacro-%}
+
+class {{Name}}(UserDict):
+    """This represents a JSON object.
+    """
+
+    {%-for propName, propSchema in schema.properties.items()%}
+    {%-if '$ref' not in prop%}
+    {{loader.Class(resolver, PropertyClassName(propName), propSchema) |indent(4)}}
+    {%-endif%}
+    {%-endfor%}
+
+    def __init__(self, data={}, **kwargs):
+        """Initialization for the {{Name}} object.
+        It can be initialized with an object, or by passing each
+        object property as a keyword argument.
+        """
+        new_data = {}
+        {%-for propName, propSchema in schema.properties.items()%}
+        try:
+            prop = data["{{propName}}"] if ("{{propName}}" in data) else kwargs["{{propName}}"]
+            if not isinstance(prop, {{PropertyType(propName, propSchema)}}):
+                new_data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(prop)
+        except KeyError:
+            {%-if propName in schema.required%}
+            raise ValueError("Missing property '{{propName}}'")
+            {%-else%}
+            pass
+            {%-endif%}
+        {%-endfor%}
+        super().__init__(new_data)
+    
+    {%-for propName, propSchema in schema.properties.items()%}
+
+    def Get{{propName|PascalCase}}(self):
+        return self.data["{{propName}}"]
+    
+    def Set{{propName|PascalCase}}(self, new_value):
+        if not isinstance(new_value, {{PropertyType(propName, propSchema)}}):
+            self.data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(new_value)
+        else:
+            self.data["{{propName}}"] = new_value
+        return self
+    {%-endfor%}
+
+    def Serializable(self):
+        return self.data
+=======
 {%-import 'loader.jinja2' as loader-%}
 
 {%-macro PropertyClassName(propName)-%}
@@ -57,3 +118,4 @@ class {{Name}}(UserDict):
 
     def Serializable(self):
         return self.data
+>>>>>>> 73099cd5821bcaf12117b9c391c058e4544d9148
