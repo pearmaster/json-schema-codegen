@@ -32,6 +32,11 @@ namespace {{origNs}} {
     os << v.EnumToString(v._value);
     return os;
 }
+
+bool operator< (const {{className}}& left, const {{className}}& right)
+{
+    return left._value < right._value;
+}
 {%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 
 void {{className}}::Set({{enumType}} value)
@@ -53,6 +58,11 @@ void {{className}}::Set({{enumType}} value)
             return "{{enum}}";
         {%-endfor%}
     }
+    // By not including a 'defaut' case in the switch statement, we should ensure that
+    // all values of the enum are handled.  However, some compilers like to see a return
+    // statement when no cases are matched.  While this never happens, throwing here
+    // avoids a compiler warning.
+    throw std::out_of_range("Could not string for invalid enum value");
 }
 
 {{enumType}} {{className}}::StringToEnum(const std::string& input)

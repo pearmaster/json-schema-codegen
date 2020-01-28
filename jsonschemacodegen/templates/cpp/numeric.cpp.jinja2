@@ -34,6 +34,11 @@ namespace {{origNs}} {
     os << num._value;
     return os;
 }
+
+bool operator< (const {{className}}& left, const {{className}}& right)
+{
+    return left._value < right._value;
+}
 {%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 
 void {{className}}::Set({{cpptype}} value)

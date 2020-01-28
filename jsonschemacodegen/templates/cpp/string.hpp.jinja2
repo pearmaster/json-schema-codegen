@@ -75,6 +75,13 @@ public:
      */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& str);
 
+    /*! The less than comparison operator.
+     * \param left A {{Name}} instance on the left size of the less than expression.
+     * \param right A {{Name}} instance on the right side of the less than expression.
+     * \return true if the less than expression is true.
+     */
+    friend bool operator< (const {{Name}}& left, const {{Name}}& right);
+
     /*! Set the value of the string.
      * \param value the new string value.
      * \throw if the passed string value doesn't meet schema validation.

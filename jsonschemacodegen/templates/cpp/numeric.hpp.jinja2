@@ -51,6 +51,13 @@ public:
     */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& num);
 
+    /*! The less than comparison operator.
+     * \param left A {{Name}} instance on the left size of the less than expression.
+     * \param right A {{Name}} instance on the right side of the less than expression.
+     * \return true if the less than expression is true.
+     */
+    friend bool operator< (const {{Name}}& left, const {{Name}}& right);
+
     /*! Sets the {{cpptype}} value.
      * \fn void Set({{cpptype}} value)
      * \param value new value
