@@ -52,9 +52,9 @@ bool operator< (const {{className}}& left, const {{className}}& right)
     return left._value < right._value;
 }
 
-{{std}}size_t hash_value(const {{Name}}& str)
+{{std}}size_t hash_value(const {{className}}& str)
 {
-    return boost::hash_value(e._value);
+    return boost::hash_value(str._value);
 }
 {%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 

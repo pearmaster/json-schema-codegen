@@ -38,7 +38,7 @@ bool operator< (const {{className}}& left, const {{className}}& right)
     return left._value < right._value;
 }
 
-{{std}}size_t hash_value(const {{Name}}& e)
+{{std}}size_t hash_value(const {{className}}& e)
 {
     return boost::hash_value(e.ToString());
 }

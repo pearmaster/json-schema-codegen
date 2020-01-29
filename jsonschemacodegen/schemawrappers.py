@@ -158,7 +158,7 @@ class OneOfSchema(CombinatorSchemaBase):
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
-        incs.update({"<boost/variant.hpp>"})
+        incs.update({"<boost/variant.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
     def GetCommonType(self, resolver):

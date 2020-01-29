@@ -30,7 +30,7 @@ public:
     {%endfor%}
 
     {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
-    /*! Constructor that initializes the {{Name}} object with a {{ObjectType(optionName, s)}} instance.
+    /*! Constructor that initializes the {{Name}} object with a {{ObjectType(optionName, s)}} instance.]
      */
     {{Name}}(const {{ObjectType(optionName, s)}}& obj);
     {%endfor%}
@@ -42,6 +42,12 @@ public:
     */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& inst);
     {%-endif%}
+
+    /*! Produce a hash value of the object.
+     * \param num A {{Name}} instance from which to produce a hash.
+     * \return a hash number using a boost hashing algorithm.
+     */
+    friend std::size_t hash_value(const {{Name}}& inst);
 
     /*! Gets a variant object containing whatever instance of whatever object has been set.
      */

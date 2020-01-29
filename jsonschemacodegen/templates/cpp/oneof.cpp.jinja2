@@ -1,4 +1,5 @@
 {%-import 'loader.jinja2' as loader with context-%}
+{%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%macro NestedObjectName(name) -%}
     {{className}}::{{-name | UpperCamelCase-}}
@@ -39,10 +40,23 @@ namespace {{origNs}} {
     {%if not loop.first%}
     else {%endif%}if (inst._value.which() == {{loop.index - 1}})
     {
-        os << boost::get<{{ObjectType(optionName, s)}}>(inst_value);
+        os << boost::get<{{ObjectType(optionName, s)}}>(inst._value);
     }
     {%-endfor %}
     return os;
+}
+
+{{std}}size_t hash_value(const {{className}}& inst)
+{
+    {{std}}size_t seed = 0;
+    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%if not loop.first%}
+    else {%endif%}if (inst._value.which() == {{loop.index - 1}})
+    {
+        boost::hash_combine(seed, boost::get<{{ObjectType(optionName, s)}}>(inst._value));
+    }
+    {%-endfor %}
+    return seed;
 }
 {%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 {%-endif%}
