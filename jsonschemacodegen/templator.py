@@ -32,10 +32,13 @@ class Generator(object):
                 return "_"+stringcase.constcase(s)
             return stringcase.constcase(s)
 
+        def UpperCamelCase(s: str):
+            return stringcase.pascalcase(stringcase.snakecase(s)).replace('_', '')
+
         if self.jinjaEnvironment is None:
             env = jinja2.Environment(loader=jinja2.PackageLoader(self.templatePkg, ''),
                                      extensions=['jinja2.ext.do'])
-            env.filters['UpperCamelCase'] = stringcase.pascalcase
+            env.filters['UpperCamelCase'] = UpperCamelCase
             env.filters['PascalCase'] = lambda s: stringcase.pascalcase(stringcase.snakecase(s))
             env.filters['CONST_CASE'] = lambda s : stringcase.constcase(str(s))
             env.filters['snake_case'] = stringcase.snakecase
