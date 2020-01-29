@@ -29,7 +29,7 @@ public:
     
     {%endfor%}
 
-    {%-for s in schema.oneOf %}
+    {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
     /*! Constructor that initializes the {{Name}} object with a {{ObjectType(optionName, s)}} instance.
      */
     {{Name}}(const {{ObjectType(optionName, s)}}& obj);

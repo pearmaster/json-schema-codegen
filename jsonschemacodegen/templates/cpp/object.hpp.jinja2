@@ -1,6 +1,6 @@
 {%-import 'loader.jinja2' as loader%}
 {%macro NestedObjectName(name) -%}
-    {{-name | UpperCamelCase-}}
+    {%-if name|UpperCamelCase != Name|UpperCamelCase%}{{-name | UpperCamelCase-}}{%else%}{{name | UpperCamelCase}}Property{%endif-%}
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}

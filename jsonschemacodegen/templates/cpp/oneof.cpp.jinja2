@@ -21,7 +21,7 @@
 {{loader.Class('cpp', resolver, [className], optionName, s) }}
 {%-endfor%}
 
-{%-for s in schema.oneOf %}
+{%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
 {{className}}::{{Name}}(const {{ObjectType(optionName, s)}}& obj) : _value(obj)
 {
 

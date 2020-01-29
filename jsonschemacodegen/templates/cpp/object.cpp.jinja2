@@ -1,7 +1,10 @@
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-set rapidjson = resolver.cpp_resolve_namespace(['rapidjson']) %}
+{%macro NestedObjectNameOnly(name) -%}
+    {%-if name|UpperCamelCase != Name|UpperCamelCase%}{{-name | UpperCamelCase-}}{%else%}{{name | UpperCamelCase}}Property{%endif-%}
+{%-endmacro%}
 {%macro NestedObjectName(name) -%}
-    {{className}}::{{-name | UpperCamelCase-}}
+    {{className}}::{{NestedObjectNameOnly(name)}}
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
@@ -13,10 +16,10 @@
 
 {%import 'loader.jinja2' as loader with context%}
 {%-for propName, propSchema in schema.RequiredList() %}
-{{loader.Class('cpp', resolver, [className], propName|UpperCamelCase, propSchema) }}
+{{loader.Class('cpp', resolver, [className], NestedObjectNameOnly(propName), propSchema) }}
 {%-endfor%}
 {%-for propName, propSchema in schema.UnRequiredList() %}
-{{loader.Class('cpp', resolver, [className], propName|UpperCamelCase, propSchema) }}
+{{loader.Class('cpp', resolver, [className], NestedObjectNameOnly(propName), propSchema) }}
 {%-endfor%}
 
 {%if schema.RequiredList() | length > 0 %}
