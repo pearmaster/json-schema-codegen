@@ -47,8 +47,13 @@
 
 }
 {%-endif%}
-{%if 'type' in propSchema and propSchema['type'] in ['boolean', 'integer', 'string', 'number'] %}
-{{className}}::{{Name}}({{ {"boolean":"bool", "integer":"int", "string":"const std::string&", "number":"double"}[propSchema.type] }} {{propName | camelCase}}) : {{Name}}({{ObjectType(propName, propSchema)}}({{propName | camelCase}}))
+{%if 'type' in propSchema and propSchema['type'] in ['boolean', 'integer', 'number'] %}
+{{className}}::{{Name}}({{ {"boolean":"bool", "integer":"int", "number":"double"}[propSchema.type] }} {{propName | camelCase}}) : {{Name}}({{ObjectType(propName, propSchema)}}({{propName | camelCase}}))
+{
+
+}
+{%-elif 'type' in propSchema and propSchema['type'] == 'string'-%}
+{{className}}::{{Name}}(const std::string& {{propName | camelCase}}) : {{Name}}({{ObjectType(propName, propSchema)}}::FromString({{propName | camelCase}}))
 {
 
 }
