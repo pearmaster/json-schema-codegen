@@ -58,6 +58,12 @@ public:
      */
     friend bool operator< (const {{Name}}& left, const {{Name}}& right);
 
+    /*! Produce a hash value of the object.
+     * \param num A {{Name}} instance from which to produce a hash.
+     * \return a hash number using a boost hashing algorithm.
+     */
+    friend std::size_t hash_value(const {{Name}}& e);
+
     /*! Sets the value to the provided enumerated Value.
      * \param value new value.
      */
@@ -96,6 +102,10 @@ public:
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
+    /*! Returns a string representation of this object.
+     * \return string representation without quotes.
+     */
+    std::string ToString() const;
 private:
     Value _value;
 };
