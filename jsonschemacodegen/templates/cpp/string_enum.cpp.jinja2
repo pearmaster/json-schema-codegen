@@ -37,6 +37,11 @@ bool operator< (const {{className}}& left, const {{className}}& right)
 {
     return left._value < right._value;
 }
+
+{{std}}size_t hash_value(const {{Name}}& e)
+{
+    return boost::hash_value(e.ToString());
+}
 {%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 
 void {{className}}::Set({{enumType}} value)
@@ -99,4 +104,9 @@ void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Valu
 {
     {{std}}string strValue = EnumToString(_value);
     value.SetString(strValue.c_str(), strValue.size(), allocator);
+}
+
+{{std}}string {{className}}::ToString() const
+{
+    return EnumToString(_value);
 }

@@ -87,7 +87,7 @@ class StringSchema(SchemaBase):
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
-        incs.add("<string>")
+        incs.update({"<string>", "<boost/functional/hash.hpp>"})
         if 'pattern' in self.data:
             incs.add("<regex>")
         if 'format' in self.data:
@@ -106,7 +106,7 @@ class NumberSchema(SchemaBase):
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
-        incs.add("<boost/lexical_cast.hpp>")
+        incs.update({"<boost/lexical_cast.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
 class BooleanSchema(SchemaBase):
