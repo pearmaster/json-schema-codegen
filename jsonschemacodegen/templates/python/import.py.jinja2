@@ -6,8 +6,7 @@
     {%-endif-%}
 {%-endmacro-%}
 
-{%-macro GetImports(resolver, schema)-%}
-{%-set includes = []-%}
+{%-macro GetImports(resolver, schema, includes)-%}
 {%-if schema.oneOf is defined-%}
 {%-    do includes.append('from collections import UserDict')-%}
 {%-    for comp in schema['oneOf']-%}
@@ -16,7 +15,6 @@
 {%-        endif-%}
 {%-    endfor-%}
 {%-elif schema.allOf is defined-%}
-{%-    do includes.append('from collections import UserDict')-%}
 {%-    for comp in schema[Combination(schema)]-%}
 {%-        if '$ref' in comp-%}
 {%-            do includes.append(resolver.py_include_statement(comp['$ref']))-%}
@@ -24,7 +22,7 @@
 {%-    endfor-%}
 {%-    for comp in schema[Combination(schema)]-%}
 {%-        if '$ref' not in comp-%}
-{{            GetImports(resolver, comp)}}
+{{            GetImports(resolver, comp, includes)}}
 {%-        endif-%}
 {%-    endfor-%}
 {%-elif schema.anyOf is defined-%}
@@ -36,7 +34,7 @@
 {%-    endfor-%}
 {%-    for comp in schema[Combination(schema)]-%}
 {%-        if '$ref' not in comp-%}
-{{            GetImports(resolver, comp)}}
+{{            GetImports(resolver, comp, includes)}}
 {%-        endif-%}
 {%-    endfor-%}
 {%-elif '$ref' in schema-%}
@@ -59,7 +57,7 @@ or schema.type == 'string'-%}
 {%-    if 'items' in schema-%}
 {%-        if '$ref' not in schema['items']-%}
 {%-            set itemType = 'self.Item'-%}
-{{            GetImports(resolver, schema['items'])}}
+{{            GetImports(resolver, schema['items'], includes)}}
 {%-        endif-%}
 {%-    endif-%}
 {%-elif schema.type == 'object'-%}
@@ -71,7 +69,7 @@ or schema.type == 'string'-%}
 {%-    endfor%}
 {%-    for propName, propSchema in schema.properties.items()-%}
 {%-        if '$ref' not in prop-%}
-{{            GetImports(resolver, propSchema)}}
+{{            GetImports(resolver, propSchema, includes)}}
 {%-        endif-%}
 {%-    endfor%}
 {%-elif schema.type == 'null'-%}
@@ -82,13 +80,4 @@ or schema.type == 'string'-%}
 {%-    endif-%}
 {%-else-%}
 {%-endif-%}
-{%-set include_set = []-%}
-{%-for include in includes-%}
-{%-    if include not in include_set-%}
-{%-        do include_set.append(include)-%}
-{%-    endif-%}
-{%-endfor-%}
-{%-for inc in include_set-%}
-{{inc + "\n"}}
-{%-endfor-%}
 {%-endmacro-%}
