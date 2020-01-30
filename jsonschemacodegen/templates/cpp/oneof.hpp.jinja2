@@ -44,7 +44,7 @@ public:
     {%-endif%}
 
     /*! Produce a hash value of the object.
-     * \param num A {{Name}} instance from which to produce a hash.
+     * \param inst A {{Name}} instance from which to produce a hash.
      * \return a hash number using a boost hashing algorithm.
      */
     friend std::size_t hash_value(const {{Name}}& inst);
@@ -55,7 +55,7 @@ public:
 
     /*! Sets the variant object.
      * \fn void Set(const boost::variant<{{optionList}}>& variant)
-     * \param const boost::variant<{{optionList}}>& variant.  An instance of one of these types must be passed: {{optionList}}
+     * \param variant  An instance of one of these types must be passed: {{optionList}}
      */
     void Set(const boost::variant<{{optionList}}>& variant);
 
