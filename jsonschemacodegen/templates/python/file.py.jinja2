@@ -3,6 +3,14 @@
 {%-else%}
 {%-import 'loader.jinja2' as loader-%}
 {%-import 'import.py.jinja2' as importer-%}
-{{importer.GetImports(resolver, schema)}}
-{{loader.Class(resolver, Name, schema) }}
+{%- set includes = []-%}
+{%- set include_set = []-%}
+{{importer.GetImports(resolver, schema, includes)}}
+{%-for include in includes-%}
+{%-if include not in include_set-%}
+{%-do include_set.append(include)-%}
+{{include + "\n"}}
+{%-endif-%}
+{%-endfor%}
+{{loader.Class(resolver, Name, schema)}}
 {%-endif-%}

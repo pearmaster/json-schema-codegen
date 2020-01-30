@@ -22,7 +22,7 @@ class {{Name}}(UserDict):
     {%-endif%}
     {%-endfor%}
 
-    def __init__(self, data={}, **kwargs):
+    def __init__(self, data=None, **kwargs):
         """Initialization for the {{Name}} object.
         It can be initialized with an object, or by passing each
         object property as a keyword argument.
