@@ -1,5 +1,6 @@
 {%-import 'schema.jinja2' as loader-%}
 One of the following types:
 {%- for s in schema.oneOf %}
- * {{loader.Display(s.Resolve(resolver), resolver) | indent(2)}}
+ * OR {{loader.Display(s.Resolve(resolver), resolver) | indent(2)}}
+{# #}
 {%-endfor%}
