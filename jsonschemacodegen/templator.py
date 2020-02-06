@@ -35,6 +35,22 @@ class Generator(object):
         def UpperCamelCase(s: str):
             return stringcase.pascalcase(stringcase.snakecase(s)).replace('_', '')
 
+        def MdIndent(s: str, width: int):
+            indention = " " * width
+            newline = "\n"
+
+            s += newline  # this quirk is necessary for splitlines method
+
+            lines = s.splitlines()
+            rv = lines.pop(0)
+
+            if lines:
+                rv += newline + newline.join(
+                    indention + line if (line and not line.strip().startswith('<')) else line for line in lines
+                )
+
+            return rv
+
         if self.jinjaEnvironment is None:
             env = jinja2.Environment(loader=jinja2.PackageLoader(self.templatePkg, ''),
                                      extensions=['jinja2.ext.do'])
@@ -43,6 +59,7 @@ class Generator(object):
             env.filters['CONST_CASE'] = lambda s : stringcase.constcase(str(s))
             env.filters['snake_case'] = stringcase.snakecase
             env.filters['camelCase'] = stringcase.camelcase
+            env.filters['mdindent'] = MdIndent
             env.filters['type'] = type # For debugging
 
             env.filters['quotestring'] = QuoteIfString
