@@ -100,7 +100,7 @@ class StringSchema(SchemaBase):
             if self.data['format'] == 'uuid':
                 incs.update({"<boost/uuid/uuid.hpp>", "<boost/uuid/random_generator.hpp>", "<boost/uuid/uuid_io.hpp>"})
             elif self.data['format'] == 'date-time':
-                incs.update({"<boost/optional.hpp>", "<boost/date_time/posix_time/posix_time.hpp>"})
+                incs.update({"<boost/optional.hpp>", "<boost/date_time/posix_time/posix_time.hpp>", "<boost/algorithm/string/replace.hpp>"})
         return incs
 
 

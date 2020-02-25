@@ -56,7 +56,8 @@ namespace {{origNs}} {
 
 void {{className}}::Set(const {{std}}string& value)
 {
-    Set(boost::posix_time::time_from_string(value));
+    {{std}}string fixedValue = boost::replace_nth_copy(value, "T", 0, " ");
+    Set(boost::posix_time::time_from_string(fixedValue));
 }
 
 void {{className}}::Set(const char* value)
