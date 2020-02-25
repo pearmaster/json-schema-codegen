@@ -6,8 +6,10 @@ with open("README.md", "r") as fh:
 with open("requirements.txt", "r") as fp:
     requirements = fp.read().split('\n')
 
+import jsonschemacodegen._version as _version
+
 setup(name='json-schema-codegen',
-      version='0.1.7',
+      version=_version.__version__,
       url='http://github.com/pearmaster/json-schema-codegen',
       author='Jacob Brunson',
       author_email='pypi@jacobbrunson.com',
