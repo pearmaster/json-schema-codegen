@@ -15,6 +15,12 @@ class SchemaBase(collections.UserDict):
     def Resolve(self, resolver):
         return self
 
+    def IsReadOnly(self):
+        return ('readOnly' in self.data) and (self.data['readOnly'] is True)
+    
+    def IsWriteOnly(self):
+        return ('writeOnly' in self.data) and (self.data['writeOnly'] is True)
+
 
 class Reference(SchemaBase):
 
@@ -109,12 +115,17 @@ class NumberSchema(SchemaBase):
         incs.update({"<boost/lexical_cast.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
+
 class BooleanSchema(SchemaBase):
     pass
 
 
 class NullSchema(SchemaBase):
-    pass
+
+    def CppIncludes(self, resolver=None):
+        incs = super().CppIncludes(resolver=resolver)
+        incs.update({"<boost/none.hpp>"})
+        return incs
 
 
 class ArraySchema(SchemaBase):

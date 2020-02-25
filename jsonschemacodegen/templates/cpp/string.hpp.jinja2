@@ -53,28 +53,13 @@ public:
     /*! Operator to cast a {{Name}} instance to a string.
      */
     operator std::string() const;
-    
-    /*! Assignment operator to set the value of the {{Name}} instance.
-     * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
-     * \return reference to the {{Name}} instance
-     */
-    {{Name}}& operator=(const std::string& value);
-
-    /*! Assignment operator to set the value of the {{Name}} instance.
-     * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
-     * \return reference to the {{Name}} instance
-     */
-    {{Name}}& operator=(const char* value);
-
-    /*! Provide the string value of the {{Name}} instance to a stream.
+     /*! Provide the string value of the {{Name}} instance to a stream.
      * \param os the stream object
      * \param str an instance of {{Name}}
      * \return the same ostream input object
      */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& str);
-
+    
     /*! The less than comparison operator.
      * \param left A {{Name}} instance on the left size of the less than expression.
      * \param right A {{Name}} instance on the right side of the less than expression.
@@ -87,22 +72,6 @@ public:
      * \return a hash number using a boost hashing algorithm.
      */
     friend std::size_t hash_value(const {{Name}}& str);
-
-    /*! Set the value of the string.
-     * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
-     */
-    void Set(const std::string& value);
-
-    /*! Set the value of the string.
-     * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
-     */
-    void Set(const char* value);
-
-    {%-if schema.format is defined and schema.format == 'uuid'%}
-    void SetUuid();
-    {%-endif%}
 
     /*! Get the contained string.
      * \return The contained string.
@@ -135,6 +104,40 @@ public:
      * \param allocator is used for rapidjson allocation.
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+{%if not schema.IsReadOnly()%}
+private:
+{%-endif%}
+    /*! Assignment operator to set the value of the {{Name}} instance.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     * \return reference to the {{Name}} instance
+     */
+    {{Name}}& operator=(const std::string& value);
+    
+    /*! Assignment operator to set the value of the {{Name}} instance.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     * \return reference to the {{Name}} instance
+     */
+    {{Name}}& operator=(const char* value);
+
+    /*! Set the value of the string.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     */
+    {{Name}}& Set(const std::string& value);
+
+    /*! Set the value of the string.
+     * \param value the new string value.
+     * \throw if the passed string value doesn't meet schema validation.
+     */
+    {{Name}}& Set(const char* value);
+
+    {%-if schema.format is defined and schema.format == 'uuid'%}
+    /*! Set the encapsulated value of the {{Name}} object to a new UUID.
+     */
+    {{Name}}& SetUuid();
+    {%-endif%}
 
 private:
     std::string _value;

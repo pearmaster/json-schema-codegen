@@ -1,5 +1,5 @@
 {%-import 'schema.jinja2' as loader-%}
-**Object**{%if 'title' in schema%} - *{{schema.title}}*.  Has{%else%} with{%endif%} these properties:
+**Object**{%if 'title' in schema%} - {{schema.title | italics}}.  Has{%else%} with{%endif%} these properties:
 <table>
 <tr><th>Property Name</th><th>Type</th><th></th></tr>
 {%-for propName, prop in schema.properties.items() %}

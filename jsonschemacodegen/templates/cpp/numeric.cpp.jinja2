@@ -46,10 +46,11 @@ bool operator< (const {{className}}& left, const {{className}}& right)
 }
 {%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 
-void {{className}}::Set({{cpptype}} value)
+{{className}}& {{className}}::Set({{cpptype}} value)
 {
     Validate(value);
     _value = value;
+    return *this;
 }
 
 {{cpptype}} {{className}}::Get() const

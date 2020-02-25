@@ -1,4 +1,4 @@
 {%-import 'schema.jinja2' as loader-%}
-**Array**{%if 'title' in schema%} - *{{schema.title}}*.  Each element is{%else%} with each element as{%endif%}:
+**Array**{%if 'title' in schema%} - {{schema.title|italics}}.  Each element is{%else%} with each element as{%endif%}:
 
 {{loader.Display(schema.GetItemSchema().Resolve(resolver), resolver) | replace("\n", "\n> ")}}

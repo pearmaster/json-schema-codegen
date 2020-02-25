@@ -38,17 +38,12 @@ public:
 
     virtual ~{{Name}}() = default;
 
-    /*!
-     * Cast to {{cpptype}} operator
+    /*! Cast to {{cpptype}} operator
      */
     operator {{cpptype}}() const;
-    
-    /*! Assignment from {{cpptype}} operator
-     */
-    {{Name}}& operator=({{cpptype}} value);
 
     /*! Stream operator.
-    */
+     */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& num);
 
     /*! The less than comparison operator.
@@ -63,12 +58,6 @@ public:
      * \return a hash number using a boost hashing algorithm.
      */
     friend std::size_t hash_value(const {{Name}}& num);
-
-    /*! Sets the {{cpptype}} value.
-     * \fn void Set({{cpptype}} value)
-     * \param value new value
-     */
-    void Set({{cpptype}} value);
 
     /*! Gets the value.
      * \fn {{cpptype}} Get() const
@@ -105,7 +94,18 @@ public:
      * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
+{%if not schema.IsReadOnly()%}
+private:
+{%-endif%}
+    /*! Assignment from {{cpptype}} operator
+     */
+    {{Name}}& operator=({{cpptype}} value);
 
+    /*! Sets the {{cpptype}} value.
+     * \fn void Set({{cpptype}} value)
+     * \param value new value
+     */
+    {{Name}}& Set({{cpptype}} value);
 private:
     {{cpptype}} _value;
 };

@@ -1,4 +1,4 @@
-**number**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
+**number**{%if 'title' in schema%} - {{schema.title|italics}}{%endif%}
 {%-if 'default' in schema%}
  * Default value: `{{schema.default}}`
 {%-endif-%}

@@ -58,24 +58,27 @@ bool operator< (const {{className}}& left, const {{className}}& right)
 }
 {%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
 
-void {{className}}::Set(const {{std}}string& value)
+{{className}}&  {{className}}::Set(const {{std}}string& value)
 {
     Validate(value);
     _value = value;
+    return *this;
 }
 
-void {{className}}::Set(const char* value)
+{{className}}& {{className}}::Set(const char* value)
 {
     Validate(value);
     _value = value;
+    return *this;
 }
 
 {%-if schema.format is defined and schema.format == 'uuid'%}
-void {{className}}::SetUuid()
+{{className}}& {{className}}::SetUuid()
 {
     boost::uuids::random_generator generator;
     boost::uuids::uuid uuid = generator();
     Set(boost::uuids::to_string(uuid));
+    return *this;
 }
 {%-endif%}
 

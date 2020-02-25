@@ -1,4 +1,4 @@
-**string**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
+**string**{%if 'title' in schema%} - {{schema.title|italics}}{%endif%}
 {%-if 'enum' in schema%}
  * Value must be one of: {%for value in schema.enum%}`{{value}}` {%endfor%}
 {%-endif-%}
