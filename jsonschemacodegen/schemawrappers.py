@@ -1,4 +1,41 @@
 import collections
+import random
+
+class ExampleMode(object):
+
+    def __init__(self, index, mode=1):
+        self.index = index
+        self.mode = mode
+
+    def GetMode(self):
+        return self.mode
+
+    def IsMin(self):
+        return self.mode == 0
+
+    def IsMost(self):
+        return self.mode == 2
+
+    def IsRand(self):
+        return self.mode == 1
+
+    def Choices(self, population):
+        random.seed(self.index)
+        k = random.randrange(len(population))
+        return random.choices(population, k=k)
+
+    def Choice(self, population):
+        random.seed(self.index+1)
+        return random.choice(population)
+
+    def Number(self, seed, mini, maxi):
+        random.seed(self.index + seed)
+        return random.randrange(mini, maxi)
+
+    def Seed(self, seed):
+        random.seed(self.index + hash(seed))
+        return ExampleMode(random.randrange(1000), self.mode)
+
 
 class SchemaBase(collections.UserDict):
 
@@ -32,6 +69,9 @@ class Reference(SchemaBase):
 
     def Resolve(self, resolver):
         return resolver.get_schema(self.data['$ref'], self.root)
+
+    def Example(self, resolver, index: ExampleMode):
+        return self.Resolve(resolver).Example(resolver, index)
 
 
 class ObjectSchema(SchemaBase):
@@ -88,6 +128,21 @@ class ObjectSchema(SchemaBase):
                 theList.append((propName, SchemaFactory(propSchema, self.root)))
         return theList
 
+    def Example(self, resolver, index: ExampleMode):
+        if 'example' in self.data:
+            return self.data['example']
+        if 'examples' in self.data:
+            return index.Choice(self.data['examples'])
+        ret = {}
+        for name, item in self.RequiredList():
+            ret[name] = item.Example(resolver, index.Seed(name))
+        if not index.IsMin():
+            unrequired = self.UnRequiredList()
+            if index.IsRand():
+                unrequired = index.Choices(unrequired)
+            for (name, item) in unrequired:
+                ret[name] = item.Example(resolver, index.Seed(name))
+        return ret
 
 class StringSchema(SchemaBase):
 
@@ -103,9 +158,30 @@ class StringSchema(SchemaBase):
                 incs.update({"<boost/optional.hpp>", "<boost/date_time/posix_time/posix_time.hpp>", "<boost/algorithm/string/replace.hpp>"})
         return incs
 
+    def Example(self, resolver, index: ExampleMode):
+        if 'example' in self.data:
+            return self.data['example']
+        if 'examples' in self.data:
+            return index.Choice(self.data['examples'])
+        if 'format' in self.data:
+            if self.data['format'] == 'uuid':
+                return "a18dfb2c-2b17-4a19-85e0-5c6c8d6a89e8"
+            elif self.data['format'] == 'date-time':
+                return "2002-10-02T15:00:00Z"
+        theString = "example string 1 2 3 4 5 6 7 8 9"
+        if 'maxLength' in self.data:
+            theString = theString[:self.data['maxLength']]
+        return theString
+
 
 class StringEnumSchema(StringSchema):
-    pass
+    
+    def Example(self, resolver, index: ExampleMode):
+        if 'example' in self.data:
+            return self.data['example']
+        if 'examples' in self.data:
+            return index.Choice(self.data['examples'])
+        return index.Choice(self.data['enum'])
 
 
 class NumberSchema(SchemaBase):
@@ -115,9 +191,35 @@ class NumberSchema(SchemaBase):
         incs.update({"<boost/lexical_cast.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
+    def Example(self, resolver, index: ExampleMode):
+        if 'example' in self.data:
+            return self.data['example']
+        if 'examples' in self.data:
+            return index.Choice(self.data['examples'])
+        mini = 0
+        if 'minimum' in self.data:
+            mini = self.data['minimum']
+        if 'exclusiveMinimum' in self.data:
+            mini = self.data['exclusiveMinimum'] + 1
+        maxi = 100000
+        if 'maximum' in self.data:
+            maxi = self.data['maximum']
+        if 'exclusiveMaximum' in self.data:
+            maxi = self.data['exclusiveMaximum'] - 1
+        theNumber = index.Number(1, mini, maxi)
+        if self.data['type'] != 'integer':
+            theNumber = theNumber/index.Number(2, 3, 9)
+        return theNumber
+
 
 class BooleanSchema(SchemaBase):
-    pass
+
+    def Example(self, resolver, index: ExampleMode):
+        if 'example' in self.data:
+            return self.data['example']
+        if 'examples' in self.data:
+            return index.Choice(self.data['examples'])
+        return index.Choice([True, False])
 
 
 class NullSchema(SchemaBase):
@@ -127,6 +229,8 @@ class NullSchema(SchemaBase):
         incs.update({"<boost/none.hpp>"})
         return incs
 
+    def Example(self, resolver, index: ExampleMode):
+        return None
 
 class ArraySchema(SchemaBase):
     
@@ -139,6 +243,27 @@ class ArraySchema(SchemaBase):
         incs.update(self.GetItemSchema().CppIncludes(resolver))
         return incs
 
+    def Example(self, resolver, index: ExampleMode):
+        if 'example' in self.data:
+            return self.data['example']
+        if 'examples' in self.data:
+            return index.Choice(self.data['examples'])
+        ret = []
+        mini = 0
+        maxi = 3
+        if 'minItems' in self.data:
+            mini = self.data['minItems']
+            maxi = mini + 3
+        if 'maxItems' in self.data:
+            maxi = self.data['maxItems']
+        numItems = mini
+        if index.IsMost():
+            numItems = maxi
+        elif index.IsRand():
+            numItems = index.Number(10, mini, maxi)
+        for i in range(0, numItems):
+            ret.append(self.GetItemSchema().Example(resolver, index.Seed(i)))
+        return ret
 
 class CombinatorSchemaBase(SchemaBase):
     

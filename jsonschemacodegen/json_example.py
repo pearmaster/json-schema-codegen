@@ -117,6 +117,7 @@ class GeneratorFromSchema(object):
         return examples
 
     def GenerateFull(self, root, schema, run=100) -> set:
+        assert(not isinstance(schema, schemawrappers.Reference))
         if isinstance(schema, schemawrappers.SchemaBase):
             schemaJsonText = json.dumps(schema.data)
         else:

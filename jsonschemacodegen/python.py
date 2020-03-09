@@ -50,6 +50,7 @@ class GeneratorFromSchema(object):
     def Examples(self, schema, root):
         generator = json_example.GeneratorFromSchema(self.resolver)
         assert(root is not None), "No Root"
+        assert(not isinstance(schema, schemawrappers.Reference))
         examples = generator.Generate(root, schema)
         exampleList = [json.dumps(ex, indent=2, sort_keys=True) for ex in examples]
         sorted(exampleList, reverse=True)
