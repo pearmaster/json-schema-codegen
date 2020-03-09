@@ -158,7 +158,7 @@ class CombinatorSchemaBase(SchemaBase):
     def __getitem__(self, key):
         if key.upper() in str(type(self)).upper():
             return self.GetComponents()
-        raise KeyError()
+        return self.data[key]
 
 
 class OneOfSchema(CombinatorSchemaBase):
