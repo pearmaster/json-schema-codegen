@@ -1,4 +1,19 @@
+{%-macro numItems(schema)-%}
+  {%-if schema.minItems is defined-%}
+    {%-if schema.maxItems is defined-%}
+      {%-if schema.minItems == schema.maxItems -%}
+        There must be exactly {{schema.minItems}} elements.
+      {%-else-%}
+        There must be {{schema.minItems}} to {{schema.maxItems}} elements.
+      {%-endif-%}
+    {%-else-%}{#no maxitems#}
+      There must be at least {{schema.minItems}} elements.
+    {%-endif-%}
+  {%-elif schema.maxItems is defined-%}
+    There must be at most {{schema.maxItems}} elements.
+  {%-endif-%}
+{%-endmacro-%}
 {%-import 'schema.jinja2' as loader-%}
-**Array**{%if 'title' in schema%} - {{schema.title|italics}}.  Each element is{%else%} with each element as{%endif%}:
+**Array**{%if 'title' in schema%} - {{schema.title|italics}}.{%endif%} {{numItems(schema)}}  Each element is:
 
 {{loader.Display(schema.GetItemSchema().Resolve(resolver), resolver) | replace("\n", "\n> ")}}

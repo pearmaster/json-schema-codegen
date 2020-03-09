@@ -1,6 +1,11 @@
 **string**{%if 'title' in schema%} - {{schema.title|italics}}{%endif%}
-{%-if 'enum' in schema%}
+{%-if 'const' in schema%}
+ * Value must be `{{schema.const}}`
+{%-elif 'enum' in schema%}
  * Value must be one of: {%for value in schema.enum%}`{{value}}` {%endfor%}
+{%-endif-%}
+{%-if 'const' not in schema and 'default' in schema%}
+ * Default value is `{{schema.default}}`
 {%-endif-%}
 {%-if 'minLength' in schema and 'maxLength' in schema%}
  * Length between {{schema.minLength}}-{{schema.maxLength}}
