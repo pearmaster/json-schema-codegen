@@ -105,6 +105,7 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
         return "{type}_{name}.py".format(**ref)
 
     def _walk_through_tree(self, tree, path) -> dict:
+        assert(tree is not None), "No tree to walk through"
         walker = tree
         for p in [p for p in path.split('/') if len(p) > 0]:
             if p not in walker:

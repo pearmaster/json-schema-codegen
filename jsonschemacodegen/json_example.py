@@ -2,6 +2,7 @@ import json
 import random
 import abc
 from copy import copy
+from . import schemawrappers
 
 class SchemaResolverBaseClass(abc.ABC):
 
@@ -116,12 +117,18 @@ class GeneratorFromSchema(object):
         return examples
 
     def GenerateFull(self, root, schema, run=100) -> set:
-        schemaJsonText = json.dumps(schema)
+        if isinstance(schema, schemawrappers.SchemaBase):
+            schemaJsonText = json.dumps(schema.data)
+        else:
+            schemaJsonText = json.dumps(schema)
         run = max(2, schemaJsonText.count('oneOf')) * 10
         return self.GenerateSome(root, schema, run, 'all')
 
     def GenerateLimited(self, root, schema, run=2) -> set:
-        schemaJsonText = json.dumps(schema)
+        if isinstance(schema, schemawrappers.SchemaBase):
+            schemaJsonText = json.dumps(schema.data)
+        else:
+            schemaJsonText = json.dumps(schema)
         run = max(1, schemaJsonText.count('oneOf')) * 5
         return self.GenerateSome(root, schema, run, 'required')
     
