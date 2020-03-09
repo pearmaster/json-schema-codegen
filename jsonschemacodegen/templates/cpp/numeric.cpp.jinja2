@@ -2,17 +2,17 @@
 {%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
-
+{%if schema.const is not defined%}
 {{className}}::{{Name}}({{cpptype}} value)
 {
     Set(value);
 }
-
-{%-if schema.default is defined %}
+{%endif%}
+{%-if schema.default is defined or schema.const is defined%}
 {%set emptyConstructor = true %}
 {{className}}::{{Name}}()
 {
-    Set({{schema.default}});
+    Set({{schema.const or schema.default}});
 }
 {%-endif%}
 
@@ -74,6 +74,9 @@ void {{className}}::Validate({{cpptype}} testValue)
     {%-endif%}
     {%-if schema.multipleOf is defined %}
     if ((testValue % {{schema.multipleOf}}) != 0) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMaximum}}");
+    {%-endif%}
+    {%-if schema.const is defined%}
+    if (testValue != {{schema.const}}) throw {{std}}invalid_argument("The '{{Name}}' value was not {{schema.const}}");
     {%-endif%}
 }
 

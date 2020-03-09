@@ -23,15 +23,21 @@ public:
     {%-if schema.multipleOf is defined %}
     static constexpr int VALUE_MULTIPLE_OF = {{schema.multipleOf}};
     {%-endif%}
-
+    {%-if schema.default is defined %}
+    static constexpr int VALUE_DEFAULT = {{schema.default}};
+    {%-endif%}
+    {%-if schema.const is defined %}
+    static constexpr int VALUE_CONSTANT = {{schema.const}};
+    {%-endif%}
+    {%if schema.const is not defined%}
     /*! Constructor
      * \param value the initial value
      */
     {{Name}}({{cpptype}} value);
-
-    {%-if schema.default is defined %}
+    {%endif%}
+    {%-if schema.default is defined or schema.const is defined %}
     /*! Default value constructor.
-     * This structure is initialized with the value '{{schema.default}}'
+     * This structure is initialized with the value '{{schema.const or schema.default}}'
      */
     {{Name}}();
     {%-endif%}
@@ -94,7 +100,8 @@ public:
      * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
-{%if not schema.IsReadOnly()%}
+
+{%if not schema.IsReadOnly() or schema.const is defined%}
 private:
 {%-endif%}
     /*! Assignment from {{cpptype}} operator
