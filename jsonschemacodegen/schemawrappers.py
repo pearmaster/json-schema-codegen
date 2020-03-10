@@ -31,14 +31,17 @@ class ExampleIndex(object):
         return bool(choice)
 
     def Choice(self, population):
-        return population[self.Number(len(population))]
+        return population[self.Number(len(population))-1]
 
     def Number(self, maximum):
+        if self._full():
+            return maximum
         bits = bitsNeededForNumber(maximum)
         mask = rightBitMask(bits)
         choice = self.current & mask
         self.current = self.current >> bits
         return choice % maximum
+
 
 class SchemaBase(collections.UserDict):
 
@@ -187,7 +190,7 @@ class StringSchema(SchemaBase):
                 return "2002-10-02T15:00:00Z"
         maxLen = 'maxLength' in self.data and self.data['maxLength'] or 6
         minLen = 'minLength' in self.data and self.data['minLength'] or min(maxLen, 6)
-        theString = ("string"*minLen)[:minLength]
+        theString = ("string"*minLen)[:minLen]
         return theString
 
 
@@ -255,7 +258,7 @@ class ArraySchema(SchemaBase):
             return super().GetExampleCombos(resolver)
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
-        combos = bitsNeededForNumber(right - left)
+        combos = bitsNeededForNumber((right - left)+1)
         combos *= self.GetItemSchema().GetExampleCombos(resolver)
         return combos
 
@@ -263,7 +266,7 @@ class ArraySchema(SchemaBase):
         ret = []
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
-        for _ in range(0, index.Number()):
+        for _ in range(0, index.Number((right - left)+1)):
             ret.append(self.GetItemSchema().Example(resolver, index))
         return ret
 
@@ -324,6 +327,12 @@ class AllOfSchema(CombinatorSchemaBase):
     def __init__(self, initialdata, root=None):
         super().__init__('allOf', initialdata, root)
         assert(isinstance(self.data['allOf'], list))
+
+    def AnExample(self, resolver, index: ExampleIndex):
+        ret = {}
+        for comp in self.GetComponents():
+            ret.update(comp.Example(resolver, index))
+        return ret
 
 
 class AnyOfSchema(CombinatorSchemaBase):
