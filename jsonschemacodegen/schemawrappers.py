@@ -1,41 +1,44 @@
 import collections
 import random
 
-class ExampleMode(object):
+def bitsNeededForNumber(num):
+    bits = 0
+    while num > 0:
+        num = num >> 1
+        bits += 1
+    return bits
 
-    def __init__(self, index, mode=1):
+def rightBitMask(bits):
+    mask = 1
+    mask = mask << bits
+    mask -= 1
+    return mask
+
+class ExampleIndex(object):
+
+    def __init__(self, index):
         self.index = index
-        self.mode = mode
+        self.current = index
 
-    def GetMode(self):
-        return self.mode
+    def _full(self):
+        return self.index == -1
 
-    def IsMin(self):
-        return self.mode == 0
-
-    def IsMost(self):
-        return self.mode == 2
-
-    def IsRand(self):
-        return self.mode == 1
-
-    def Choices(self, population):
-        random.seed(self.index)
-        k = random.randrange(len(population))
-        return random.choices(population, k=k)
+    def BooleanChoice(self):
+        if self._full():
+            return True
+        choice = self.current & 0x01
+        self.current = self.current >> 1
+        return bool(choice)
 
     def Choice(self, population):
-        random.seed(self.index+1)
-        return random.choice(population)
+        return population[self.Number(len(population))]
 
-    def Number(self, seed, mini, maxi):
-        random.seed(self.index + seed)
-        return random.randrange(mini, maxi)
-
-    def Seed(self, seed):
-        random.seed(self.index + hash(seed))
-        return ExampleMode(random.randrange(1000), self.mode)
-
+    def Number(self, maximum):
+        bits = bitsNeededForNumber(maximum)
+        mask = rightBitMask(bits)
+        choice = self.current & mask
+        self.current = self.current >> bits
+        return choice % maximum
 
 class SchemaBase(collections.UserDict):
 
@@ -58,6 +61,19 @@ class SchemaBase(collections.UserDict):
     def IsWriteOnly(self):
         return ('writeOnly' in self.data) and (self.data['writeOnly'] is True)
 
+    def GetExampleCombos(self, resolver) -> int:
+        if 'examples' in self.data:
+            return len(self.data['examples'])
+        return 1
+    
+    def Example(self, resolver, index: ExampleIndex):
+        if 'example' in self.data:
+            return self.data['example']
+        if 'examples' in self.data:
+            return index.Choice(self.data['examples'])
+        if 'default' in self.data:
+            return self.data['default']
+        return self.AnExample(resolver, index)
 
 class Reference(SchemaBase):
 
@@ -70,7 +86,10 @@ class Reference(SchemaBase):
     def Resolve(self, resolver):
         return resolver.get_schema(self.data['$ref'], self.root)
 
-    def Example(self, resolver, index: ExampleMode):
+    def GetExampleCombos(self, resolver) -> int:
+        return self.Resolve(resolver).GetExampleCombos(resolver)
+
+    def Example(self, resolver, index: ExampleIndex):
         return self.Resolve(resolver).Example(resolver, index)
 
 
@@ -128,20 +147,22 @@ class ObjectSchema(SchemaBase):
                 theList.append((propName, SchemaFactory(propSchema, self.root)))
         return theList
 
-    def Example(self, resolver, index: ExampleMode):
-        if 'example' in self.data:
-            return self.data['example']
-        if 'examples' in self.data:
-            return index.Choice(self.data['examples'])
+    def GetExampleCombos(self, resolver) -> int:
+        combos = 1
+        for _, item in self.RequiredList():
+            combos *= item.GetExampleCombos(resolver)
+        for _, item in self.UnRequiredList():
+            combos *= 2
+            combos *= item.GetExampleCombos(resolver)
+        return combos
+
+    def AnExample(self, resolver, index: ExampleIndex):
         ret = {}
         for name, item in self.RequiredList():
-            ret[name] = item.Example(resolver, index.Seed(name))
-        if not index.IsMin():
-            unrequired = self.UnRequiredList()
-            if index.IsRand():
-                unrequired = index.Choices(unrequired)
-            for (name, item) in unrequired:
-                ret[name] = item.Example(resolver, index.Seed(name))
+            ret[name] = item.Example(resolver, index)
+        for name, item in self.UnRequiredList():
+            if index.BooleanChoice():
+                ret[name] = item.Example(resolver, index)
         return ret
 
 class StringSchema(SchemaBase):
@@ -158,29 +179,26 @@ class StringSchema(SchemaBase):
                 incs.update({"<boost/optional.hpp>", "<boost/date_time/posix_time/posix_time.hpp>", "<boost/algorithm/string/replace.hpp>"})
         return incs
 
-    def Example(self, resolver, index: ExampleMode):
-        if 'example' in self.data:
-            return self.data['example']
-        if 'examples' in self.data:
-            return index.Choice(self.data['examples'])
+    def AnExample(self, resolver, index: ExampleIndex):
         if 'format' in self.data:
             if self.data['format'] == 'uuid':
                 return "a18dfb2c-2b17-4a19-85e0-5c6c8d6a89e8"
             elif self.data['format'] == 'date-time':
                 return "2002-10-02T15:00:00Z"
-        theString = "example string 1 2 3 4 5 6 7 8 9"
-        if 'maxLength' in self.data:
-            theString = theString[:self.data['maxLength']]
+        maxLen = 'maxLength' in self.data and self.data['maxLength'] or 6
+        minLen = 'minLength' in self.data and self.data['minLength'] or min(maxLen, 6)
+        theString = ("string"*minLen)[:minLength]
         return theString
 
 
 class StringEnumSchema(StringSchema):
     
-    def Example(self, resolver, index: ExampleMode):
-        if 'example' in self.data:
-            return self.data['example']
-        if 'examples' in self.data:
-            return index.Choice(self.data['examples'])
+    def GetExampleCombos(self, resolver) -> int:
+        if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
+            return super().GetExampleCombos(resolver)
+        return len(self.data['enum'])
+    
+    def AnExample(self, resolver, index: ExampleIndex):
         return index.Choice(self.data['enum'])
 
 
@@ -191,34 +209,23 @@ class NumberSchema(SchemaBase):
         incs.update({"<boost/lexical_cast.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
-    def Example(self, resolver, index: ExampleMode):
-        if 'example' in self.data:
-            return self.data['example']
-        if 'examples' in self.data:
-            return index.Choice(self.data['examples'])
-        mini = 0
-        if 'minimum' in self.data:
-            mini = self.data['minimum']
+    def AnExample(self, resolver, index: ExampleIndex):
+        for k in ['minimum', 'maximum']:
+            if k in self.data:
+                return self.data[k]
         if 'exclusiveMinimum' in self.data:
-            mini = self.data['exclusiveMinimum'] + 1
-        maxi = 100000
-        if 'maximum' in self.data:
-            maxi = self.data['maximum']
+            return self.data['exclusiveMinimum'] + (self.data['type'] == 'integer' and 1 or 0.000001)
         if 'exclusiveMaximum' in self.data:
-            maxi = self.data['exclusiveMaximum'] - 1
-        theNumber = index.Number(1, mini, maxi)
-        if self.data['type'] != 'integer':
-            theNumber = theNumber/index.Number(2, 3, 9)
-        return theNumber
-
+            return self.data['exclusiveMaximum'] - (self.data['type'] == 'integer' and 1 or 0.000001)
 
 class BooleanSchema(SchemaBase):
 
-    def Example(self, resolver, index: ExampleMode):
-        if 'example' in self.data:
-            return self.data['example']
-        if 'examples' in self.data:
-            return index.Choice(self.data['examples'])
+    def GetExampleCombos(self, resolver) -> int:
+        if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
+            return super().GetExampleCombos(resolver)
+        return 2
+
+    def AnExample(self, resolver, index: ExampleIndex):
         return index.Choice([True, False])
 
 
@@ -229,7 +236,7 @@ class NullSchema(SchemaBase):
         incs.update({"<boost/none.hpp>"})
         return incs
 
-    def Example(self, resolver, index: ExampleMode):
+    def AnExample(self, resolver, index: ExampleIndex):
         return None
 
 class ArraySchema(SchemaBase):
@@ -243,26 +250,21 @@ class ArraySchema(SchemaBase):
         incs.update(self.GetItemSchema().CppIncludes(resolver))
         return incs
 
-    def Example(self, resolver, index: ExampleMode):
-        if 'example' in self.data:
-            return self.data['example']
-        if 'examples' in self.data:
-            return index.Choice(self.data['examples'])
+    def GetExampleCombos(self, resolver) -> int:
+        if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
+            return super().GetExampleCombos(resolver)
+        left = 'minItems' in self.data and int(self.data['minItems']) or 0
+        right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
+        combos = bitsNeededForNumber(right - left)
+        combos *= self.GetItemSchema().GetExampleCombos(resolver)
+        return combos
+
+    def AnExample(self, resolver, index: ExampleIndex):
         ret = []
-        mini = 0
-        maxi = 3
-        if 'minItems' in self.data:
-            mini = self.data['minItems']
-            maxi = mini + 3
-        if 'maxItems' in self.data:
-            maxi = self.data['maxItems']
-        numItems = mini
-        if index.IsMost():
-            numItems = maxi
-        elif index.IsRand():
-            numItems = index.Number(10, mini, maxi)
-        for i in range(0, numItems):
-            ret.append(self.GetItemSchema().Example(resolver, index.Seed(i)))
+        left = 'minItems' in self.data and int(self.data['minItems']) or 0
+        right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
+        for _ in range(0, index.Number()):
+            ret.append(self.GetItemSchema().Example(resolver, index))
         return ret
 
 class CombinatorSchemaBase(SchemaBase):
@@ -308,6 +310,14 @@ class OneOfSchema(CombinatorSchemaBase):
                     return None
         return commonType
 
+    def GetExampleCombos(self, resolver) -> int:
+        if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
+            return super().GetExampleCombos(resolver)
+        return bitsNeededForNumber(len(self.GetComponents()) - 1)
+
+    def AnExample(self, resolver, index: ExampleIndex):
+        return index.Choice(self.GetComponents()).Example(resolver, index)
+
 
 class AllOfSchema(CombinatorSchemaBase):
 
@@ -322,6 +332,25 @@ class AnyOfSchema(CombinatorSchemaBase):
         super().__init__('anyOf', initialdata, root)
         assert(isinstance(self.data['anyOf'], list))
 
+    def GetExampleCombos(self, resolver) -> int:
+        if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
+            return super().GetExampleCombos(resolver)
+        numberComponents = len(self.GetComponents())
+        combos = bitsNeededForNumber(numberComponents - 1)
+        combos << (numberComponents - 1)
+        return combos
+    
+    def AnExample(self, resolver, index: ExampleIndex):
+        ret = {}
+        gotOne = False
+        for comp in self.GetComponents():
+            if index.BooleanChoice():
+                gotOne = True
+                ret.update(comp.Example(resolver, index))
+        if not gotOne:
+            comp = index.Choice(self.GetComponents())
+            ret.update(comp.Example(resolver, index))
+        return ret
 
 def SchemaFactory(schema, root=None):
     if 'type' in schema:

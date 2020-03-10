@@ -48,13 +48,18 @@ class GeneratorFromSchema(object):
         return generator.RenderTemplate("file.py.jinja2", output_name="{}.py".format(filename_base), resolver=self.resolver, **args)
 
     def Examples(self, schema, root):
-        generator = json_example.GeneratorFromSchema(self.resolver)
-        assert(root is not None), "No Root"
-        assert(not isinstance(schema, schemawrappers.Reference))
-        examples = generator.Generate(root, schema)
-        exampleList = [json.dumps(ex, indent=2, sort_keys=True) for ex in examples]
-        sorted(exampleList, reverse=True)
-        return exampleList
+        wrapped_schema = schemawrappers.SchemaFactory(schema, root)
+        number_of_examples = wrapped_schema.GetExampleCombos(self.resolver)
+        examples = []
+        examples.append(wrapped_schema.Example(self.resolver, schemawrappers.ExampleIndex(0)))
+        examples.append(wrapped_schema.Example(self.resolver, schemawrappers.ExampleIndex(-1)))
+        show_examples = min(number_of_examples, 10)
+        example_step = int(number_of_examples/show_examples)
+        index = example_step
+        for _ in range(0, show_examples):
+            examples.append(wrapped_schema.Example(self.resolver, schemawrappers.ExampleIndex(index)))
+            index += example_step
+        return list(set([json.dumps(x) for x in examples]))
 
     def GenerateTest(self, schema, root, class_name, filename_base, path):
         generator = templator.Generator('jsonschemacodegen.templates.python', self.output_dir)
