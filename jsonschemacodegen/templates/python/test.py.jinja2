@@ -1,11 +1,16 @@
 import unittest
 import json
-from . import {{class}} as {{Name}}
+{{resolver.py_include_statement(path)}}
 
-class Test{{Name|UpperCamelCase}}SchemaStructure(unittest.TestCase):
+class Test{{Name|UpperCamelCase}}{{objType|UpperCamelCase}}Structure(unittest.TestCase):
+
+    def do_{{Name|snake_case}}_load(self, json_example_string):
+        ex = json.loads(json_example_string)
+        {{resolver.py_class_name(path)}}(ex)
 
     def test_parse_json(self):
         examples = {{examples}}
-        for ex_str in examples:
-            ex = json.loads(ex_str)
-            {{Name}}(ex)
+        for i, ex_str in enumerate(examples):
+            with self.subTest(index=i):
+                self.do_{{Name|snake_case}}_load(ex_str)
+{# #}
