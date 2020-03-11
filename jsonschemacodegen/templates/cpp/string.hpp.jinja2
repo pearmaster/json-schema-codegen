@@ -104,7 +104,7 @@ public:
      * \param allocator is used for rapidjson allocation.
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
-{%if not schema.IsReadOnly()%}
+{%if schema.IsReadOnly()%}
 private:
 {%-endif%}
     /*! Assignment operator to set the value of the {{Name}} instance.

@@ -101,7 +101,7 @@ public:
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
-{%if not schema.IsReadOnly() or schema.const is defined%}
+{%if schema.IsReadOnly() or schema.const is defined%}
 private:
 {%-endif%}
     /*! Assignment from {{cpptype}} operator
