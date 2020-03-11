@@ -1,6 +1,7 @@
 import json
 import abc
 import stringcase
+import os.path
 
 from . import templator
 from . import schemawrappers
@@ -59,18 +60,21 @@ class GeneratorFromSchema(object):
         for _ in range(0, show_examples):
             examples.append(wrapped_schema.Example(self.resolver, schemawrappers.ExampleIndex(index)))
             index += example_step
-        return list(set([json.dumps(x) for x in examples]))
+        return sorted(list(set([json.dumps(x) for x in examples])))
 
     def GenerateTest(self, schema, root, class_name, filename_base, path):
-        generator = templator.Generator('jsonschemacodegen.templates.python', self.output_dir)
+        filename = self.resolver.py_test_filename(path)
+        generator = templator.Generator('jsonschemacodegen.templates.python', os.path.join(self.output_dir, os.path.dirname(filename)))
         wrapped_schema = schemawrappers.SchemaFactory(schema, root)
         args = {
             "Name": class_name.split('.')[-1],
             "schema": wrapped_schema,
             "examples": self.Examples(schema, root),
-            "class": class_name
+            "class": class_name,
+            "path": path,
+            "objType": path.split("/")[-2]
         }
-        return generator.RenderTemplate("test.py.jinja2", output_name="test_{}".format(filename_base), resolver=self.resolver, **args)
+        return generator.RenderTemplate("test.py.jinja2", output_name=os.path.basename(filename), resolver=self.resolver, **args)
 
     def GenerateFromPath(self, schema, path):
         assert(self.resolver)
