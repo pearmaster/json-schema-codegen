@@ -34,7 +34,7 @@ class ExampleIndex(object):
         return population[self.Number(len(population))-1]
 
     def Number(self, maximum):
-        if self._full():
+        if self._full() or maximum == 0:
             return maximum
         bits = bitsNeededForNumber(maximum)
         mask = rightBitMask(bits)
@@ -220,6 +220,7 @@ class NumberSchema(SchemaBase):
             return self.data['exclusiveMinimum'] + (self.data['type'] == 'integer' and 1 or 0.000001)
         if 'exclusiveMaximum' in self.data:
             return self.data['exclusiveMaximum'] - (self.data['type'] == 'integer' and 1 or 0.000001)
+        return 1
 
 class BooleanSchema(SchemaBase):
 
@@ -266,7 +267,7 @@ class ArraySchema(SchemaBase):
         ret = []
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
-        for _ in range(0, index.Number((right - left)+1)):
+        for _ in range(0, left+index.Number(right-left)):
             ret.append(self.GetItemSchema().Example(resolver, index))
         return ret
 

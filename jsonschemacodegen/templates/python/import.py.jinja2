@@ -12,16 +12,15 @@
 {%-    for comp in schema['oneOf']-%}
 {%-        if '$ref' in comp-%}
 {%-            do includes.append(resolver.py_include_statement(comp['$ref']))-%}
+{%-        else-%}
+{{            GetImports(resolver, comp, includes)}}
 {%-        endif-%}
 {%-    endfor-%}
 {%-elif schema.allOf is defined-%}
 {%-    for comp in schema[Combination(schema)]-%}
 {%-        if '$ref' in comp-%}
 {%-            do includes.append(resolver.py_include_statement(comp['$ref']))-%}
-{%-        endif-%}
-{%-    endfor-%}
-{%-    for comp in schema[Combination(schema)]-%}
-{%-        if '$ref' not in comp-%}
+{%-        else-%}
 {{            GetImports(resolver, comp, includes)}}
 {%-        endif-%}
 {%-    endfor-%}
