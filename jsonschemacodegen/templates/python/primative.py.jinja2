@@ -43,8 +43,8 @@ if {{varName}} > {{schema.maximum}}:
 if {{varName}} <= {{schema.exclusiveMinimum}}:
     raise ValueError("Value is less than the minimum of {{schema.exclusiveMinimum}}")
 {%-endif%} {#minimum#}
-{%-if schema.maximum is defined%}
-if {{varName}} >= {{schema.maximum}}:
+{%-if schema.exclusiveMaximum is defined%}
+if {{varName}} >= {{schema.exclusiveMaximum}}:
     raise ValueError("Value is more than the maximum of {{schema.exclusiveMaximum}}")
 {%-endif%} {#maximum#}
 {%-if schema.multipleOf is defined%}
