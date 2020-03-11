@@ -131,18 +131,18 @@ class ObjectSchema(SchemaBase):
         return incs
 
     # TODO: Need something that specifies that this is 'required' for init
-    def RequiredList(self):
+    def RequiredList(self, default_negates_required=True):
         theList = []
         for propName, propSchema in self.data['properties'].items():
-            if 'required' in self.data and propName in self.data['required'] and 'default' not in propSchema:
+            if ('required' in self.data and propName in self.data['required']) and not (default_negates_required and 'default' in propSchema):
                 theList.append((propName, SchemaFactory(propSchema, self.root)))
         return theList
 
     # TODO: Need something that specifies that this is 'required' for init
-    def UnRequiredList(self):
+    def UnRequiredList(self, default_negates_required=True):
         theList = []
         for propName, propSchema in self.data['properties'].items():
-            if 'default' in propSchema:
+            if default_negates_required and 'default' in propSchema:
                 theList.append((propName, SchemaFactory(propSchema, self.root)))
             elif 'required' not in self.data:
                 theList.append((propName, SchemaFactory(propSchema, self.root)))
@@ -152,18 +152,18 @@ class ObjectSchema(SchemaBase):
 
     def GetExampleCombos(self, resolver) -> int:
         combos = 1
-        for _, item in self.RequiredList():
+        for _, item in self.RequiredList(default_negates_required=False):
             combos *= item.GetExampleCombos(resolver)
-        for _, item in self.UnRequiredList():
+        for _, item in self.UnRequiredList(default_negates_required=False):
             combos *= 2
             combos *= item.GetExampleCombos(resolver)
         return combos
 
     def AnExample(self, resolver, index: ExampleIndex):
         ret = {}
-        for name, item in self.RequiredList():
+        for name, item in self.RequiredList(default_negates_required=False):
             ret[name] = item.Example(resolver, index)
-        for name, item in self.UnRequiredList():
+        for name, item in self.UnRequiredList(default_negates_required=False):
             if index.BooleanChoice():
                 ret[name] = item.Example(resolver, index)
         return ret
