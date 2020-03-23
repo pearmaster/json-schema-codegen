@@ -8,13 +8,21 @@
     {%-endif-%}
 {%-endmacro-%}
 
-{%-macro ComponentType(schema, index)-%}
+{%-macro ComponentType(schema, index, fullClassPath=None)-%}
     {%-if '$ref' in schema-%}
         {{resolver.py_class_name(schema['$ref'])}}
     {%-else-%}
         self.Component{{index}}
     {%-endif-%}
 {%-endmacro-%}
+
+{%-set fullClassPath -%}
+    {%-if parentClass is not defined or parentClass is none-%}
+        {{Name}}
+    {%-else-%}
+        {{parentClass}}.{{Name}}
+    {%-endif-%}
+{%-endset-%}
 
 class {{Name}}(object):
     """This combines {{Combination(schema)}} {{schema[Combination(schema)] |count}} components.
@@ -23,7 +31,7 @@ class {{Name}}(object):
     {%-for comp in schema[Combination(schema)]%}
     {%-if '$ref' not in comp%}
     {%-set compClassName%}Component{{loop.index}}{%endset%}
-    {{loader.Class(resolver, compClassName, comp) |indent(4)}}
+    {{loader.Class(resolver, compClassName, comp, fullClassPath) |indent(4)}}
     {%-endif%}
     {%-endfor%}
 
@@ -74,15 +82,16 @@ class {{Name}}(object):
     def GetComponent{{loop.index}}(self):
         return self._component{{loop.index}}
 
-    def SetComponent{{loop.index}}(self, data):
+    def SetComponent{{loop.index}}(self, data) -> {{fullClassPath}}:
         if isinstance(data, {{ComponentType(compSchema, loop.index)}}):
             self._component{{loop.index}} = data
         elif isinstance(data, dict):
             self._component{{loop.index}} = {{ComponentType(compSchema, loop.index)}}(data)
         else:
             raise ValueError("Didn't pass an valid representation of {{ComponentType(compSchema, loop.index)}}")
+        return self
     {%endfor%}
-    def Serializable(self):
+    def Serializable(self) -> dict:
         obj = {}
         {%-for compSchema in schema[Combination(schema)]%}
         if self._component{{loop.index}} is not None:

@@ -6,7 +6,7 @@ class {{Name}}(object):
         if not isinstance(data, type(self)) and data is not None:
             raise ValueError("Expected None")
 
-    def Get(self):
+    def Get(self) -> None:
         return None
 
     def Serializable(self):

@@ -16,6 +16,14 @@
     {%-endif-%}
 {%-endmacro-%}
 
+{%-set fullClassPath -%}
+    {%-if parentClass is not defined or parentClass is none-%}
+        {{Name}}
+    {%-else-%}
+        {{parentClass}}.{{Name}}
+    {%-endif-%}
+{%-endset-%}
+
 class {{Name}}(object):
     """This represents one of {{schema['oneOf'] | length}} options"
     {%-for comp in schema['oneOf']%}
@@ -24,7 +32,7 @@ class {{Name}}(object):
     """
     {%-for comp in schema['oneOf']%}
     {%-if '$ref' not in comp%}
-    {{loader.Class(resolver, ComponentName(comp, loop.index), comp) |indent(4)}}
+    {{loader.Class(resolver, ComponentName(comp, loop.index), comp, fullClassPath) |indent(4)}}
     {%-endif%}
     {%-endfor%}
 
@@ -38,7 +46,7 @@ class {{Name}}(object):
         """
         return self._value
 
-    def Set(self, data):
+    def Set(self, data) -> {{fullClassPath}}:
         """ Must pass an object or data for one of the supported
         option types.
         """
@@ -59,6 +67,7 @@ class {{Name}}(object):
             {%-endfor%}
         if self._type is None:
             raise ValueError("Provided data did not match one of the required formats")
+        return self
 
     def Serializable(self):
         """ Returns an object that can be JSON serialized.

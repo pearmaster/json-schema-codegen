@@ -12,13 +12,21 @@ self.{{PropertyClassName(propName)}}
 {%-endif-%}
 {%-endmacro-%}
 
+{%-set fullClassPath -%}
+    {%-if parentClass is not defined or parentClass is none-%}
+        {{Name}}
+    {%-else-%}
+        {{parentClass}}.{{Name}}
+    {%-endif-%}
+{%-endset-%}
+
 class {{Name}}(UserDict):
     """This represents a JSON object.
     """
 
     {%-for propName, propSchema in schema.properties.items()%}
     {%-if '$ref' not in prop%}
-    {{loader.Class(resolver, PropertyClassName(propName), propSchema) |indent(4)}}
+    {{loader.Class(resolver, PropertyClassName(propName), propSchema, fullClassPath) |indent(4)}}
     {%-endif%}
     {%-endfor%}
 
@@ -47,7 +55,7 @@ class {{Name}}(UserDict):
     def Get{{propName|PascalCase}}(self):
         return self.data["{{propName}}"]
     
-    def Set{{propName|PascalCase}}(self, new_value):
+    def Set{{propName|PascalCase}}(self, new_value) -> {{fullClassPath}}:
         if not isinstance(new_value, {{PropertyType(propName, propSchema)}}):
             self.data["{{propName}}"] = {{PropertyType(propName, propSchema)}}(new_value)
         else:
@@ -55,6 +63,6 @@ class {{Name}}(UserDict):
         return self
     {%-endfor%}
 
-    def Serializable(self):
+    def Serializable(self) -> dict:
         return self.data
 {# #}

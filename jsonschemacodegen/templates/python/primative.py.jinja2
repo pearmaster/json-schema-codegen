@@ -22,45 +22,58 @@ bool
 
 {%-macro ValidateValue(schema, varName)%}
 if not isinstance({{varName}}, {{ToPythonType(schema.type)}}):
-    raise ValueError("Passed value was not a {{schema.type}}")
+    raise ValueError("Passed value '{}' was not a {{schema.type}}".format({{varName}}))
 {%-if schema.maxLength is defined%}
 if len({{varName}}) > {{schema.maxLength}}:
-    raise ValueError("Value length is greater than maximum of {{schema.maxLength}}")
+    raise ValueError("Value '{}' length {} is greater than maximum of {{schema.maxLength}}".format({{varName}}, len({{varName}})))
 {%-endif%} {#maxLength#}
 {%-if schema.minLength is defined%}
 if len({{varName}}) < {{schema.minLength}}:
-    raise ValueError("Value length is less than minimum of {{schema.minLength}}")
+    raise ValueError("Value '{}' length {} is less than minimum of {{schema.minLength}}".format({{varName}}, len({{varName}})))
 {%-endif%} {#minLength#}
 {%-if schema.minimum is defined%}
 if {{varName}} < {{schema.minimum}}:
-    raise ValueError("Value is less than the minimum of {{schema.minimum}}")
+    raise ValueError("Value '{}' is less than the minimum of {{schema.minimum}}".format({{varName}}))
 {%-endif%} {#minimum#}
 {%-if schema.maximum is defined%}
 if {{varName}} > {{schema.maximum}}:
-    raise ValueError("Value is more than the maximum of {{schema.maximum}}")
+    raise ValueError("Value '{}' is more than the maximum of {{schema.maximum}}".format({{varName}}))
 {%-endif%} {#maximum#}
 {%-if schema.exclusiveMinimum is defined%}
 if {{varName}} <= {{schema.exclusiveMinimum}}:
-    raise ValueError("Value is less than the minimum of {{schema.exclusiveMinimum}}")
+    raise ValueError("Value '{}' is less than the minimum of {{schema.exclusiveMinimum}}".format({{varName}}))
 {%-endif%} {#minimum#}
 {%-if schema.exclusiveMaximum is defined%}
 if {{varName}} >= {{schema.exclusiveMaximum}}:
-    raise ValueError("Value is more than the maximum of {{schema.exclusiveMaximum}}")
+    raise ValueError("Value '{}' is more than the maximum of {{schema.exclusiveMaximum}}".format({{varName}}))
 {%-endif%} {#maximum#}
 {%-if schema.multipleOf is defined%}
 if ({{varName}} % {{schema.multipleOf}}) != 0:
-    raise ValueError("Value is not a multiple of {{schema.multipleOf}}")
+    raise ValueError("Value '{}' is not a multiple of {{schema.multipleOf}}".format({{varName}}))
 {%-endif%} {#maximum#}
 {%-if schema.enum is defined%}
-if {{varName}} not in [{%for v in schema.enum%}{{FormatValue(schema.type, v)}}, {%endfor%}]:
-    raise ValueError("Value is not an acceptable value")
+acceptable_values = [{%for v in schema.enum%}{{FormatValue(schema.type, v)}}, {%endfor%}]
+if {{varName}} not in acceptable_values:
+    raise ValueError("Value '{}' is not in the list of acceptable value: {}".format({{varName}}, acceptable_values))
+{%-endif%} {#enum#}
+{%-if schema.const is defined%}
+if {{varName}} != {{schema.const | quotestring(schema.type)}}:
+    raise ValueError("Value '{}' is not the constant value '{{schema.const}}'".format({{varName}}))
 {%-endif%} {#enum#}
 {%-if schema.pattern is defined%}
 pattern = r"{{schema.pattern}}"
 if re.match(pattern, {{varName}}) is None:
-    raise ValueError("Value did not match the established regular expression")
+    raise ValueError("Value '{}' did not match the established regular expression".format({{varName}}))
 {%-endif%}
 {%-endmacro-%}
+
+{%-set fullClassPath -%}
+    {%-if parentClass is not defined or parentClass is none-%}
+        {{Name}}
+    {%-else-%}
+        {{parentClass}}.{{Name}}
+    {%-endif-%}
+{%-endset-%}
 
 class {{Name}}(object):
     """ This class is a schema-validating wrapper around a {{schema.type}}.
@@ -71,19 +84,23 @@ class {{Name}}(object):
 
     @staticmethod
     def _Validate(value):
+        """Ensures that the provided {{schema.type}} value meets all the schema constraints.
+        """
         {{-ValidateValue(schema, 'value') | indent(8)}}
 
-    def Set(self, new_value):
+    def Set(self, new_value) -> {{fullClassPath}}:
         if isinstance(new_value, type(self)):
             self._value = new_value._value
-        else:
+        elif isinstance(new_value, {{ToPythonType(schema.type)}}):
             self._Validate(new_value)
             self._value = new_value
+        else:
+            raise TypeError("The provided type was not a {{fullClassPath}} or a {{ToPythonType(schema.type)}}")
         return self
 
     def Get(self) -> {{ToPythonType(schema.type)}}:
         return self._value
 
-    def Serializable(self):
+    def Serializable(self) -> {{ToPythonType(schema.type)}}:
         return self.Get()
 
