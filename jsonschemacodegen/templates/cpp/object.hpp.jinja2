@@ -1,4 +1,5 @@
-{%-import 'loader.jinja2' as loader%}
+{%-import 'loader.jinja2' as loader-%}
+{%-import 'propname.jinja2' as helper-%}
 {%macro NestedObjectName(name) -%}
     {%-if name|UpperCamelCase != Name|UpperCamelCase%}{{-name | UpperCamelCase-}}{%else%}{{name | UpperCamelCase}}Property{%endif-%}
 {%-endmacro%}
@@ -18,6 +19,11 @@
 class {{Name}}
 {
 public:
+    {%-for propName, propSchema in schema.properties.items() %}
+    /*! The key name used in the exported JSON object.
+     */
+    static constexpr auto {{helper.ConstPropertyName(propName)}} = "{{propName}}";
+    {%endfor-%}
     {%-for propName, propSchema in schema.properties.items() %}
     {%-if '$ref' not in propSchema %}
     {{loader.Class('hpp', resolver, [Name], NestedObjectName(propName), propSchema) | indent(4) }}

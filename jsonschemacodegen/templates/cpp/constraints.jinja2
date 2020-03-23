@@ -1,0 +1,19 @@
+{%-macro ExprName(constraint)-%}
+    {%-if constraint == 'default'-%}
+        VALUE_DEFAULT
+    {%-elif constraint == 'minimum'-%}
+        VALUE_MINIMUM
+    {%-elif constraint == 'maximum'-%}
+        VALUE_MAXIMUM
+    {%-elif constraint == 'exclusiveMinimum'-%}
+        VALUE_EXCLUSIVE_MINIMUM
+    {%-elif constraint == 'exclusiveMaximum'-%}
+        VALUE_EXCLUSIVE_MAXIMUM
+    {%-elif constraint == 'multipleOf'-%}
+        VALUE_MULTIPLE_OF
+    {%-elif constraint == 'const'-%}
+        VALUE_CONSTANT
+    {%-else-%}
+        VALUE_{{constraint | CONST_CASE}}
+    {%-endif-%}
+{%-endmacro-%}

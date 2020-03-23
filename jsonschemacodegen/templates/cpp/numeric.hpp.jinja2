@@ -1,3 +1,4 @@
+{%-import 'constraints.jinja2' as constraint-%}
 {%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif-%}
 /*! {{Name}} is a wrapper around a {{schema.type}}.
  * \brief wrapper around {{cpptype}}
@@ -9,27 +10,48 @@ class {{Name}}
 {
 public:
     {%-if schema.minimum is defined %}
-    static constexpr int VALUE_MINIMUM = {{schema.minimum}};
-    {%-endif%}
+    /*! The encapsulated value must not be less than this minimum number.
+     * This is defined as a static value to encourage static assertations in application code.
+     */
+    static constexpr int {{constraint.ExprName('minimum')}} = {{schema.minimum}};
+    {%endif%}
     {%-if schema.maximum is defined %}
-    static constexpr int VALUE_MAXIMUM = {{schema.maximum}};
-    {%-endif%}
+    /*! The encapsulated value must not exceed this maximum number.
+     * This is defined as a static value to encourage static assertations in application code.
+     */
+    static constexpr int {{constraint.ExprName('maximum')}} = {{schema.maximum}};
+    {%endif%}
     {%-if schema.exclusiveMinimum is defined %}
-    static constexpr int VALUE_EXCLUSIVE_MINIMUM = {{schema.exclusiveMinimum}};
-    {%-endif%}
+    /*! The encapsulated value must be greater than this minimum number.
+     * This is defined as a static value to encourage static assertations in application code.
+     */
+    static constexpr int {{constraint.ExprName('exclusiveMinimum')}} = {{schema.exclusiveMinimum}};
+    {%endif%}
     {%-if schema.exclusiveMaximum is defined %}
-    static constexpr int VALUE_EXCLUSIVE_MAXIMUM = {{schema.exclusiveMaximum}};
-    {%-endif%}
+    /*! The encapsulated value must be less than this maximum number.
+     * This is defined as a static value to encourage static assertations in application code.
+     */
+    static constexpr int {{constraint.ExprName('exclusiveMaximum')}} = {{schema.exclusiveMaximum}};
+    {%endif%}
     {%-if schema.multipleOf is defined %}
-    static constexpr int VALUE_MULTIPLE_OF = {{schema.multipleOf}};
-    {%-endif%}
+    /*! The encapsulated value must be a multiple of {{schema.multipleOf}}.
+     * This is defined as a static value to encourage static assertations in application code.
+     */
+    static constexpr int {{constraint.ExprName('multipleOf')}} = {{schema.multipleOf}};
+    {%endif%}
     {%-if schema.default is defined %}
-    static constexpr int VALUE_DEFAULT = {{schema.default}};
-    {%-endif%}
+    /*! This is the default value encapsulated by {{Name}}.
+     * This is defined as a static value to encourage static assertations in application code.
+     */
+    static constexpr int {{constraint.ExprName('default')}} = {{schema.default}};
+    {%endif%}
     {%-if schema.const is defined %}
-    static constexpr int VALUE_CONSTANT = {{schema.const}};
-    {%-endif%}
-    {%if schema.const is not defined%}
+    /*! The encapsulated value must only be this value: {{schema.const}}.
+     * This is defined as a static value to encourage static assertations in application code.
+     */
+    static constexpr int {{constraint.ExprName('const')}} = {{schema.const}};
+    {%endif%}
+    {%-if schema.const is not defined%}
     /*! Constructor
      * \param value the initial value
      */
