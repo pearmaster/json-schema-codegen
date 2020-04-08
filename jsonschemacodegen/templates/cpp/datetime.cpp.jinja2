@@ -119,3 +119,13 @@ void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Valu
     std::string tempVal(GetString());
     value.SetString(tempVal.c_str(), tempVal.size(), allocator);  
 }
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
+}

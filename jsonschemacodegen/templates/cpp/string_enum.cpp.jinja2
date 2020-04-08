@@ -10,7 +10,7 @@
 {%set emptyConstructor = true %}
 {{className}}::{{Name}}()
 {
-    Set({{enumType}}::{{schema.default |enumify}});
+    Set(DEFAULT_VALUE);
 }
 {%-endif%}
 
@@ -109,4 +109,14 @@ void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Valu
 {{std}}string {{className}}::ToString() const
 {
     return EnumToString(_value);
+}
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
 }

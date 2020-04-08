@@ -68,16 +68,26 @@
 {
     return {{propName | privatize}};
 }
+
+{{className}}& {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
+{
+    {{propName | privatize}} = value;
+    {{propName | privatize}}.SetHandle({{helper.ConstPropertyName(propName)}});
+    return *this;
+}
 {%else%}
 boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propName | UpperCamelCase}}() const
 {
     return {{propName | privatize}};
 }
-{%endif%}
-void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
+
+{{className}}& {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
 {
     {{propName | privatize}} = value;
+    {{propName | privatize}}->SetHandle({{helper.ConstPropertyName(propName)}});
+    return *this;
 }
+{%endif%}
 {%-endfor%}
 
 {{className}} {{className}}::FromJson(const {{rapidjson}}Value& json)
@@ -93,6 +103,7 @@ void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName
         throw std::invalid_argument("JSON is missing the '{{propName}}' property.");
     }
     {{ObjectType(propName, propSchema)}} local{{propName | UpperCamelCase}} = {{ObjectType(propName, propSchema)}}::FromJson(json[{{helper.ConstPropertyName(propName)}}]);
+    local{{propName | UpperCamelCase}}.SetHandle({{helper.ConstPropertyName(propName)}});
     {%-endfor%}
 
     {%-if schema.RequiredList() %}
@@ -103,7 +114,9 @@ void {{className}}::Set{{propName | UpperCamelCase}}(const {{ObjectType(propName
     {%-for propName, propSchema in schema.UnRequiredList()%}
     if (json.HasMember({{helper.ConstPropertyName(propName)}}))
     {
-        newInstance.Set{{propName | UpperCamelCase}}({{ObjectType(propName, propSchema)}}::FromJson(json[{{helper.ConstPropertyName(propName)}}]));
+        auto local{{propName | UpperCamelCase}} = {{ObjectType(propName, propSchema)}}::FromJson(json[{{helper.ConstPropertyName(propName)}}]);
+        local{{propName | UpperCamelCase}}.SetHandle({{helper.ConstPropertyName(propName)}});
+        newInstance.Set{{propName | UpperCamelCase}}(local{{propName | UpperCamelCase}});
     }
     {%-endfor%}
     return newInstance;
@@ -130,4 +143,14 @@ void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.cpp_resolve_nam
     }
     {%endif%}
     {%-endfor%}
+}
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
 }

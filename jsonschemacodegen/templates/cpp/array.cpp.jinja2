@@ -41,6 +41,10 @@ void {{className}}::SetArray(const {{resolver.cpp_resolve_namespace(['std'])}}ve
     }
     {%-endif%}
     _arr = arr;
+    for ({{itemtype}}& el : _arr)
+    {
+        el.SetHandle(_handle);
+    }
 }
 
 {{resolver.cpp_resolve_namespace(['std'])}}vector<{{itemtype}}> {{className}}::GetArray() const
@@ -57,6 +61,7 @@ void {{className}}::Append(const {{itemtype}}& item)
     }
     {%-endif%}
     _arr.push_back(item);
+    _arr.back().SetHandle(_handle);
 }
 
 {{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
@@ -82,4 +87,19 @@ void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Valu
         el.ToJson(elementValue, allocator);
         value.PushBack(elementValue, allocator);
     }
+}
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+
+    for ({{itemtype}}& el : _arr)
+    {
+        el.SetHandle(handle);
+    }
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
 }

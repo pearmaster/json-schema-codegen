@@ -1,7 +1,7 @@
 /*! {{Name}} is a wrapper around a {{schema.type}}.
  * The value is limited to a set of enum values.
  {%-if schema.description %}
- * {{schema.description}}
+ * {{schema.description|doxygen}}
  {%-endif%}
  */
 class {{Name}}
@@ -24,13 +24,18 @@ public:
     /*! This string represents the default JSON value.
      */
     static constexpr char DEFAULT_STRING[] = "{{schema.default}}";
+
+    /*! This is the default enum value.
+     * When the class is called with an empty constructor, this is the value that is used.
+     */
+    static constexpr Value DEFAULT_VALUE = Value::{{schema.default |enumify}};
     {%-endif%}
 
     /*! Constructor for {{Name}}.
      * \param value initial value
      */
     {{Name}}(Value value);
-
+    {# #}
     {%-if schema.default is defined %}
     /*! Constructor that initializes the object with the {{schema.default |enumify}} value.
      */
@@ -49,6 +54,11 @@ public:
      * \param value new value
      */
     {{Name}}& operator=(Value value);
+
+    /*! Stream operator
+     * \param os the output stream
+     * \param v instance of {{Name}}
+     */
     friend std::ostream& operator<<(std::ostream& os, const {{Name}}& v);
 
     /*! The less than comparison operator.
@@ -106,6 +116,20 @@ public:
      * \return string representation without quotes.
      */
     std::string ToString() const;
+
+    /*! Sets a string handle associated with this {{Name}} instance.
+     * This gets called by a parent object after creating an instance that is used for an object's property.
+     * \param handle is the string name.
+     */
+    void SetHandle(const std::string& handle);
+
+    /*! Gets the string handle associated with this {{Name}} instance.
+     * This is often the property name used in a JSON-object parent.
+     * It may be empty.
+     * \returns the handle string
+     */
+    std::string GetHandle() const;
 private:
     Value _value;
+    std::string _handle;
 };

@@ -73,7 +73,7 @@ or schema.type == 'string'-%}
 {%-        endif-%}
 {%-    endfor%}
 {%-elif schema.type == 'null'-%}
-{%-    include 'null.py.jinja2'-%}
+{#     Nothing special here #}
 {%-elif schema.type == 'string'-%}
 {%-    if schema.pattern is defined-%}
 {%-        do includes.append('import re')-%}

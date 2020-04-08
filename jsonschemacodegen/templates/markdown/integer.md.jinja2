@@ -1,4 +1,13 @@
-**integer**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
+{%-macro IntFormat(schema)-%}
+    {%-if 'format' in schema-%}
+        {%-if schema['format'].startswith('u')%}Unsigned {%endif-%}
+        {%-if schema['format'].endswith('64')%}64-bit {%endif-%}
+        {%-if schema['format'].endswith('32')%}32-bit {%endif-%}
+        {%-if schema['format'].endswith('16')%}16-bit {%endif-%}
+        {%-if schema['format'].endswith('8')%}8-bit {%endif-%}
+    {%-endif-%}
+{%-endmacro-%}
+**{{IntFormat(schema)}}integer**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
 {%-if 'default' in schema%}
  * Default value: `{{schema.default}}`
 {%-endif-%}

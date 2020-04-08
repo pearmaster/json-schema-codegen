@@ -379,7 +379,7 @@ def SchemaFactory(schema, root=None):
         elif schema['type'] == 'array':
             return ArraySchema(schema, root)
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f"The type '{schema['type']}' is not implemented")
     elif 'allOf' in schema:
         return AllOfSchema(schema, root)
     elif 'anyOf' in schema:

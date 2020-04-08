@@ -69,6 +69,13 @@ boost::variant<{{optionList}}> {{className}}::Get() const
 void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
 {
     _value = variant;
+    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%if not loop.first%}
+    else {%endif%}if (_value.which() == {{loop.index - 1}})
+    {
+        boost::get<{{ObjectType(optionName, s)}}>(_value).SetHandle(_handle);
+    }
+    {%-endfor %}
 }
 
 {%-if commonType in ['boolean', 'integer', 'number', string] %}
@@ -120,4 +127,22 @@ void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorT
         boost::get<{{ObjectType(optionName, s)}}>(_value).ToJson(value, allocator);
     }
     {%-endfor %}
+}
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+
+    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%if not loop.first%}
+    else {%endif%}if (_value.which() == {{loop.index - 1}})
+    {
+        boost::get<{{ObjectType(optionName, s)}}>(_value).SetHandle(handle);
+    }
+    {%-endfor %}
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
 }

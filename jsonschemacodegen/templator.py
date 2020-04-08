@@ -3,6 +3,7 @@ import jinja2
 import stringcase
 import re
 
+PLANTUML_REPLACE = re.compile(r"```plantuml\n(.*)```", re.DOTALL|re.MULTILINE)
 
 class Generator(object):
 
@@ -51,6 +52,17 @@ class Generator(object):
 
             return rv
 
+        def Italics(s: str):
+            if s and s is not None and s != 'None' and len(s) > 0:
+                return "_%s_" % (s)
+            else:
+                return ''
+
+        def Doxygenify(s: str):
+            if "```plantuml" in s:
+                return PLANTUML_REPLACE.sub(r"\\startuml\n\1\\enduml", s)
+            return s
+
         if self.jinjaEnvironment is None:
             env = jinja2.Environment(loader=jinja2.PackageLoader(self.templatePkg, ''),
                                      extensions=['jinja2.ext.do'])
@@ -61,7 +73,8 @@ class Generator(object):
             env.filters['camelCase'] = stringcase.camelcase
             env.filters['mdindent'] = MdIndent
             env.filters['type'] = type # For debugging
-
+            env.filters['doxygen'] = Doxygenify
+            env.filters['italics'] = Italics
             env.filters['quotestring'] = QuoteIfString
             env.filters['dir'] = dir # For debug
             env.filters['privatize'] = Privatize

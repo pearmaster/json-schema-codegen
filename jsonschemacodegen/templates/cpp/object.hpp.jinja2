@@ -77,7 +77,7 @@ public:
      * \fn void Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value)
      * \param value the value which is set as the {{propName}} property.
      */
-    void Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value);
+    {{Name}}& Set{{propName | UpperCamelCase}}(const {{ObjectType(propName, propSchema)}}& value);
     {%-endfor%}
 
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
@@ -95,6 +95,18 @@ public:
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
+    /*! Sets a string handle associated with this {{Name}} instance.
+     * This gets called by a parent object after creating an instance that is used for an object's property.
+     * \param handle is the string name.
+     */
+    void SetHandle(const std::string& handle);
+
+    /*! Gets the string handle associated with this {{Name}} instance.
+     * This is often the property name used in a JSON-object parent.
+     * It may be empty.
+     * \returns the handle string
+     */
+    std::string GetHandle() const;
 private:
     {%-for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required %}
@@ -103,4 +115,5 @@ private:
     boost::optional<{{ObjectType(propName, propSchema)}}> {{propName | privatize}};
     {%-endif%}
     {%-endfor%}
+    std::string _handle;
 };

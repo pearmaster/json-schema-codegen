@@ -37,6 +37,7 @@ boost::optional<{{ObjectType(componentName, s)}}> {{className}}::Get{{ObjectName
 void {{className}}::Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
 {
     {{componentName|privatize}} = component;
+    {{componentName|privatize}}->SetHandle(_handle);
 }
 {%endfor%}
 
@@ -70,4 +71,22 @@ void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorT
         {{componentName|privatize}}->ToJson(value, allocator);
     }
     {%-endfor %}
+}
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+
+    // This 'anyOf' object passes the handle through to its children objects
+    {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    if ({{componentName|privatize}})
+    {
+        {{componentName|privatize}}->SetHandle(handle);
+    }
+    {%-endfor %}
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
 }

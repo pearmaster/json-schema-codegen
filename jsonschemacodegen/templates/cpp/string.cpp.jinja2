@@ -128,3 +128,13 @@ void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Valu
 {
     value.SetString(_value.c_str(), _value.size(), allocator);  
 }
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
+}

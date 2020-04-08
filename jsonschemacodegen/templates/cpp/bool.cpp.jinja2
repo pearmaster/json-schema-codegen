@@ -50,3 +50,13 @@ void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.cpp_resolve_nam
 {
     value.SetBool(_value); 
 }
+
+void {{className}}::SetHandle(const std::string& handle)
+{
+    _handle = handle;
+}
+
+std::string {{className}}::GetHandle() const
+{
+    return _handle;
+}

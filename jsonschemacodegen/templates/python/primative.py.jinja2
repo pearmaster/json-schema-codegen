@@ -23,6 +23,37 @@ bool
 {%-macro ValidateValue(schema, varName)%}
 if not isinstance({{varName}}, {{ToPythonType(schema.type)}}):
     raise ValueError("Passed value '{}' was not a {{schema.type}}".format({{varName}}))
+{%-if schema.format is defined%}
+{%-if schema.format.startswith('uint')%}
+if {{varName}} < 0:
+    raise ValueError("Value '{}' is signed but the format is {}".format({{varName}}, "{{schema.format}}"))
+{%-if schema.format.endswith('32')%}
+if {{varName}} > 0xFFFFFFFF:
+    raise ValueError("Value '{}' is greater than the max for {}".format({{varName}}, "{{schema.format}}"))
+{%-endif%} {#format is uint32#}
+{%-if schema.format.endswith('16')%}
+if {{varName}} > 0xFFFF:
+    raise ValueError("Value '{}' is greater than the max for {}".format({{varName}}, "{{schema.format}}"))
+{%-endif%} {#format is uint16#}
+{%-if schema.format.endswith('8')%}
+if {{varName}} > 0xFF:
+    raise ValueError("Value '{}' is greater than the max for {}".format({{varName}}, "{{schema.format}}"))
+{%-endif%} {#format is uint8#}
+{%-elif schema.format.startswith('int')%}
+{%-if schema.format.endswith('32')%}
+if {{varName}} > 0x7FFFFFFF or {{varName}} < (-1*0x800000000):
+    raise ValueError("Value '{}' is outside the range for {}".format({{varName}}, "{{schema.format}}"))
+{%-endif%} {#format is int32#}
+{%-if schema.format.endswith('16')%}
+if {{varName}} > 0x7FFF or {{varName}} < (-1*0x80000):
+    raise ValueError("Value '{}' is outside the range for {}".format({{varName}}, "{{schema.format}}"))
+{%-endif%} {#format is int16#}
+{%-if schema.format.endswith('8')%}
+if {{varName}} > 0x7F or {{varName}} < (-1*0x800):
+    raise ValueError("Value '{}' is outside the range for {}".format({{varName}}, "{{schema.format}}"))
+{%-endif%} {#format is int8#}
+{%-endif%} {#format is int/uint#}
+{%-endif%} {#format#}
 {%-if schema.maxLength is defined%}
 if len({{varName}}) > {{schema.maxLength}}:
     raise ValueError("Value '{}' length {} is greater than maximum of {{schema.maxLength}}".format({{varName}}, len({{varName}})))
@@ -94,6 +125,11 @@ class {{Name}}(object):
         elif isinstance(new_value, {{ToPythonType(schema.type)}}):
             self._Validate(new_value)
             self._value = new_value
+        {%if schema.type == 'number' -%}
+        elif isinstance(new_value, int):
+            self._Validate(float(new_value))
+            self._value = float(new_value)
+        {%endif-%}
         else:
             raise TypeError("The provided type was not a {{fullClassPath}} or a {{ToPythonType(schema.type)}}")
         return self
