@@ -3,7 +3,7 @@ import abc
 import stringcase
 import os
 
-from . import templator
+from jacobsjinjatoo import templator
 from . import schemawrappers
 
 class ResolverBaseClass(abc.ABC):
@@ -98,8 +98,8 @@ class GeneratorFromSchema(object):
 
     def Generate(self, schema, path):
         retval = [None, None]
-        srcGenerator = templator.Generator('jsonschemacodegen.templates.cpp', self.output_dir['src'])
-        headerGenerator = templator.Generator('jsonschemacodegen.templates.cpp', self.output_dir['header'])
+        srcGenerator = templator.CodeTemplator(self.output_dir['src']).add_template_package('jsonschemacodegen.templates.cpp')
+        headerGenerator = templator.CodeTemplator(self.output_dir['header']).add_template_package('jsonschemacodegen.templates.cpp')
         args = {
             "Name": self.resolver.cpp_get_name(path),
             "schema": schemawrappers.SchemaFactory(schema),
@@ -109,16 +109,16 @@ class GeneratorFromSchema(object):
         if '$ref' not in schema:
             srcFileName = "{}.cpp".format(self.resolver.cpp_get_filename_base(path))
             self._make_sure_directory_exists('src', os.path.dirname(srcFileName))
-            srcGenerator.RenderTemplate("source.cpp.jinja2", 
-                srcFileName, 
+            srcGenerator.render_template(template_name="source.cpp.jinja2", 
+                output_name=srcFileName, 
                 deps=['"{}"'.format(self.resolver.cpp_get_header(path))], 
                 usings=self.resolver.cpp_get_usings(),
                 ns=self.resolver.cpp_get_namespace(path),
                 resolver=self.resolver,
                 **args)
             retval[0] = srcFileName
-        headerGenerator.RenderTemplate("header.hpp.jinja2", 
-            headerFilename, 
+        headerGenerator.render_template(template_name="header.hpp.jinja2", 
+            output_name=headerFilename, 
             ns=self.resolver.cpp_get_namespace(path),
             deps=self.GetDeps(args['schema']), 
             resolver=self.resolver, 

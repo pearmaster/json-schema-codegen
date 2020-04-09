@@ -3,7 +3,7 @@ import abc
 import stringcase
 import os.path
 
-from . import templator
+from jacobsjinjatoo import templator
 from . import schemawrappers
 from . import json_example
 
@@ -41,12 +41,14 @@ class GeneratorFromSchema(object):
         return []
 
     def Generate(self, schema, class_name, filename_base):
-        generator = templator.Generator('jsonschemacodegen.templates.python', self.output_dir)
+        generator = templator.CodeTemplator(self.output_dir)
+        generator.add_template_package('jsonschemacodegen.templates.python')
+
         args = {
             "Name": class_name,
             "schema": schemawrappers.SchemaFactory(schema),
         }
-        return generator.RenderTemplate("file.py.jinja2", output_name="{}.py".format(filename_base), resolver=self.resolver, **args)
+        return generator.render_template(template_name="file.py.jinja2", output_name="{}.py".format(filename_base), resolver=self.resolver, **args)
 
     def Examples(self, schema, root):
         wrapped_schema = schemawrappers.SchemaFactory(schema, root)
@@ -64,7 +66,8 @@ class GeneratorFromSchema(object):
 
     def GenerateTest(self, schema, root, class_name, filename_base, path):
         filename = self.resolver.py_test_filename(path)
-        generator = templator.Generator('jsonschemacodegen.templates.python', os.path.join(self.output_dir, os.path.dirname(filename)))
+        generator = templator.CodeTemplator(os.path.join(self.output_dir, os.path.dirname(filename)))
+        generator.add_template_package('jsonschemacodegen.templates.python')
         wrapped_schema = schemawrappers.SchemaFactory(schema, root)
         args = {
             "Name": class_name.split('.')[-1],
@@ -74,7 +77,7 @@ class GeneratorFromSchema(object):
             "path": path,
             "objType": path.split("/")[-2]
         }
-        return generator.RenderTemplate("test.py.jinja2", output_name=os.path.basename(filename), resolver=self.resolver, **args)
+        return generator.render_template(template_name="test.py.jinja2", output_name=os.path.basename(filename), resolver=self.resolver, **args)
 
     def GenerateFromPath(self, schema, path):
         assert(self.resolver)
