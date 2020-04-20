@@ -77,6 +77,10 @@ class ResolverBaseClass(abc.ABC):
     def cpp_get_usings(self) -> list:
         pass
 
+    @abc.abstractmethod
+    def cpp_get_lib_ns(self) -> list:
+        pass
+
 
 class GeneratorFromSchema(object):
 
@@ -128,3 +132,26 @@ class GeneratorFromSchema(object):
         retval[1] = headerFilename
         return tuple(retval)
 
+
+class LibraryGenerator(object):
+
+    def __init__(self, src_output_dir: str, header_output_dir: str, resolver):
+        self.output_dir = {
+            "src": src_output_dir,
+            "header": header_output_dir,
+        }
+        self.resolver = resolver
+    
+    def _make_sure_directory_exists(self, output_key, dir_path):
+        d = os.path.join(self.output_dir[output_key], dir_path)
+        if not os.path.exists(d):
+            os.makedirs(d)
+
+    def Generate(self):
+        retval = [None, "exceptions.hpp"]
+        headerGenerator = templator.CodeTemplator(self.output_dir['header']).add_template_package('jsonschemacodegen.templates.cpp')
+        headerGenerator.render_template(template_name="exceptions.hpp.jinja2", 
+            output_name="exceptions.hpp", 
+            ns=ns, 
+        )
+        return tuple(retval)
