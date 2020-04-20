@@ -43,6 +43,9 @@ void {{className}}::Set{{ObjectName(componentName, s)}}(const {{ObjectType(compo
 
 {{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
+    {%-if schema.requiredProperties | length > 0 %}
+    ThrowIfMissingRequiredProperties(json);
+    {%-endif%}
     {{className}} returnObject;
     {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
     try
@@ -71,6 +74,9 @@ void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorT
         {{componentName|privatize}}->ToJson(value, allocator);
     }
     {%-endfor %}
+    {%-if schema.requiredProperties | length > 0 %}
+    ThrowIfMissingRequiredProperties(value);
+    {%-endif%}
 }
 
 void {{className}}::SetHandle(const std::string& handle)
@@ -90,3 +96,19 @@ std::string {{className}}::GetHandle() const
 {
     return _handle;
 }
+
+{%if schema.requiredProperties | length > 0 %}
+void {{className}}::ThrowIfMissingRequiredProperties(const rapidjson::Value& json)
+{
+    if (!json.IsObject())
+    {
+        throw std::invalid_argument("Not an object");
+    }
+    {%-for reqProp in schema.requiredProperties %}
+    if (!json.HasMember("{{reqProp}}"))
+    {
+        throw std::invalid_argument("Missing '{{reqProp}}' property");
+    }
+    {%-endfor%}
+}
+{%-endif%}

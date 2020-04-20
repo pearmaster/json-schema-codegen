@@ -77,6 +77,10 @@ class {{Name}}(object):
             raise ValueError("Did not provide data for {{ComponentType(compSchema, loop.index)}}")
         {%-endfor-%}
         {%-endif%}
+        {%-if schema.requiredProperties | length > 0 %}
+        # Test to make sure item can still serialize with the required properties
+        self.Serializable()
+        {%-endif%}
 
     {%for compSchema in schema[Combination(schema)]%}
     def GetComponent{{loop.index}}(self):
@@ -97,5 +101,10 @@ class {{Name}}(object):
         if self._component{{loop.index}} is not None:
             obj.update(self._component{{loop.index}}.Serializable())
         {%-endfor%}
+        {%-if schema.requiredProperties | length > 0 %}
+        for req_prop in {{schema.requiredProperties}}:
+            if req_prop not in obj:
+                raise KeyError("Missing required property '{}' in serialized object".format(req_prop))
+        {%-endif%}
         return obj
 

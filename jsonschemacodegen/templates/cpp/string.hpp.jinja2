@@ -80,12 +80,12 @@ public:
 
     /*! Validate that the provided string meets schema constraints.
      * \param testValue string for evaluation
-     * \throw if the string doesn't meet requirements
+     * \throw std::out_of_range If the string doesn't meet requirements
      */
     static void Validate(const std::string& testValue);
 
     /*! Create a new {{Name}} object from a JSON structure.
-     * \throw if the JSON structure doesn't match the schema constraints.
+     * \throw std::out_of_range If the string didn't meet the schema's constraints.
      * \return new {{Name}} object containing values from the JSON.
      * \param json JSON structure to use for creating new {{Name}} object.
      */
@@ -95,7 +95,8 @@ public:
      * The string must meet the schema's constraints.
      * \return new {{Name}} object containing the string.
      * \param str the string that will be contained in the new {{Name}} object.
-     * \throw if the string didn't meet the schema's constraints.
+     * \throw std::invalid_argument If the JSON value isn't a JSON string.
+     * \throw std::out_of_range If the string didn't meet the schema's constraints.
      */
     static {{Name}} FromString(const std::string& str);
 
@@ -137,13 +138,13 @@ private:
 
     /*! Set the value of the string.
      * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
+     * \throw std::out_of_range If the passed string value doesn't meet schema validation.
      */
     {{Name}}& Set(const std::string& value);
 
     /*! Set the value of the string.
      * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
+     * \throw std::out_of_range If the passed string value doesn't meet schema validation.
      */
     {{Name}}& Set(const char* value);
 

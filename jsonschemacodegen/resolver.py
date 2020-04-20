@@ -109,8 +109,9 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
         walker = tree
         for p in [p for p in path.split('/') if len(p) > 0]:
             if p not in walker:
-                treeId = 'id' in tree and tree['id'] or 'UNKNOWN'
-                raise TreeWalkerException("Could not resolve {} from {}".format(path, treeId))
+                treeTitle = 'info' in tree and 'title' in tree['info'] and tree['info']['title'] or 'UNKNOWN'
+                treeId = 'id' in tree and tree['id'] or treeTitle
+                raise TreeWalkerException("Could not resolve {} from '{}'".format(path, treeId))
             walker = walker[p]
         return walker
 
@@ -146,7 +147,7 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
             return json_doc
 
     def get_schema(self, reference, root=None) -> schemawrappers.SchemaBase:
-        schema = schemawrappers.SchemaFactory(self.get_json(reference, root=root))
-        schema.root = self._get_root(reference, root)
+        schemasRoot = self._get_root(reference, root)
+        schema = schemawrappers.SchemaFactory(self.get_json(reference, root=root), schemasRoot)
         return schema
 

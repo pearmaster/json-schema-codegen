@@ -53,6 +53,27 @@ public:
      */
     boost::variant<{{optionList}}> Get() const;
 
+    {#{%-for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+    /*! Asserts that the type provided is a {{ObjectType(optionName, s)}}.
+     * Asserts that when `object.Get().which() == {{loop.index - 1}}` the expression `boost::get<{{ObjectType(optionName, s)}}>(object.Get())` is valid.
+     * This is static_assertion, so it will break at compile time, which is desireable.
+     * \code
+       boost::variant<{{optionList}}> v = instance.Get();
+       if (v.which() == {{loop.index - 1}})
+       {
+           {{Name}}::StaticAssertWhich{{loop.index - 1}}Type<{{ObjectType(optionName, s)}}>();
+           {{ObjectType(optionName, s)}} opt = boost::get<{{ObjectType(optionName, s)}}>(v);
+           // do other stuff with opt
+       }
+     * \endcode
+     */
+    template <typename T>
+    static inline void StaticAssertWhich{{loop.index - 1}}Type()
+    {
+        static_assert(std::is_same<T, {{ObjectType(optionName, s)}}>::value, "Type {{loop.index - 1}} is not {{ObjectType(optionName, s)}}");
+    }
+    {%-endfor -%}#}
+
     /*! Sets the variant object.
      * \fn void Set(const boost::variant<{{optionList}}>& variant)
      * \param variant  An instance of one of these types must be passed: {{optionList}}

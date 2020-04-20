@@ -31,17 +31,19 @@ class ExampleIndex(object):
         return bool(choice)
 
     def Choice(self, population):
-        return population[self.Number(len(population))-1]
+        return population[self.Number(len(population)-1)]
 
-    def Number(self, maximum):
+    def Number(self, maximum) -> int:
         if self._full() or maximum == 0:
             return maximum
         bits = bitsNeededForNumber(maximum)
         mask = rightBitMask(bits)
         choice = self.current & mask
         self.current = self.current >> bits
-        return choice % maximum
+        return choice % (maximum + 1)
 
+    def __repr__(self):
+        return str(self.index)
 
 class SchemaBase(collections.UserDict):
 
@@ -58,6 +60,11 @@ class SchemaBase(collections.UserDict):
     def Resolve(self, resolver):
         return self
 
+    def GetTitle(self):
+        if 'title' in self.data:
+            return self.data['title']
+        return ''
+
     def IsReadOnly(self):
         return ('readOnly' in self.data) and (self.data['readOnly'] is True)
     
@@ -65,9 +72,13 @@ class SchemaBase(collections.UserDict):
         return ('writeOnly' in self.data) and (self.data['writeOnly'] is True)
 
     def GetExampleCombos(self, resolver) -> int:
+        combos = 1
         if 'examples' in self.data:
-            return len(self.data['examples'])
-        return 1
+            combos = len(self.data['examples'])
+        return combos
+
+    def AnExample(self, resolver, index):
+        raise NotImplementedError
     
     def Example(self, resolver, index: ExampleIndex):
         if 'example' in self.data:
@@ -76,7 +87,11 @@ class SchemaBase(collections.UserDict):
             return index.Choice(self.data['examples'])
         if 'default' in self.data:
             return self.data['default']
-        return self.AnExample(resolver, index)
+        try:
+            return self.AnExample(resolver, index)
+        except:
+            print(f"Failed to get an example for {self.data} against {self.root['info']['title']}")
+            raise
 
 class Reference(SchemaBase):
 
@@ -87,13 +102,18 @@ class Reference(SchemaBase):
         return incs
 
     def Resolve(self, resolver):
-        return resolver.get_schema(self.data['$ref'], self.root)
+        resolution = resolver.get_schema(self.data['$ref'], self.root)
+        return resolution
 
     def GetExampleCombos(self, resolver) -> int:
         return self.Resolve(resolver).GetExampleCombos(resolver)
 
     def Example(self, resolver, index: ExampleIndex):
-        return self.Resolve(resolver).Example(resolver, index)
+        try:
+            return self.Resolve(resolver).Example(resolver, index)
+        except:
+            print(f"Trying to resolve {self.data['$ref']} against yaml root {self.root}")
+            raise
 
 
 class ObjectSchema(SchemaBase):
@@ -101,9 +121,16 @@ class ObjectSchema(SchemaBase):
     def __init__(self, initialdata, root=None):
         super().__init__(initialdata, root)
         if 'properties' in self.data:
-            assert(isinstance(self.data['properties'], dict))
+            assert(isinstance(self.data['properties'], dict)), f"Schema's properties is type {type(self.data['properties'])} instead of dict like expected"
         else:
             self.data['properties'] = dict()
+        self.requiredProperties = set()
+        if 'required' in self.data:
+            self.requiredProperties.update(self.data['required'])
+
+    def SetPropertyRequired(self, propertyName):
+        if 'properties' in self.data and propertyName in self.data['properties']:
+            self.requiredProperties.add(propertyName)
 
     def GetPropertySchemas(self):
         props = {}
@@ -134,7 +161,7 @@ class ObjectSchema(SchemaBase):
     def RequiredList(self, default_negates_required=True):
         theList = []
         for propName, propSchema in self.data['properties'].items():
-            if ('required' in self.data and propName in self.data['required']) and not (default_negates_required and 'default' in propSchema):
+            if (propName in self.requiredProperties) and not (default_negates_required and 'default' in propSchema):
                 theList.append((propName, SchemaFactory(propSchema, self.root)))
         return theList
 
@@ -142,12 +169,11 @@ class ObjectSchema(SchemaBase):
     def UnRequiredList(self, default_negates_required=True):
         theList = []
         for propName, propSchema in self.data['properties'].items():
+            schemaObject = SchemaFactory(propSchema, self.root)
             if default_negates_required and 'default' in propSchema:
-                theList.append((propName, SchemaFactory(propSchema, self.root)))
-            elif 'required' not in self.data:
-                theList.append((propName, SchemaFactory(propSchema, self.root)))
-            elif propName not in self.data['required']:
-                theList.append((propName, SchemaFactory(propSchema, self.root)))
+                theList.append((propName, schemaObject))
+            elif propName not in self.requiredProperties:
+                theList.append((propName, schemaObject))
         return theList
 
     def GetExampleCombos(self, resolver) -> int:
@@ -155,8 +181,7 @@ class ObjectSchema(SchemaBase):
         for _, item in self.RequiredList(default_negates_required=False):
             combos *= item.GetExampleCombos(resolver)
         for _, item in self.UnRequiredList(default_negates_required=False):
-            combos *= 2
-            combos *= item.GetExampleCombos(resolver)
+            combos *= (1 + item.GetExampleCombos(resolver))
         return combos
 
     def AnExample(self, resolver, index: ExampleIndex):
@@ -220,14 +245,15 @@ class NumberSchema(SchemaBase):
             return self.data['exclusiveMinimum'] + (self.data['type'] == 'integer' and 1 or 0.000001)
         if 'exclusiveMaximum' in self.data:
             return self.data['exclusiveMaximum'] - (self.data['type'] == 'integer' and 1 or 0.000001)
-        return 1
+        return self.data['type'] == 'integer' and 1 or 1.1
 
 class BooleanSchema(SchemaBase):
 
     def GetExampleCombos(self, resolver) -> int:
+        combos = 2
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
-            return super().GetExampleCombos(resolver)
-        return 2
+            combos = super().GetExampleCombos(resolver)
+        return combos
 
     def AnExample(self, resolver, index: ExampleIndex):
         return index.Choice([True, False])
@@ -276,9 +302,29 @@ class CombinatorSchemaBase(SchemaBase):
     def __init__(self, name, initialdata, root=None):
         super().__init__(initialdata, root)
         self.name = name
+        self.requiredProperties = set()
+        self.components = []
+        for s in self.data[self.name]:
+            if 'type' in s or 'required' not in s:
+                schema = SchemaFactory(s, self.root)
+                self.components.append(schema)
+
+        for s in self.data[self.name]:
+            if 'required' in s and 'type' not in s:
+                for rp in s['required']:
+                    self.requiredProperties.add(rp)
+                    self.SetPropertyRequired(rp)
+                
+
+    def SetPropertyRequired(self, propertyName):
+        for comp in self.components:
+            try:
+                comp.SetPropertyRequired(propertyName)
+            except:
+                pass
 
     def GetComponents(self):
-        return [SchemaFactory(s, self.root) for s in self.data[self.name]]
+        return self.components
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -315,12 +361,21 @@ class OneOfSchema(CombinatorSchemaBase):
         return commonType
 
     def GetExampleCombos(self, resolver) -> int:
+        combos = 1
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
-            return super().GetExampleCombos(resolver)
-        return bitsNeededForNumber(len(self.GetComponents()) - 1)
+            combos = super().GetExampleCombos(resolver)
+        else:
+            combos = len(self.GetComponents())#bitsNeededForNumber(len(self.GetComponents()) - 1)
+            max_component_combo = 1
+            for comp in self.GetComponents():
+                max_component_combo = max(max_component_combo, comp.GetExampleCombos(resolver))
+            combos *= max_component_combo
+        return combos
 
     def AnExample(self, resolver, index: ExampleIndex):
-        return index.Choice(self.GetComponents()).Example(resolver, index)
+        component = index.Choice(self.GetComponents())
+        ex = component.Example(resolver, index)
+        return ex
 
 
 class AllOfSchema(CombinatorSchemaBase):

@@ -121,7 +121,9 @@ class GeneratorFromSchema(object):
             output_name=headerFilename, 
             ns=self.resolver.cpp_get_namespace(path),
             deps=self.GetDeps(args['schema']), 
-            resolver=self.resolver, 
+            resolver=self.resolver,
+            filename=headerFilename,
+            filepath='',
             **args)
         retval[1] = headerFilename
         return tuple(retval)

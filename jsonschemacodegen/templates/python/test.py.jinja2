@@ -16,4 +16,9 @@ class Test{{Name|UpperCamelCase}}{{objType|UpperCamelCase}}Structure(unittest.Te
         for i, ex_str in enumerate(examples):
             with self.subTest(index=i):
                 self.do_{{Name|snake_case}}_load(ex_str)
+
+    def test_fail_when_not_json(self):
+        example = 'this string here should cause it to fail{{examples[-1]}}'
+        with self.assertRaises(ValueError):
+            self.do_{{Name|snake_case}}_load(example)
 {# #}

@@ -81,4 +81,13 @@ private:
     boost::optional<{{ObjectType(componentName, s)}}> {{componentName|privatize}};
     {%-endfor%}
     std::string _handle;
+
+    {%-if schema.requiredProperties | length > 0 %}
+    
+    /*! Checks to make sure any required properties defined in the 'anyOf' list are missing.
+     * \param json Is completed JSON-object structure.
+     * \throws std::invalid_argument If a property is missing
+     */
+    static void ThrowIfMissingRequiredProperties(const rapidjson::Value& json);
+    {%-endif%}
 };

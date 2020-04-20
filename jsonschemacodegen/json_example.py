@@ -25,116 +25,61 @@ class GeneratorFromSchema(object):
 
     def __init__(self, resolver=None):
         self.resolver = resolver
-        self.includeMode = 'all'
-        self.seed = 0
 
-    def GetExampleOr(self, schema, default):
-        if 'example' in schema:
-            return schema['example']
-        elif 'examples' in schema:
-            exampleList = sorted(schema['examples'])
-            return exampleList[0]
-        elif 'enum' in schema:
-            enums = sorted(schema['enum'])
-            return enums[0]
+    @staticmethod
+    def DeDuplicate(aList : list, limit=None) -> list:
+        text_list = [json.dumps(a, sort_keys=True) for a in aList]
+        text_unique = []
+        for t in text_list:
+            if len(text_unique) == limit:
+                break
+            if t not in text_unique:
+                text_unique.append(t)
+        text_sorted = sorted(text_unique, key=len)
+        return [json.loads(s) for s in text_sorted]
+
+    def GenerateSome(self, schema, number_of_examples=2, random_seed=0xBEEF) -> list:
+        examples = []
+        indexes = []
+        random.seed(random_seed)
+        number_of_combos = schema.GetExampleCombos(self.resolver)
+        bits_for_combos = schemawrappers.bitsNeededForNumber(number_of_combos)
+        index_max = 1 << bits_for_combos
+        if number_of_examples >= index_max:
+            indexes = [schemawrappers.ExampleIndex(i) for i in range(0, index_max)]
+        elif (number_of_examples*3) >= index_max:
+            indexes = [schemawrappers.ExampleIndex(i) for i in range(1, index_max)]
+            random.shuffle(indexes)
         else:
-            return default
+            index_numbers = []
+            while len(indexes) < number_of_examples*3:
+                rand_index = random.randint(1, index_max)
+                if rand_index not in index_numbers:
+                    indexes.append(schemawrappers.ExampleIndex(rand_index))
+                    index_numbers.append(rand_index)
+        for index in indexes:
+            ex = schema.Example(self.resolver, index)
+            examples.append(ex)
+        return self.DeDuplicate(examples, limit=number_of_examples)
 
-    def GetNumber(self, schema):
-        return self.GetExampleOr(schema, schema['type'] == 'integer' and 1 or 3.14)
+    def GenerateFull(self, schema) -> list:
+        index = schemawrappers.ExampleIndex(-1)
+        return [schema.Example(self.resolver, index)]
 
-    def GetObject(self, root, schema, base=None):
-        base = base or {}
-        for propName, propSchema in schema['properties'].items():
-            if (self.includeMode == 'required') and (('required' not in schema) or (propName not in schema['required'])):
-                continue
-            thing = self.GetThing(root, propSchema)
-            base[propName] = thing
-        default = None
-        if 'default' in schema:
-            default = schema['default']
-        elif 'defaults' in schema and isinstance(schema['defaults'], list):
-            default = schema['defaults'][0]
-        if default is not None:
-            base.update(default)
-        return base
-
-    def GetArray(self, root, schema):
-        base = []
-        defaultMin = self.includeMode == 'all' and 1 or 0
-        minItems = 'minItems' in schema and schema['minItems'] or defaultMin
-        for _ in range(0, minItems):
-            base.append(self.GetThing(root, schema['items']))
-        return base
-
-    def GetThing(self, root, schema, base=None):
-        root_doc = root
-        base = base or {}
-        if '$ref' in schema:
-            if len(schema['$ref'].split('#')[0]) > 0:
-                root_doc = self.resolver.get_document(schema['$ref'])
-            schema = self.resolver.get_schema(reference=schema['$ref'], root=root)
-        if 'allOf' in schema:
-            obj = base
-            for opt in schema['allOf']:
-                obj = self.GetThing(root_doc, opt, base=obj)
-            return obj
-        elif 'anyOf' in schema:
-            obj = base
-            if self.includeMode == 'required':
-                return obj
-            for opt in schema['anyOf']:
-                obj = self.GetThing(root_doc, opt, base=obj)
-            return obj
-        elif 'oneOf' in schema:
-            random.seed(self.seed)
-            thing = self.GetThing(root_doc, random.choice(schema['oneOf']))
-            return thing
-        elif 'type' not in schema:
-            raise NotImplementedError(schema)
-        elif schema['type'] in ['integer', 'number']:
-            return self.GetNumber(schema)
-        elif schema['type'] == 'string':
-            return self.GetExampleOr(schema, 'string')
-        elif schema['type'] == 'null':
-            return None
-        elif schema['type'] == 'boolean':
-            return self.GetExampleOr(schema, True)
-        elif schema['type'] == 'object':
-            return self.GetObject(root_doc, schema, base)
-        elif schema['type'] == 'array':
-            return self.GetArray(root_doc, schema)
-        else:
-            raise NotImplementedError
-
-    def GenerateSome(self, root, schema, run, includeMode) -> set:
-        self.includeMode = (includeMode in ['all', 'required']) and includeMode or 'all'
-        examples = set()
-        for i in range(0, run):
-            self.seed = i
-            thing = self.GetThing(root, schema)
-            examples.add(json.dumps(thing, sort_keys=True))
-        return examples
-
-    def GenerateFull(self, root, schema, run=100) -> set:
-        assert(not isinstance(schema, schemawrappers.Reference))
-        if isinstance(schema, schemawrappers.SchemaBase):
-            schemaJsonText = json.dumps(schema.data)
-        else:
-            schemaJsonText = json.dumps(schema)
-        run = max(2, schemaJsonText.count('oneOf')) * 10
-        return self.GenerateSome(root, schema, run, 'all')
-
-    def GenerateLimited(self, root, schema, run=2) -> set:
-        if isinstance(schema, schemawrappers.SchemaBase):
-            schemaJsonText = json.dumps(schema.data)
-        else:
-            schemaJsonText = json.dumps(schema)
-        run = max(1, schemaJsonText.count('oneOf')) * 5
-        return self.GenerateSome(root, schema, run, 'required')
+    def GenerateLimited(self, schema) -> list:
+        index = schemawrappers.ExampleIndex(0)
+        return [schema.Example(self.resolver, index)]
     
-    def Generate(self, root, schema) -> list:
-        full = self.GenerateFull(root, schema)
-        full.update(self.GenerateLimited(root, schema))
-        return [json.loads(s) for s in full]
+    def Generate(self, schema, number_of_examples=3) -> list:
+        examples = []
+        if number_of_examples > 0:
+            ex = self.GenerateFull(schema)
+            examples.extend(ex)
+        if number_of_examples > 1:
+            ex = self.GenerateLimited(schema)
+            examples.extend(ex)
+        if number_of_examples > 2:
+            examples.extend(self.GenerateSome(schema, number_of_examples))
+        ret = self.DeDuplicate(examples, limit=number_of_examples)
+        return ret
 

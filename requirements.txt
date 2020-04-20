@@ -1,2 +1,2 @@
 stringcase
-jacobsjinjatoo
+jacobsjinjatoo>=0.0.3

@@ -96,14 +96,15 @@ public:
     /*! Validates that a value meets schema requirements.
      * \fn void Validate({{cpptype}} testValue)
      * \param testValue to validate
-     * \throw if passed value is invalid
+     * \throw std::invalid_argument if passed value is invalid
      */
     static void Validate({{cpptype}} testValue);
 
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes a JSON "{{schema.type}}" value into a new instance of {{Name}}.
      * \param json is the RapidJSON value which must be of "null" type.
-     * \throw If the JSON isn't a {{schema.type}}
+     * \throw std::invalid_argument If the JSON isn't a {{schema.type}}
+     * \throw std::invalid_argument If the value doesn't meet schema constraints
      * \returns {{Name}}
      */ 
     static {{Name}} FromJson(const rapidjson::Value& json);
@@ -111,7 +112,7 @@ public:
     /*! \fn {{Name}} FromString(const std::string& str)
      * \brief Performs a "lexical cast" on the string to create a new {{Name}} object
      * \param str stringified representation of a {{schema.type}}
-     * \throw If the string cannot be cast or does not JSON-schema validate
+     * \throw std::invalid_argument If the string cannot be cast or does not JSON-schema validate
      * \return {{Name}}
      */
     static {{Name}} FromString(const std::string& str);

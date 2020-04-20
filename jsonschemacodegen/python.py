@@ -40,13 +40,13 @@ class GeneratorFromSchema(object):
     def GetDeps(self, schema):
         return []
 
-    def Generate(self, schema, class_name, filename_base):
+    def Generate(self, schema, root, class_name, filename_base):
         generator = templator.CodeTemplator(self.output_dir)
         generator.add_template_package('jsonschemacodegen.templates.python')
 
         args = {
             "Name": class_name,
-            "schema": schemawrappers.SchemaFactory(schema),
+            "schema": schemawrappers.SchemaFactory(schema, root),
         }
         return generator.render_template(template_name="file.py.jinja2", output_name="{}.py".format(filename_base), resolver=self.resolver, **args)
 
@@ -56,7 +56,7 @@ class GeneratorFromSchema(object):
         examples = []
         examples.append(wrapped_schema.Example(self.resolver, schemawrappers.ExampleIndex(0)))
         examples.append(wrapped_schema.Example(self.resolver, schemawrappers.ExampleIndex(-1)))
-        show_examples = min(number_of_examples, 10)
+        show_examples = min(number_of_examples, 20)
         example_step = int(number_of_examples/show_examples)
         index = example_step
         for _ in range(0, show_examples):
