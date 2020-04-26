@@ -1,5 +1,7 @@
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-if schema.const is not defined-%}
 {{className}}::{{Name}}(const {{std}}string& value)
 {
     Set(value);
@@ -9,11 +11,11 @@
 {
     Set(value);
 }
-
-{%-if schema.default is defined %}
+{%endif%}
+{%-if schema.default is defined or schema.const is defined%}
 {{className}}::{{Name}}()
 {
-    Set("{{schema.default}}");
+    Set({%if schema.const is defined%}CONST_VALUE{%else%}DEFAULT_VALUE{%endif%});
 }
 {%-elif schema.format is defined and schema.format == 'uuid'%}
 {{className}}::{{Name}}()
@@ -80,8 +82,8 @@ bool operator< (const {{className}}& left, const {{className}}& right)
     Set(boost::uuids::to_string(uuid));
     return *this;
 }
-{%-endif%}
-
+{%-endif-%}
+{# #}
 {{std}}string {{className}}::Get() const
 {
     return _value;
@@ -92,20 +94,26 @@ void {{className}}::Validate(const {{std}}string& testValue)
     {%-if schema.maxLength is defined %}
     if (testValue.size() > {{className}}::MAX_LENGTH)
     {
-        throw {{std}}out_of_range("The string is longer than {{className}}::MAX_LENGTH={{schema.maxLength}}");
+        throw {{exception}}("The string is longer than {{className}}::MAX_LENGTH={{schema.maxLength}}");
     }
     {%-endif%}
     {%-if schema.minLength is defined %}
     if (testValue.size() < {{className}}::MIN_LENGTH)
     {
-        throw {{std}}out_of_range("The string is shorter than {{className}}::MIN_LENGTH={{schema.minLength}}");
+        throw {{exception}}("The string is shorter than {{className}}::MIN_LENGTH={{schema.minLength}}");
     }
     {%-endif%}
     {%-if schema.pattern is defined %}
     {{std}}regex regexPattern("{{schema.pattern}}");
     {{std}}smatch regexMatch;
     {{std}}regex_match(testValue, regexMatch, regexPattern);
-    if (regexMatch.empty()) {{std}}out_of_range("The contents of '{{className}}' did not match the required pattern '{{schema.pattern}}'");
+    if (regexMatch.empty()) throw {{exception}}("The value did not match the required pattern '{{schema.pattern}}'");
+    {%-endif%}
+    {%-if schema.const is defined %}
+    if (testValue != CONST_VALUE)
+    {
+        throw {{exception}}("The value is not '{{schema.const}}'");
+    }
     {%-endif%}
 }
 
@@ -113,15 +121,24 @@ void {{className}}::Validate(const {{std}}string& testValue)
 {
     if (!(json.IsString()))
     {
-        throw std::invalid_argument("The '{{className}}' document JSON wasn't a string");
+        throw {{exception}}("JSON wasn't a string");
     }
-
+    {%if schema.const is defined%}
+    Validate(json.GetString());
+    return {{className}}();
+    {%-else%}
     return {{className}}(json.GetString());
+    {%-endif%}
 }
 
 {{className}} {{className}}::FromString(const {{std}}string& str)
 {
+    {%if schema.const is defined-%}
+    Validate(str);
+    return {{className}}();
+    {%-else-%}
     return {{className}}(str);
+    {%-endif%}
 }
 
 void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const

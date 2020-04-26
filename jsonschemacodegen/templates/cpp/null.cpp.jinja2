@@ -1,4 +1,5 @@
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {{className}}::{{Name}}()
 {
 }
@@ -12,7 +13,7 @@ boost::none_t {{className}}::Get() const
 {
     if (!(json.IsNull()))
     {
-        throw std::invalid_argument("The '{{className}}' document JSON wasn't a string");
+        throw {{exception}}("Not the NULL value");
     }
 
     return {{className}}();

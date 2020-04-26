@@ -1,3 +1,4 @@
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 /*! {{Name}} is a wrapper around a {{schema.type}}.
  * The value is limited to a set of enum values.
  {%-if schema.description %}
@@ -90,19 +91,19 @@ public:
 
     /*! Returns an enumerated value matching the provided string.
      * \param str is the string to match.
-     * \throws if the provided string does not match an enumerated value.
+     * \throws std::out_of_range If the provided string does not match an enumerated value.
      */
     static Value StringToEnum(const std::string& str);
 
     /*! Initializes a {{Name}} object from JSON.
      * \param json JSON string value that maps to an enumerated value.
-     * \throws if the JSON value isn't one of the supported string values.
+     * \throws {{exception}} If the JSON value isn't one of the supported string values.
      */
     static {{Name}} FromJson(const rapidjson::Value& json);
 
     /*! Initializes a {{Name}} object from a string value.
      * \param str must match one of the supported string values.
-     * \throws if the provided value isn't a supported value.
+     * \throws {{exception}} if the provided value isn't a supported value.
      */
     static {{Name}} FromString(const std::string& str);
 

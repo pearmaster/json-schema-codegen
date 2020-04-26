@@ -80,7 +80,9 @@ class SchemaBase(collections.UserDict):
     def AnExample(self, resolver, index):
         raise NotImplementedError
     
-    def Example(self, resolver, index: ExampleIndex):
+    def Example(self, resolver, index: ExampleIndex, required=None):
+        if 'const' in self.data:
+            return self.data['const']
         if 'example' in self.data:
             return self.data['example']
         if 'examples' in self.data:
@@ -88,12 +90,20 @@ class SchemaBase(collections.UserDict):
         if 'default' in self.data:
             return self.data['default']
         try:
+            try:
+                return self.AnExample(resolver, index, required)
+            except TypeError:
+                pass
             return self.AnExample(resolver, index)
         except:
             print(f"Failed to get an example for {self.data} against {self.root['info']['title']}")
             raise
 
 class Reference(SchemaBase):
+
+    def __init__(self, initialdata, root=None):
+        super().__init__(initialdata, root)
+        self.requiredProperties = set()
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -103,14 +113,22 @@ class Reference(SchemaBase):
 
     def Resolve(self, resolver):
         resolution = resolver.get_schema(self.data['$ref'], self.root)
+        try:
+            for propName in self.requiredProperties:
+                resolution.SetPropertyRequired(propName)
+        except:
+            pass
         return resolution
+
+    def SetPropertyRequired(self, propertyName):
+        self.requiredProperties.add(propertyName)
 
     def GetExampleCombos(self, resolver) -> int:
         return self.Resolve(resolver).GetExampleCombos(resolver)
 
-    def Example(self, resolver, index: ExampleIndex):
+    def Example(self, resolver, index: ExampleIndex, required=None):
         try:
-            return self.Resolve(resolver).Example(resolver, index)
+            return self.Resolve(resolver).Example(resolver, index, required)
         except:
             print(f"Trying to resolve {self.data['$ref']} against yaml root {self.root}")
             raise
@@ -184,12 +202,14 @@ class ObjectSchema(SchemaBase):
             combos *= (1 + item.GetExampleCombos(resolver))
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
+        if required is None:
+            required = []
         ret = {}
         for name, item in self.RequiredList(default_negates_required=False):
             ret[name] = item.Example(resolver, index)
         for name, item in self.UnRequiredList(default_negates_required=False):
-            if index.BooleanChoice():
+            if index.BooleanChoice() or name in required:
                 ret[name] = item.Example(resolver, index)
         return ret
 
@@ -276,7 +296,7 @@ class ArraySchema(SchemaBase):
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
-        incs.update({"<vector>"})
+        incs.update({"<vector>", "<string>"})
         incs.update(self.GetItemSchema().CppIncludes(resolver))
         return incs
 
@@ -384,10 +404,12 @@ class AllOfSchema(CombinatorSchemaBase):
         super().__init__('allOf', initialdata, root)
         assert(isinstance(self.data['allOf'], list))
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         ret = {}
+        if required is not None:
+            self.requiredProperties.update(required)
         for comp in self.GetComponents():
-            ret.update(comp.Example(resolver, index))
+            ret.update(comp.Example(resolver, index, self.requiredProperties))
         return ret
 
 
@@ -405,16 +427,18 @@ class AnyOfSchema(CombinatorSchemaBase):
         combos << (numberComponents - 1)
         return combos
     
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         ret = {}
+        if required is not None:
+            self.requiredProperties.update(required)
         gotOne = False
         for comp in self.GetComponents():
             if index.BooleanChoice():
                 gotOne = True
-                ret.update(comp.Example(resolver, index))
+                ret.update(comp.Example(resolver, index, self.requiredProperties))
         if not gotOne:
             comp = index.Choice(self.GetComponents())
-            ret.update(comp.Example(resolver, index))
+            ret.update(comp.Example(resolver, index, self.requiredProperties))
         return ret
 
 def SchemaFactory(schema, root=None):

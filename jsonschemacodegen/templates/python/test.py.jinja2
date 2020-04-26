@@ -3,7 +3,10 @@ import json
 {{resolver.py_include_statement(path)}}
 
 class Test{{Name|UpperCamelCase}}{{objType|UpperCamelCase}}Structure(unittest.TestCase):
-
+    """A test for the following schema:
+    {{schema}}
+    """
+    
     def do_{{Name|snake_case}}_load(self, json_example_string):
         ex = json.loads(json_example_string)
         {{resolver.py_class_name(path)}}(ex)

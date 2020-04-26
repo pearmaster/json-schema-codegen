@@ -1,4 +1,5 @@
 {%-import 'constraints.jinja2' as constraint-%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif-%}
 /*! {{Name}} is a wrapper around a {{schema.type}}.
  * \brief wrapper around {{cpptype}}
@@ -96,15 +97,15 @@ public:
     /*! Validates that a value meets schema requirements.
      * \fn void Validate({{cpptype}} testValue)
      * \param testValue to validate
-     * \throw std::invalid_argument if passed value is invalid
+     * \throw {{exception}} if passed value is invalid
      */
     static void Validate({{cpptype}} testValue);
 
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes a JSON "{{schema.type}}" value into a new instance of {{Name}}.
      * \param json is the RapidJSON value which must be of "null" type.
-     * \throw std::invalid_argument If the JSON isn't a {{schema.type}}
-     * \throw std::invalid_argument If the value doesn't meet schema constraints
+     * \throw {{exception}} If the JSON isn't a {{schema.type}}
+     * \throw {{exception}} If the value doesn't meet schema constraints
      * \returns {{Name}}
      */ 
     static {{Name}} FromJson(const rapidjson::Value& json);
@@ -112,7 +113,7 @@ public:
     /*! \fn {{Name}} FromString(const std::string& str)
      * \brief Performs a "lexical cast" on the string to create a new {{Name}} object
      * \param str stringified representation of a {{schema.type}}
-     * \throw std::invalid_argument If the string cannot be cast or does not JSON-schema validate
+     * \throw {{exception}} If the string cannot be cast or does not JSON-schema validate
      * \return {{Name}}
      */
     static {{Name}} FromString(const std::string& str);

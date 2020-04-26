@@ -15,6 +15,7 @@
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 
 /*! \class {{Name}}
  * \brief Optional union of: {%for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectName(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor %}
@@ -86,7 +87,7 @@ private:
     
     /*! Checks to make sure any required properties defined in the 'anyOf' list are missing.
      * \param json Is completed JSON-object structure.
-     * \throws std::invalid_argument If a property is missing
+     * \throws {{exception}} If a property is missing
      */
     static void ThrowIfMissingRequiredProperties(const rapidjson::Value& json);
     {%-endif%}

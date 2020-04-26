@@ -2,11 +2,11 @@
 **Object**{%if 'title' in schema%} - {{schema.title |italics}}.  Has{%else%} with{%endif%} these properties:
 <table>
     <tr><th>Property Name</th><th>Type</th><th></th></tr>
-    {%-for s in schema.allOf%}
+    {%-for s in schema.GetComponents() %}
         {%-set subSchema = s.Resolve(resolver).Resolve(resolver)%}
         {%-if 'properties' in subSchema%}
         {%-for propName, prop in subSchema.properties.items() %}
-        {{loader.Property(propName, prop.Resolve(resolver), propName in subSchema.required, resolver)}}
+        {{loader.Property(propName, prop.Resolve(resolver), propName in subSchema.required or propName in subSchema.requiredProperties, resolver)}}
         {%-endfor%}
         {%-else-%}
 <tr><td colspan="3">
