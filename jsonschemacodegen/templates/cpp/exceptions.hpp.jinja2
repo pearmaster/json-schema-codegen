@@ -79,9 +79,49 @@ private:
     std::vector<std::string> _pathParts;
 };
 
-/*! Create a new class of exceptions so they can be caught differently than other exceptions.
+/*! This exception type should be used when there is any problem with a JSON document.
  */
-class SchemaValidationException : public std::exception
+class JsonException : public std::exception
+{
+
+};
+
+/*! This exception type should be used when rapidjson couldn't parse a JSON document.
+ */
+class RapidJsonParseException : public JsonException
+{
+public:
+    /*! Constructor (C strings).
+     *  @param whatArg C-style string error message.
+     */
+    explicit RapidJsonParseException(const char* whatArg) : JsonException(), _whatArg(whatArg) { }
+
+    /*! Constructor (C++ STL strings).
+     *  @param whatArg The error message.
+     */
+    explicit RapidJsonParseException(const std::string& whatArg) : JsonException(), _whatArg(whatArg) { }
+
+    /** Destructor.
+     * Virtual to allow for subclassing.
+     */
+    virtual ~RapidJsonParseException() throw () {}
+
+    /** Returns a pointer to the (constant) error description.
+     *  @return A pointer to a const char*. 
+     */
+    virtual const char* what() const throw() 
+    {
+       return _whatArg.c_str();
+    }
+
+protected:
+    std::string _whatArg;
+};
+
+/*! This exception type should be used for exceptions that are invalid according to a JSON schema.
+ * It is meant to be a parent class for more specific schema exceptions to inherit from.
+ */
+class SchemaValidationException : public JsonException
 {
 
 };
