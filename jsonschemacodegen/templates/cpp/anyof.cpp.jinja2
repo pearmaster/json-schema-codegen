@@ -16,6 +16,7 @@
         {{-propName | UpperCamelCase-}}
     {%-endif-%}
 {%-endmacro%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 
 {%import 'loader.jinja2' as loader with context%}
 {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
@@ -102,12 +103,12 @@ void {{className}}::ThrowIfMissingRequiredProperties(const rapidjson::Value& jso
 {
     if (!json.IsObject())
     {
-        throw std::invalid_argument("Not an object");
+        throw {{exception}}("Not an object");
     }
-    {%-for reqProp in schema.requiredProperties %}
+    {%-for reqProp in schema.requiredProperties |sort %}
     if (!json.HasMember("{{reqProp}}"))
     {
-        throw std::invalid_argument("Missing '{{reqProp}}' property");
+        throw {{exception}}("Missing '{{reqProp}}' property");
     }
     {%-endfor%}
 }

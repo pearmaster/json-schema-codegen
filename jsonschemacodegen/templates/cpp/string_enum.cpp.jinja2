@@ -1,6 +1,7 @@
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set enumType = className+"::Value"%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {{className}}::{{Name}}({{enumType}} value)
 {
     Set(value);
@@ -67,7 +68,7 @@ void {{className}}::Set({{enumType}} value)
     // all values of the enum are handled.  However, some compilers like to see a return
     // statement when no cases are matched.  While this never happens, throwing here
     // avoids a compiler warning.
-    throw std::out_of_range("Could not string for invalid enum value");
+    throw std::out_of_range("No valid string for invalid enum value");
 }
 
 {{enumType}} {{className}}::StringToEnum(const std::string& input)
@@ -88,11 +89,18 @@ void {{className}}::Set({{enumType}} value)
 {
     if (!(json.IsString()))
     {
-        throw {{std}}invalid_argument("The '{{className}}' document JSON wasn't a string");
+        throw {{exception}}("JSON wasn't a string");
     }
 
     {{std}}string testValue = json.GetString();
-    return {{className}}(StringToEnum(testValue));
+    try
+    {
+        return {{className}}(StringToEnum(testValue));
+    }
+    catch (const std::exception& e)
+    {
+        throw {{exception}}(e);
+    }
 }
 
 {{className}} {{className}}::FromString(const {{std}}string& str)

@@ -151,3 +151,5 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
         schema = schemawrappers.SchemaFactory(self.get_json(reference, root=root), schemasRoot)
         return schema
 
+    def cpp_get_lib_ns(self):
+        return []

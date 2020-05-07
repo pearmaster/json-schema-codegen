@@ -28,11 +28,15 @@
     {{-''-}}Component{{-i-}}
 {%-endif-%}
 {%-endmacro%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 
 /*! \class {{Name}}
  * \brief Mandatory union of: {%for s in schema.allOf %}{{ObjectName(ComponentName(Name, s, loop.index), s)}}{%if not loop.last%}, {%endif%}{%endfor %}.
  {%-if schema.description -%}
  * {{schema.description}}
+ {%-endif%}
+ {%-if schema.requiredProperties is defined and schema.requiredProperties | length > 0%}
+ * The contained object must provide the following properties: {%for rp in schema.requiredProperties |sort%}`{{rp}}` {%endfor%}
  {%-endif%}
  */
 class {{Name}}
@@ -74,7 +78,7 @@ public:
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes JSON into a new instance of the {{Name}} object.
      * \param json is the RapidJSON value which must be of object type and conforming to the schema.
-     * \throw If any of the components don't deserialize correctly according to their schemas.
+     * \throw {{exception}} If any of the components don't deserialize correctly according to their schemas.
      * \returns {{Name}}
      */
     static {{Name}} FromJson(const rapidjson::Value& json);
@@ -83,6 +87,9 @@ public:
      * \brief Serializes the combined (allof) object to JSON
      * \param value is the RapidJSON value which will be modified to contain the serialization
      * \param allocator is the top-level RapidJSON document allocator which may be used for allocations
+     {%-if schema.requiredProperties is defined and schema.requiredProperties | length > 0%}
+     * \throw {{exception}} When the resulting JSON object is missing one or more of the following properties: {%for rp in schema.requiredProperties |sort%}`{{rp}}` {%endfor%}
+     {%-endif%}
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
@@ -108,7 +115,7 @@ private:
 
     /*! Checks to make sure any required properties defined in the 'allOf' list are missing.
      * \param json Is completed JSON-object structure.
-     * \throws std::invalid_argument If a property is missing
+     * \throws {{exception}} If a property is missing
      */
     static void ThrowIfMissingRequiredProperties(const rapidjson::Value& json);
     {%-endif%}

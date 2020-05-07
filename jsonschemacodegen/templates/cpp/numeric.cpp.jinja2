@@ -3,6 +3,7 @@
 {%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {%if schema.const is not defined%}
 {{className}}::{{Name}}({{cpptype}} value)
 {
@@ -62,22 +63,22 @@ bool operator< (const {{className}}& left, const {{className}}& right)
 void {{className}}::Validate({{cpptype}} testValue)
 {
     {%-if schema.minimum is defined %}
-    if (testValue < {{constraint.ExprName('minimum')}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than {{schema.minimum}}");
+    if (testValue < {{constraint.ExprName('minimum')}}) throw {{exception}}("Value was less than {{schema.minimum}}");
     {%-endif%}
     {%-if schema.exclusiveMinimum is defined %}
-    if (testValue <= {{constraint.ExprName('exclusiveMinimum')}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMinimum}}");
+    if (testValue <= {{constraint.ExprName('exclusiveMinimum')}}) throw {{exception}}("Value was less than or equal to {{schema.exclusiveMinimum}}");
     {%-endif%}
     {%-if schema.maximum is defined %}
-    if (testValue > {{constraint.ExprName('maximum')}}) throw {{std}}invalid_argument("The '{{Name}}' value was more than {{schema.maximum}}");
+    if (testValue > {{constraint.ExprName('maximum')}}) throw {{exception}}("Value was more than {{schema.maximum}}");
     {%-endif%}
     {%-if schema.exclusiveMaximum is defined %}
-    if (testValue >= {{constraint.ExprName('exclusiveMaximum')}}) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMaximum}}");
+    if (testValue >= {{constraint.ExprName('exclusiveMaximum')}}) throw {{exception}}("Value was less than or equal to {{schema.exclusiveMaximum}}");
     {%-endif%}
     {%-if schema.multipleOf is defined %}
-    if ((testValue % {{constraint.ExprName('multipleOf')}}) != 0) throw {{std}}invalid_argument("The '{{Name}}' value was less than or equal to {{schema.exclusiveMaximum}}");
+    if ((testValue % {{constraint.ExprName('multipleOf')}}) != 0) throw {{exception}}("Value was less than or equal to {{schema.exclusiveMaximum}}");
     {%-endif%}
     {%-if schema.const is defined%}
-    if (testValue != {{constraint.ExprName('const')}}) throw {{std}}invalid_argument("The '{{Name}}' value was not {{schema.const}}");
+    if (testValue != {{constraint.ExprName('const')}}) throw {{exception}}("Value was not {{schema.const}}");
     {%-endif%}
 }
 
@@ -85,7 +86,7 @@ void {{className}}::Validate({{cpptype}} testValue)
 {
     if (!(json.Is{{rjtype | UpperCamelCase}}()))
     {
-        throw {{std}}invalid_argument("The '{{Name}}' document wasn't a {{rjtype}}");
+        throw {{exception}}("Wasn't a {{rjtype}}");
     }
 
     {{className}} newObject(json.Get{{cpptype | UpperCamelCase}}());

@@ -1,6 +1,7 @@
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set rapidjson = resolver.cpp_resolve_namespace(['rapidjson']) %}
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {{className}}::{{Name}}(bool value)
 {
     Set(value);
@@ -39,7 +40,7 @@ bool {{className}}::Get() const
 {
     if (!(json.IsBool()))
     {
-        throw {{std}}invalid_argument("The '{{Name}}' document wasn't a boolean");
+        throw {{exception}}("Not a boolean");
     }
 
     {{className}} newObject(json.GetBool());

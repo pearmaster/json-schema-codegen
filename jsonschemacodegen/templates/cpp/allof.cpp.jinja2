@@ -29,6 +29,7 @@
     {{-''-}}Component{{-i-}}
 {%-endif-%}
 {%-endmacro%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 
 {%import 'loader.jinja2' as loader with context%}
 {%-for s in schema.allOf %}{%set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset%}
@@ -63,7 +64,7 @@ void {{className}}::Set{{ObjectName(componentName, s)}}(const {{ObjectType(compo
 {{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
     {%-if schema.requiredProperties | length > 0 %}
-    ThrowIfMissingRequiredProperties(value);
+    ThrowIfMissingRequiredProperties(json);
     {%-endif%}
     {%-for s in schema.allOf %}{%set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset%}
     {{ObjectType(componentName, s)}} init{{componentName}} = {{ObjectType(componentName, s)}}::FromJson(json);
@@ -109,12 +110,12 @@ void {{className}}::ThrowIfMissingRequiredProperties(const rapidjson::Value& jso
 {
     if (!json.IsObject())
     {
-        throw std::invalid_argument("Not an object");
+        throw {{exception}}("Not an object");
     }
-    {%-for reqProp in schema.requiredProperties %}
+    {%-for reqProp in schema.requiredProperties | sort%}
     if (!json.HasMember("{{reqProp}}"))
     {
-        throw std::invalid_argument("Missing '{{reqProp}}' property");
+        throw {{exception}}("Missing '{{reqProp}}' property");
     }
     {%-endfor%}
 }

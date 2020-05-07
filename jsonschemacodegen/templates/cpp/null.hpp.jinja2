@@ -1,3 +1,4 @@
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 /*! {{Name}} is a wrapper around "null".
  {%-if schema.description %}
  * {{schema.description}}
@@ -22,7 +23,7 @@ public:
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes a JSON "null" value into a new instance of {{Name}}.
      * \param json is the RapidJSON value which must be of "null" type.
-     * \throw If the JSON isn't a null
+     * \throw {{exception}} If the JSON isn't a null
      * \returns {{Name}}
      */
     static {{Name}} FromJson(const rapidjson::Value& json);

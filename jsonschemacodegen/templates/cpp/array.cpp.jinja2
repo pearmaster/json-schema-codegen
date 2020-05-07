@@ -1,4 +1,5 @@
 {%import 'loader.jinja2' as loader with context-%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-if schema.GetItemSchema()['$ref'] %}
@@ -31,13 +32,13 @@ void {{className}}::SetArray(const {{resolver.cpp_resolve_namespace(['std'])}}ve
     {%-if schema.maxItems is defined %}
     if (arr.size() > {{schema.maxItems}})
     {
-        throw {{std}}out_of_range("The array is shorter than {{className}}::MIN_ITEMS={{schema.minItems}}");
+        throw {{exception}}("The array is shorter than {{className}}::MIN_ITEMS={{schema.minItems}}");
     }
     {%-endif%}
     {%-if schema.minItems is defined %}
     if (arr.size() < {{schema.minItems}})
     {
-        throw {{std}}out_of_range("The array is longer than {{className}}::MAX_ITEMS={{schema.maxItems}}");
+        throw {{exception}}("The array is longer than {{className}}::MAX_ITEMS={{schema.maxItems}}");
     }
     {%-endif%}
     _arr = arr;
@@ -68,12 +69,26 @@ void {{className}}::Append(const {{itemtype}}& item)
 {
     if (!json.IsArray())
     {
-        throw std::invalid_argument("The '{{className}}' document JSON wasn't an array");
+        throw {{exception}}("The JSON wasn't an array");
     }
     {{resolver.cpp_resolve_namespace(['std'])}}vector<{{itemtype}}> arr;
+    {{exception}}Collection exceptionCollection;
+    unsigned i = 0;
     for (auto& v : json.GetArray())
     {
-        arr.push_back({{itemtype}}::FromJson(v));
+        try
+        {
+            arr.push_back({{itemtype}}::FromJson(v));
+        }
+        catch (const {{exception}}& e)
+        {
+            exceptionCollection.AddException(e, std::to_string(i));
+        }
+        i++;
+    }
+    if (exceptionCollection.IsExceptional())
+    {
+        throw exceptionCollection;
     }
     return {{className}}(arr);
 }

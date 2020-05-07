@@ -1,6 +1,6 @@
 {%-import 'schema.jinja2' as loader-%}
 One of the following types:
-{%- for s in schema.oneOf %}
+{%- for s in schema.GetComponents() %}
  * OR {{loader.Display(s.Resolve(resolver), resolver) | mdindent(2)}}
 {# #}
 {%-endfor%}

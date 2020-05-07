@@ -14,6 +14,7 @@
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset-%}
 
 {%import 'loader.jinja2' as loader with context%}
 {%-for propName, propSchema in schema.RequiredList() %}
@@ -94,32 +95,64 @@ boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propNa
 {
     if (!(json.IsObject()))
     {
-        throw std::invalid_argument("The '{{className}}' document JSON wasn't an object");
+        throw {{exception}}("JSON wasn't an object");
     }
     {##}
-    {%-for propName, propSchema in schema.RequiredList()-%}
+    {{exception}}Collection exceptionCollection;
+    {%for propName, propSchema in schema.RequiredList()-%}
+    boost::optional<{{ObjectType(propName, propSchema)}}> optLocal{{propName | UpperCamelCase}};
     if (!json.HasMember({{helper.ConstPropertyName(propName)}}))
     {
-        throw std::invalid_argument("JSON is missing the '{{propName}}' property.");
+        exceptionCollection.AddException({{exception}}("Property is missing", "{{propName}}"));
     }
-    {{ObjectType(propName, propSchema)}} local{{propName | UpperCamelCase}} = {{ObjectType(propName, propSchema)}}::FromJson(json[{{helper.ConstPropertyName(propName)}}]);
-    local{{propName | UpperCamelCase}}.SetHandle({{helper.ConstPropertyName(propName)}});
-    {%-endfor%}
-
+    else
+    {
+        optLocal{{propName | UpperCamelCase}} = {{ObjectType(propName, propSchema)}}::FromJson(json[{{helper.ConstPropertyName(propName)}}]);
+        optLocal{{propName | UpperCamelCase}}->SetHandle({{helper.ConstPropertyName(propName)}});
+    }
+    {%endfor%}
+    boost::optional<{{className}}> optNewInstance;
     {%-if schema.RequiredList() %}
-    {{className}} newInstance({%for propName, propSchema in schema.RequiredList()%}local{{propName | UpperCamelCase}}{%if not loop.last%}, {%endif%}{%endfor%});
+    if ({%for propName, propSchema in schema.RequiredList()%}optLocal{{propName | UpperCamelCase}}{%if not loop.last%} && {%endif%}{%endfor%})
+    {
+        optNewInstance = {{className}}({%for propName, propSchema in schema.RequiredList()%}*optLocal{{propName | UpperCamelCase}}{%if not loop.last%}, {%endif%}{%endfor%});
+    }
     {%else%}
-    {{className}} newInstance;
+    // Yes I know this looks weird to create a boost::optional only to immediately instantiate it.
+    // However, this is generated code, and there is a branch you don't see here where we conditionally instantiate it.
+    optNewInstance = {{className}}();
     {%-endif%}
     {%-for propName, propSchema in schema.UnRequiredList()%}
     if (json.HasMember({{helper.ConstPropertyName(propName)}}))
     {
-        auto local{{propName | UpperCamelCase}} = {{ObjectType(propName, propSchema)}}::FromJson(json[{{helper.ConstPropertyName(propName)}}]);
-        local{{propName | UpperCamelCase}}.SetHandle({{helper.ConstPropertyName(propName)}});
-        newInstance.Set{{propName | UpperCamelCase}}(local{{propName | UpperCamelCase}});
+        try
+        {
+            auto local{{propName | UpperCamelCase}} = {{ObjectType(propName, propSchema)}}::FromJson(json[{{helper.ConstPropertyName(propName)}}]);
+            local{{propName | UpperCamelCase}}.SetHandle({{helper.ConstPropertyName(propName)}});
+            if (optNewInstance)
+            {
+                optNewInstance->Set{{propName | UpperCamelCase}}(local{{propName | UpperCamelCase}});
+            }
+        }
+        catch (const {{exception}}& e)
+        {
+            exceptionCollection.AddException(e, {{helper.ConstPropertyName(propName)}});
+        }
+        catch (const {{exception}}Collection& ec)
+        {
+            exceptionCollection.AddException(ec, {{helper.ConstPropertyName(propName)}});
+        }
+        catch (const std::exception& e)
+        {
+            exceptionCollection.AddException({{exception}}(e), {{helper.ConstPropertyName(propName)}});
+        }
     }
     {%-endfor%}
-    return newInstance;
+    if (exceptionCollection.IsExceptional() || !optNewInstance)
+    {
+        throw exceptionCollection;
+    }
+    return *optNewInstance;
 }
 
 void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const

@@ -3,6 +3,6 @@
 <table>
 <tr><th>Property Name</th><th>Type</th><th>Description</th></tr>
 {%-for propName, prop in schema.properties.items() %}
-{{loader.Property(propName, prop.Resolve(resolver), propName in schema.required, resolver)}}
+{{loader.Property(propName, prop.Resolve(resolver), propName in schema.required or propName in schema.requiredProperties, resolver)}}
 {%-endfor%}
 </table>

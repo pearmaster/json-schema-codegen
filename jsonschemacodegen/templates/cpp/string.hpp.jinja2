@@ -1,3 +1,4 @@
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset-%}
 /*! {{Name}} is a wrapper around a {{schema.type}}.
  {%-if schema.description %}
  * {{schema.description}}
@@ -13,7 +14,7 @@ public:
      * to ensure it is consistant with external requirements.
      */
     static constexpr int MAX_LENGTH = {{schema.maxLength}};
-    {%-endif%}
+    {%endif%}
     {%-if schema.minLength is defined %}
     /*! The minimum length of the contained string.
      * Trying to set a string shorter than this length will throw.
@@ -21,10 +22,21 @@ public:
      * to ensure it is consistant with external requirements.
      */
     static constexpr int MIN_LENGTH = {{schema.minLength}};
+    {%endif%}
+    {%-if schema.default is defined or schema.const is defined%}
+    /*! The default value of the string.
+     * If the string has not been set to a value, "{{schema.default or schema.const}}" would be returned for value getting methods.
+     */
+    static constexpr auto DEFAULT_VALUE = "{{schema.default or schema.const}}";
+    
     {%-endif%}
-    {%-if schema.default is defined %}
-    static constexpr char DEFAULT_VALUE[] = "{{schema.default}}";
+    {%-if schema.const is defined%}
+    /*! The constant value of the string.
+     * The value is not allowed to be anything other than "{{schema.const}}".
+     */
+    static constexpr auto CONST_VALUE = "{{schema.const}}";
     {%-endif%}
+    {%-if schema.const is not defined%}
 
     /*! Constructor.
      * \param value initial value of {{Name}} instance.
@@ -35,17 +47,19 @@ public:
      * \param value initial value of {{Name}} instance.
      */
     {{Name}}(const char* value);
+    {%-endif%}
+    {%-if schema.default is defined or schema.const is defined%}
 
-    {%-if schema.default is defined%}
-    /*! Constructor that sets the objects value to "{{schema.default}}".
+    /*! Constructor that sets the objects value to "{{schema.const or schema.default}}".
      */
     {{Name}}();
     {%-elif schema.format is defined and schema.format == 'uuid'%}
+
     /*! Constructor that sets the objects value to a new unique UUID.
      */
     {{Name}}();
-    {%-endif%}
-
+    {%-endif-%}{# #}
+    
     /*! Default destructor.
      */
     virtual ~{{Name}}() = default;
@@ -79,13 +93,14 @@ public:
     std::string Get() const;
 
     /*! Validate that the provided string meets schema constraints.
+     * This is used internally anytime a value is passed into the class, including from the constructor.
      * \param testValue string for evaluation
-     * \throw std::out_of_range If the string doesn't meet requirements
+     * \throw {{exception}} If the string doesn't meet requirements
      */
     static void Validate(const std::string& testValue);
 
     /*! Create a new {{Name}} object from a JSON structure.
-     * \throw std::out_of_range If the string didn't meet the schema's constraints.
+     * \throw {{exception}} If the string didn't meet the schema's constraints.
      * \return new {{Name}} object containing values from the JSON.
      * \param json JSON structure to use for creating new {{Name}} object.
      */
@@ -95,8 +110,8 @@ public:
      * The string must meet the schema's constraints.
      * \return new {{Name}} object containing the string.
      * \param str the string that will be contained in the new {{Name}} object.
-     * \throw std::invalid_argument If the JSON value isn't a JSON string.
-     * \throw std::out_of_range If the string didn't meet the schema's constraints.
+     * \throw {{exception}} If the JSON value isn't a JSON string.
+     * \throw {{exception}} If the string didn't meet the schema's constraints.
      */
     static {{Name}} FromString(const std::string& str);
 
@@ -119,32 +134,32 @@ public:
      */
     std::string GetHandle() const;
 
-{%if schema.IsReadOnly()%}
+{%if schema.IsReadOnly() or schema.const is defined %}
 private:
 {%-endif%}
     /*! Assignment operator to set the value of the {{Name}} instance.
      * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
+     * \throw {{exception}} if the passed string value doesn't meet schema validation.
      * \return reference to the {{Name}} instance
      */
     {{Name}}& operator=(const std::string& value);
     
     /*! Assignment operator to set the value of the {{Name}} instance.
      * \param value the new string value.
-     * \throw if the passed string value doesn't meet schema validation.
+     * \throw {{exception}} if the passed string value doesn't meet schema validation.
      * \return reference to the {{Name}} instance
      */
     {{Name}}& operator=(const char* value);
 
     /*! Set the value of the string.
      * \param value the new string value.
-     * \throw std::out_of_range If the passed string value doesn't meet schema validation.
+     * \throw {{exception}} If the passed string value doesn't meet schema validation.
      */
     {{Name}}& Set(const std::string& value);
 
     /*! Set the value of the string.
      * \param value the new string value.
-     * \throw std::out_of_range If the passed string value doesn't meet schema validation.
+     * \throw {{exception}} If the passed string value doesn't meet schema validation.
      */
     {{Name}}& Set(const char* value);
 

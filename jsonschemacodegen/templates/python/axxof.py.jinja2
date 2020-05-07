@@ -102,7 +102,7 @@ class {{Name}}(object):
             obj.update(self._component{{loop.index}}.Serializable())
         {%-endfor%}
         {%-if schema.requiredProperties | length > 0 %}
-        for req_prop in {{schema.requiredProperties}}:
+        for req_prop in {{schema.requiredProperties |sort}}:
             if req_prop not in obj:
                 raise KeyError("Missing required property '{}' in serialized object".format(req_prop))
         {%-endif%}

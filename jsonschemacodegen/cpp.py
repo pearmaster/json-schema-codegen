@@ -152,6 +152,6 @@ class LibraryGenerator(object):
         headerGenerator = templator.CodeTemplator(self.output_dir['header']).add_template_package('jsonschemacodegen.templates.cpp')
         headerGenerator.render_template(template_name="exceptions.hpp.jinja2", 
             output_name="exceptions.hpp", 
-            ns=ns, 
+            ns=self.resolver.cpp_get_lib_ns(), 
         )
         return tuple(retval)

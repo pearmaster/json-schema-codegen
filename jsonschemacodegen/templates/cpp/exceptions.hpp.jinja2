@@ -1,0 +1,343 @@
+#pragma once
+
+#include <exception>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <boost/algorithm/string/join.hpp>
+
+{%for n in ns-%}
+namespace {{n}} {
+{%-endfor%}
+
+/*! Encapsulates a JSON path.  This is not the "JSONPath" standard, but a simple representation of a pointer to a value in a JSON-object tree.
+ * For example, the path `A/B/C` would point to _"this is the string"_ in the following JSON object:
+ * ```
+   {
+       "A" : {
+           "B": {
+               "C": "this is the string",
+               "X0": 1
+           },
+           "X1": null
+       },
+       "X2": false
+   }
+   ```
+ */
+class JsonPath
+{
+public:
+    /*! Empty constructor.
+     */
+    JsonPath() : _pathParts({}) {}
+
+    /*! Constructor with a single element in the path.
+     * \param propName A single element in the path
+     */
+    JsonPath(const std::string& propName) : _pathParts({propName}) {}
+
+    /*! Copy constructor.
+     * \param other Another JsonPath object from which to copy the path.
+     */
+    JsonPath(const JsonPath& other) : _pathParts(other._pathParts) {}
+
+    /*! Prepends an element to the beginning of the JSON path.
+     * \param propName A property name to prepend to the stored path.
+     * \returns Reference to this JsonPath object (useful for chaining commands).
+     */
+    JsonPath& PrependToPath(const std::string& propName)
+    {
+        _pathParts.push_back(propName);
+        return *this;
+    }
+
+    /*!
+     * Gets a JSON path representation as strings in a vector.  For example, if the path is `A/B/C` then this would return a vector with the elements `{"A", "B", "C"}`.
+     * \returns A vector of strings representing the path.
+     */
+    std::vector<std::string> GetPath() const
+    {
+        std::vector<std::string> ret;
+        // Parts are stored in reverse order.
+        ret.insert(ret.end(), _pathParts.crbegin(), _pathParts.crend());
+        return ret;
+    }
+
+    /*!
+     * Returns a string representation of a JSON path.   For example: `Highest/Middle/Leaf`.
+     * \returns String representation of the path.
+     */
+    std::string PathAsString() const
+    {
+        return boost::algorithm::join(GetPath(), "/");
+    }
+
+private:
+    /*! In this private member variable, the parts are stored in reverse order.
+     */
+    std::vector<std::string> _pathParts;
+};
+
+/*! This exception type should be used when there is any problem with a JSON document.
+ */
+class JsonException : public std::exception
+{
+
+};
+
+/*! This exception type should be used when rapidjson couldn't parse a JSON document.
+ */
+class RapidJsonParseException : public JsonException
+{
+public:
+    /*! Constructor (C strings).
+     *  @param whatArg C-style string error message.
+     */
+    explicit RapidJsonParseException(const char* whatArg) : JsonException(), _whatArg(whatArg) { }
+
+    /*! Constructor (C++ STL strings).
+     *  @param whatArg The error message.
+     */
+    explicit RapidJsonParseException(const std::string& whatArg) : JsonException(), _whatArg(whatArg) { }
+
+    /** Destructor.
+     * Virtual to allow for subclassing.
+     */
+    virtual ~RapidJsonParseException() throw () {}
+
+    /** Returns a pointer to the (constant) error description.
+     *  @return A pointer to a const char*. 
+     */
+    virtual const char* what() const throw() 
+    {
+       return _whatArg.c_str();
+    }
+
+protected:
+    std::string _whatArg;
+};
+
+/*! This exception type should be used for exceptions that are invalid according to a JSON schema.
+ * It is meant to be a parent class for more specific schema exceptions to inherit from.
+ */
+class SchemaValidationException : public JsonException
+{
+
+};
+
+/*! This class of exception handles any type of schema validation errors.
+ * In additional to the error message, it also keeps the JSON path to describe the JSON-tree location of the error.
+ */
+class JsonSchemaException : public SchemaValidationException
+{
+public:
+
+    /*! Simple constructor that looks like the constructor for most exceptions.
+     * \param whatArg The message that should be include in the message returned by the `what()` method. 
+     */
+    JsonSchemaException(const std::string& whatArg) : SchemaValidationException(), _whatVal(""), _whatArg(whatArg), _jsonPath()
+    {
+
+    }
+
+    /*! Constructor that also takes a JSON-object property name.
+     * \param whatArg The message that should be include in the message returned by the `what()` method. 
+     * \param propName The name of the JSON-object property that failed JSON Schema validation.
+     */
+    JsonSchemaException(const std::string& whatArg, const std::string& propName) : SchemaValidationException(), _whatVal(""),  _whatArg(whatArg), _jsonPath(propName)
+    {
+        
+    }
+
+    /*! Constructor that accepts an existing JSON path.
+     * \param whatArg The message that should be include in the message returned by the `what()` method. 
+     * \param jsonPath An existing JSON path representation object.
+     */
+    JsonSchemaException(const std::string& whatArg, const JsonPath& jsonPath) : SchemaValidationException(), _whatVal(""),  _whatArg(whatArg), _jsonPath(jsonPath)
+    {
+
+    }
+
+    /*! Constructor that assumes the message of an existing std::exception.
+     * \param other An existing exception from which to copy the exception message.
+     */
+    explicit JsonSchemaException(const std::exception& other): SchemaValidationException(), _whatVal(""),  _whatArg(other.what()), _jsonPath()
+    {
+
+    }
+
+    /*! Adds to the front of the contained JSON path.
+     * When an error is found in recursively parsing a JSON object tree, additional parts of the JSON path are prepended as the exception bubbles up through the recursive layers.
+     * \param propName The path string to add to the front of the path.
+     */
+    void PrependToPath(const std::string& propName)
+    {
+        _jsonPath.PrependToPath(propName);
+    }
+
+    /*! Returns the error message, prepended by a Json Path string pointing to where the exception was found.
+     * \returns The exception's error message.
+     */
+    virtual const char* what() const throw()
+    {
+        std::stringstream ss;
+        ss << _jsonPath.PathAsString();
+        ss << ": ";
+        ss << _whatArg;
+        _whatVal = ss.str();
+        return _whatVal.c_str();
+    }
+
+    /*! Gets the Json Path associated with the exception.
+     * \returns The exception's Json Path.
+     */
+    JsonPath WhatJsonPath() const
+    {
+        return _jsonPath;
+    }
+
+    /*! Gets only the exception message (without any Json path info).
+     * \returns The exception's error string.
+     */
+    std::string WhatMessage() const
+    {
+        return _whatArg;
+    }
+
+private:
+    mutable std::string _whatVal;
+    std::string _whatArg;
+    JsonPath _jsonPath;
+};
+
+
+/*! This exception class can contain information from other exceptions.
+ */
+class JsonSchemaExceptionCollection : public SchemaValidationException
+{
+public:
+
+    /*! Empty constructor.  
+     * This can be created before any exceptions are thrown, so that when any exceptions _are_ thrown, they can be added to this class.
+     */
+    JsonSchemaExceptionCollection() : SchemaValidationException(), _whatVal(""), _subExceptions({}) { }
+
+    /*! Default destructor.
+     */
+    virtual ~JsonSchemaExceptionCollection() = default;
+
+    /*! Adds an exception to the collection.
+     * \param exc The exception to add to the collection.
+     */
+    void AddException(const JsonSchemaException& exc)
+    {
+        _subExceptions.push_back(exc);
+    }
+
+    /*! Adds an exception to the collection, setting the Json path associated with the exception.
+     * \param exc The exception to add to the collection.
+     * \param propName This is the name of the property from which the exception was thrown.
+     */
+    void AddException(const JsonSchemaException& exc, const std::string& propName)
+    {
+        _subExceptions.push_back(exc);
+        _subExceptions.back().PrependToPath(propName);
+    }
+
+    /*! Adds all the exceptions from a different JsonSchemaExceptionCollection to this collection.
+     * \param exc A different exception collection from which to copy exceptions.
+     */
+    void AddException(const JsonSchemaExceptionCollection& exc)
+    {
+        auto exceptions = exc.GetExceptions();
+        _subExceptions.insert(_subExceptions.end(), exceptions.begin(), exceptions.end());
+    }
+
+    /*! Adds all the exceptions from a different JsonSchemaExceptionCollection to this collection.
+     * \param exc A different exception collection from which to copy exceptions.
+     * \param propName This is the name of the property from which the exception was thrown
+     */
+    void AddException(const JsonSchemaExceptionCollection& exc, const std::string& propName)
+    {
+        std::vector<JsonSchemaException> exceptions = exc.GetExceptions();
+        for (JsonSchemaException iter : exceptions)
+        {
+            iter.PrependToPath(propName);
+            _subExceptions.push_back(iter);
+        }
+    }
+
+    /*! Adds any exception to the collection.
+     * \param exc The exception to add to the collection.
+     */
+    void AddException(const std::exception& exc)
+    {
+        _subExceptions.push_back(JsonSchemaException(exc));
+    }
+
+    /*! Adds any exception to the collection.
+     * \param exc The exception to add to the collection.
+     * \param propName This is the name of the property from which the exception was thrown.
+     */
+    void AddException(const std::exception& exc, const std::string& propName)
+    {
+        _subExceptions.push_back(JsonSchemaException(exc));
+    }
+
+    /*! Prepends an additional layer to the JSON path of each contained object.
+     * When a JSON object is being recursively parsed, this is needed to add to the JSON paths as the exceptions bubble upward.
+     * \param propName This name will get prepended to each contained exception's JSON path.
+     */
+    void PrependToPath(const std::string& propName)
+    {
+        for (auto& iter : _subExceptions)
+        {
+            iter.PrependToPath(propName);
+        }
+    }
+
+    /*! Indicates if there are any collection exceptions.
+     * \return true if one or more exceptions have been collected.
+     */
+    bool IsExceptional() const {
+        return !_subExceptions.empty();
+    }
+
+    /*! Returns the error message.
+     * \returns The exception's error message.
+     */
+    virtual const char* what() const throw()
+    {
+        if (!IsExceptional())
+        {
+            return "";
+        }
+        _whatVal = "";
+        for (auto& iter : _subExceptions)
+        {
+            if (!_whatVal.empty())
+            {
+                _whatVal += " ; ";
+            }
+            _whatVal += iter.what();
+        }
+        return _whatVal.c_str();
+    }
+
+    /*! Get the collection of exceptions.
+     * \returns Collection of exceptions.
+     */
+    std::vector<JsonSchemaException> GetExceptions() const
+    {
+        return _subExceptions;
+    }
+
+private:
+    mutable std::string _whatVal;
+    std::vector<JsonSchemaException> _subExceptions;
+};
+
+{%for n in ns-%}
+} //end namespace {{n}} 
+{%-endfor%}

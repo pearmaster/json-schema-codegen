@@ -16,7 +16,7 @@
 {{ObjectType(optionName, s)}}{%if not loop.last%}, {%endif-%}
 {%-endfor -%}
 {%-endset%}
-
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 
 {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
 {{loader.Class('cpp', resolver, [className], optionName, s) }}
@@ -81,41 +81,45 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
 {%-if commonType in ['boolean', 'integer', 'number', string] %}
 {{className}} {{className}}::FromString(const std::string& str)
 {
+    {{exception}}Collection exceptionCollection;
     {%for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
     try
     {
         auto obj = {{ObjectType(optionName, s)}}::FromString(str);
         return {{className}}(obj);
     }
-    catch (...)
+    catch (const std::exception& e)
     {
         // {{optionName}} wasnt able to deserialize{%if not loop.last%}
         // but there are other option to try{%endif%}
+        exceptionCollection.AddException(e);
     }
     {%endfor %}
 
     // Didnt deserialize
-    throw std::runtime_error("JSON didn't conform to schema");
+    throw {{exception}}(exceptionCollection.what());
 }
 {%-endif%}
 
 {{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
+    {{exception}}Collection exceptionCollection;
     {%for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
     try
     {
         auto obj = {{ObjectType(optionName, s)}}::FromJson(json);
         return {{className}}(obj);
     }
-    catch (...)
+    catch (const std::exception& e)
     {
         // {{optionName}} wasnt able to deserialize{%if not loop.last%}
         // but there are other option to try{%endif%}
+        exceptionCollection.AddException(e);
     }
     {%endfor %}
 
     // Didnt deserialize
-    throw std::runtime_error("JSON didn't conform to schema");
+    throw {{exception}}(exceptionCollection.what());
 }
 
 void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const

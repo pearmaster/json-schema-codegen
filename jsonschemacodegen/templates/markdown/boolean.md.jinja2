@@ -1,4 +1,4 @@
 **boolean**{%if 'title' in schema%} - *{{schema.title}}*{%endif%}
 {%-if 'default' in schema%}
- * Default value: `{{schema.default}}`
+ * Default value: `{{schema.default | lower }}`
 {%-endif-%}

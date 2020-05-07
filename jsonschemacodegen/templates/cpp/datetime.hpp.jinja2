@@ -1,3 +1,4 @@
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 /*! {{Name}} is a wrapper around a {{schema.format}} implemented as a {{schema.type}}.
  {%-if schema.description %}
  * {{schema.description}}
@@ -40,14 +41,14 @@ public:
     
     /*! Assignment operator to set the value of the {{Name}} instance from a ISO8601 string.
      * \param value the new ISO8601 string value.
-     * \throw if the passed string value isn't ISO8601 formatted.
+     * \throw {{exception}} if the passed string value is not ISO8601 formatted.
      * \return reference to the {{Name}} instance
      */
     {{Name}}& operator=(const std::string& value);
 
     /*! Assignment operator to set the value of the {{Name}} instance from a ISO8601 string.
      * \param value the new ISO8601 string value.
-     * \throw if the passed string value isn't ISO8601 formatted.
+     * \throw {{exception}} the passed string value is not ISO8601 formatted.
      * \return reference to the {{Name}} instance
      */
     {{Name}}& operator=(const char* value);

@@ -1,5 +1,6 @@
 {%-import 'loader.jinja2' as loader-%}
 {%-import 'propname.jinja2' as helper-%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset-%}
 {%macro NestedObjectName(name) -%}
     {%-if name|UpperCamelCase != Name|UpperCamelCase%}{{-name | UpperCamelCase-}}{%else%}{{name | UpperCamelCase}}Property{%endif-%}
 {%-endmacro%}
@@ -83,7 +84,8 @@ public:
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes a JSON "object" value into a new instance of {{Name}}.
      * \param json is the RapidJSON value which must be of "object" type.
-     * \throw If the JSON didn't validate according to the schema
+     * \throw {{exception}} If the JSON value wasn't an object.
+     * \throw {{exception}}Collection if any property was missing or didn't validate.
      * \returns {{Name}}
      */
     static {{Name}} FromJson(const rapidjson::Value& json);

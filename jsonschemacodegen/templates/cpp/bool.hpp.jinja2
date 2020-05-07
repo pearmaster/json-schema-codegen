@@ -1,3 +1,4 @@
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 /*! {{Name}} is a wrapper around a boolean.
  {%-if schema.description %}
  * {{schema.description}}
@@ -43,7 +44,7 @@ public:
     /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
      * \brief Deserializes JSON into a new instance of the {{Name}} object.
      * \param json is the RapidJSON value which must be a boolean type.
-     * \throw If the JSON data isn't a boolean
+     * \throw {{exception}} If the JSON data is not a boolean
      * \returns {{Name}}
      */
     static {{Name}} FromJson(const rapidjson::Value& json);

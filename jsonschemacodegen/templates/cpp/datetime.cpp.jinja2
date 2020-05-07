@@ -1,5 +1,7 @@
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
+{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 {{className}}::{{Name}}(const {{std}}string& value)
 {
     Set(value);
@@ -56,8 +58,15 @@ namespace {{origNs}} {
 
 void {{className}}::Set(const {{std}}string& value)
 {
-    {{std}}string fixedValue = boost::replace_nth_copy(value, "T", 0, " ");
-    Set(boost::posix_time::time_from_string(fixedValue));
+    try
+    {
+        {{std}}string fixedValue = boost::replace_nth_copy(value, "T", 0, " ");
+        Set(boost::posix_time::time_from_string(fixedValue));
+    }
+    catch (const std::exception& e)
+    {
+        throw {{exception}}({{std}}string("Could not parse timestamp: ") + e.what());
+    }
 }
 
 void {{className}}::Set(const char* value)
@@ -103,7 +112,7 @@ boost::posix_time::ptime {{className}}::Get() const
 {
     if (!(json.IsString()))
     {
-        throw std::invalid_argument("The '{{className}}' document JSON wasn't a string");
+        throw {{exception}}("Not a string");
     }
 
     return {{className}}(json.GetString());
