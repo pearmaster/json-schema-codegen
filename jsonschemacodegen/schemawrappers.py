@@ -315,6 +315,8 @@ class ArraySchema(SchemaBase):
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
         for _ in range(0, left+index.Number(right-left)):
             ret.append(self.GetItemSchema().Example(resolver, index))
+        if 'uniqueItems' in self.data and self.data['uniqueItems']:
+            ret = list(set(ret))
         return ret
 
 class CombinatorSchemaBase(SchemaBase):
