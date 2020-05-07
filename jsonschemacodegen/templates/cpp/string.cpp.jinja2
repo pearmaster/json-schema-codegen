@@ -1,7 +1,7 @@
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
-{%-if schema.const is not defined-%}
+{%-if schema.const is not defined%}
 {{className}}::{{Name}}(const {{std}}string& value)
 {
     Set(value);
@@ -17,13 +17,12 @@
 {
     Set({%if schema.const is defined%}CONST_VALUE{%else%}DEFAULT_VALUE{%endif%});
 }
-{%-elif schema.format is defined and schema.format == 'uuid'%}
+{%elif schema.format is defined and schema.format == 'uuid'%}
 {{className}}::{{Name}}()
 {
     SetUuid();
 }
 {%-endif%}
-
 {{className}}::operator {{std}}string() const
 {
     return Get();
@@ -82,8 +81,8 @@ bool operator< (const {{className}}& left, const {{className}}& right)
     Set(boost::uuids::to_string(uuid));
     return *this;
 }
-{%-endif-%}
-{# #}
+{%-endif-%}{# #}
+
 {{std}}string {{className}}::Get() const
 {
     return _value;
@@ -107,7 +106,7 @@ void {{className}}::Validate(const {{std}}string& testValue)
     {{std}}regex regexPattern("{{schema.pattern}}");
     {{std}}smatch regexMatch;
     {{std}}regex_match(testValue, regexMatch, regexPattern);
-    if (regexMatch.empty()) throw {{exception}}("The value did not match the required pattern '{{schema.pattern}}'");
+    if (regexMatch.empty()) throw {{exception}}("The string value did not match the required regular expression pattern '{{schema.pattern}}'");
     {%-endif%}
     {%-if schema.const is defined %}
     if (testValue != CONST_VALUE)
