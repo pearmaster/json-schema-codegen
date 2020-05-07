@@ -95,9 +95,9 @@ public:
     {{cpptype}} Get() const;
 
     /*! Validates that a value meets schema requirements.
-     * \fn void Validate({{cpptype}} testValue)
-     * \param testValue to validate
-     * \throw {{exception}} if passed value is invalid
+     * This is used internally anytime a value is passed into the class, including from the constructor.
+     * \param testValue This value is checked against all schema contraints.
+     * \throw {{exception}} When the provided value is invalid according to the schema.
      */
     static void Validate({{cpptype}} testValue);
 

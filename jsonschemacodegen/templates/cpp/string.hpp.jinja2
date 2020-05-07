@@ -22,15 +22,22 @@ public:
      * to ensure it is consistant with external requirements.
      */
     static constexpr int MIN_LENGTH = {{schema.minLength}};
-    {%-endif%}
+    {%endif%}
     {%-if schema.default is defined or schema.const is defined%}
+    /*! The default value of the string.
+     * If the string has not been set to a value, "{{schema.default or schema.const}}" would be returned for value getting methods.
+     */
     static constexpr auto DEFAULT_VALUE = "{{schema.default or schema.const}}";
+    
     {%-endif%}
     {%-if schema.const is defined%}
+    /*! The constant value of the string.
+     * The value is not allowed to be anything other than "{{schema.const}}".
+     */
     static constexpr auto CONST_VALUE = "{{schema.const}}";
     {%-endif%}
     {%-if schema.const is not defined%}
-    
+
     /*! Constructor.
      * \param value initial value of {{Name}} instance.
      */
@@ -40,17 +47,19 @@ public:
      * \param value initial value of {{Name}} instance.
      */
     {{Name}}(const char* value);
-    {%endif%}
+    {%-endif%}
     {%-if schema.default is defined or schema.const is defined%}
+
     /*! Constructor that sets the objects value to "{{schema.const or schema.default}}".
      */
     {{Name}}();
     {%-elif schema.format is defined and schema.format == 'uuid'%}
+
     /*! Constructor that sets the objects value to a new unique UUID.
      */
     {{Name}}();
-    {%-endif-%}
-    {# #}
+    {%-endif-%}{# #}
+    
     /*! Default destructor.
      */
     virtual ~{{Name}}() = default;
@@ -84,6 +93,7 @@ public:
     std::string Get() const;
 
     /*! Validate that the provided string meets schema constraints.
+     * This is used internally anytime a value is passed into the class, including from the constructor.
      * \param testValue string for evaluation
      * \throw {{exception}} If the string doesn't meet requirements
      */
