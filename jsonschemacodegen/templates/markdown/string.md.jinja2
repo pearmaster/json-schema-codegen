@@ -21,7 +21,7 @@
 {%-if schema.format == 'uuid'%}
  * Must be a **UUID**
 {%-elif schema.format == 'date-time'%}
- * Must be a ISO 8601 Timestamp
+ * Must be a RFC3339 Timestamp
 {%-else%}
  * Format is `{{schema.format}}`
 {%-endif%}

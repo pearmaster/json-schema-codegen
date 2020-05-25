@@ -29,6 +29,18 @@
 
 }
 
+{%if not schema.allow_none -%}
+{{className}}::{{Name}}(const boost::variant<{%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor%}>& firstOption)
+{
+    {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
+    {%if not loop.first%}else {%endif%}if (firstOption.which() == {{loop.index - 1}})
+    {
+        Set{{ObjectName(componentName, s)}}(boost::get<{{ObjectType(componentName, s)}}>(firstOption));
+    }
+    {%endfor%}
+}
+{%endif%}
+
 {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
 boost::optional<{{ObjectType(componentName, s)}}> {{className}}::Get{{ObjectName(componentName, s)}}() const
 {
@@ -48,16 +60,24 @@ void {{className}}::Set{{ObjectName(componentName, s)}}(const {{ObjectType(compo
     ThrowIfMissingRequiredProperties(json);
     {%-endif%}
     {{className}} returnObject;
+    {%if not schema.allow_none %}bool parsedAtLeastOne = false;{%endif%}
     {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
     try
     {
         returnObject.Set{{ObjectName(componentName, s)}}({{ObjectType(componentName, s)}}::FromJson(json));
+        {%if not schema.allow_none %}parsedAtLeastOne = true;{%endif%}
     }
     catch (...)
     {
         // If the type didn't parse, then no big deal since AnyOf doesn't require it to
     }
     {%-endfor%}
+    {%-if not schema.allow_none %}
+    if (!parsedAtLeastOne)
+    {
+        throw {{exception}}("At least one sub-object is required");
+    }
+    {%-endif%}
 
     return returnObject;
 }

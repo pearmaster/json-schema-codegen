@@ -31,11 +31,18 @@ public:
     {{loader.Class('hpp', resolver, [Name], componentName, s) | indent(4) }}
     
     {%endfor%}
-
+    {%if schema.allow_none%}
     /*! Constructor for {{Name}}
      * Since all components are optional, this is an empty constructor.
      */
     {{Name}}();
+    {%else-%}
+    /*! Constructor for {{Name}} that requires any component.
+     * \param firstOption is an object required for {{Name}} to be valid according to the schema.
+     */
+    {{Name}}(const boost::variant<{%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}{{ObjectType(componentName, s)}}{%if not loop.last%}, {%endif%}{%endfor%}>& firstOption);
+    {%-endif%}
+
     virtual ~{{Name}}() = default;
 
     {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
@@ -78,6 +85,13 @@ public:
      */
     std::string GetHandle() const;
 private:
+    {%-if not schema.allow_none%}
+    /*! Private constructor for {{Name}}.
+     * This is used for JSON deserialization which will use alternative methods to ensure that at least one component is set.
+     */
+    {{Name}}();
+    {%-endif%}
+
     {%-for s in schema.anyOf %}{%set componentName%}Component{{loop.index}}{%endset%}
     boost::optional<{{ObjectType(componentName, s)}}> {{componentName|privatize}};
     {%-endfor%}

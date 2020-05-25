@@ -1,5 +1,6 @@
 import collections
 import random
+import copy
 
 def bitsNeededForNumber(num):
     bits = 0
@@ -13,6 +14,8 @@ def rightBitMask(bits):
     mask = mask << bits
     mask -= 1
     return mask
+
+XCOUNT = 1
 
 class ExampleIndex(object):
 
@@ -31,7 +34,14 @@ class ExampleIndex(object):
         return bool(choice)
 
     def Choice(self, population):
-        return population[self.Number(len(population)-1)]
+        number_choices = len(population)-1
+        index = self.Number(number_choices)
+        try:
+            choice = population[index % (number_choices+1)]
+        except Exception as e:
+            print(f"{e}: Choice {index} from {population}")
+        else:
+            return choice
 
     def Number(self, maximum) -> int:
         if self._full() or maximum == 0:
@@ -85,7 +95,7 @@ class SchemaBase(collections.UserDict):
             return self.data['const']
         if 'example' in self.data:
             return self.data['example']
-        if 'examples' in self.data:
+        if 'examples' in self.data and len(self.data['examples']) > 0:
             return index.Choice(self.data['examples'])
         if 'default' in self.data:
             return self.data['default']
@@ -319,6 +329,7 @@ class ArraySchema(SchemaBase):
             ret = list(set(ret))
         return ret
 
+
 class CombinatorSchemaBase(SchemaBase):
     
     def __init__(self, name, initialdata, root=None):
@@ -326,13 +337,14 @@ class CombinatorSchemaBase(SchemaBase):
         self.name = name
         self.requiredProperties = set()
         self.components = []
+        self.allow_none = False
         for s in self.data[self.name]:
-            if 'type' in s or 'required' not in s:
+            if hasattr(s, '__iter__') and ('type' in s or 'required' not in s):
                 schema = SchemaFactory(s, self.root)
                 self.components.append(schema)
 
         for s in self.data[self.name]:
-            if 'required' in s and 'type' not in s:
+            if hasattr(s, '__iter__') and 'required' in s and 'type' not in s:
                 for rp in s['required']:
                     self.requiredProperties.add(rp)
                     self.SetPropertyRequired(rp)
@@ -359,12 +371,15 @@ class CombinatorSchemaBase(SchemaBase):
             return self.GetComponents()
         return self.data[key]
 
-
 class OneOfSchema(CombinatorSchemaBase):
     
     def __init__(self, initialdata, root=None):
         super().__init__('oneOf', initialdata, root)
         assert(isinstance(self.data['oneOf'], list))
+        if isinstance(initialdata, OneOfSchema):
+            self.allow_none = initialdata.allow_none
+        else:
+            self.allow_none = True in initialdata['oneOf']
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -399,7 +414,6 @@ class OneOfSchema(CombinatorSchemaBase):
         ex = component.Example(resolver, index)
         return ex
 
-
 class AllOfSchema(CombinatorSchemaBase):
 
     def __init__(self, initialdata, root=None):
@@ -414,12 +428,18 @@ class AllOfSchema(CombinatorSchemaBase):
             ret.update(comp.Example(resolver, index, self.requiredProperties))
         return ret
 
-
 class AnyOfSchema(CombinatorSchemaBase):
 
     def __init__(self, initialdata, root=None):
         super().__init__('anyOf', initialdata, root)
         assert(isinstance(self.data['anyOf'], list))
+        self.allow_none = (True in self.data['anyOf'])
+
+    def CppIncludes(self, resolver=None):
+        incs = super().CppIncludes(resolver=resolver)
+        if not self.allow_none:
+            incs.add("<boost/variant.hpp>")
+        return incs
 
     def GetExampleCombos(self, resolver) -> int:
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
@@ -433,7 +453,7 @@ class AnyOfSchema(CombinatorSchemaBase):
         ret = {}
         if required is not None:
             self.requiredProperties.update(required)
-        gotOne = False
+        gotOne = self.allow_none
         for comp in self.GetComponents():
             if index.BooleanChoice():
                 gotOne = True
@@ -443,7 +463,14 @@ class AnyOfSchema(CombinatorSchemaBase):
             ret.update(comp.Example(resolver, index, self.requiredProperties))
         return ret
 
+class AnyOfFirstMatchSchema(OneOfSchema):
+
+    def __init__(self, initialdata, root=None):
+        CombinatorSchemaBase.__init__(self, 'anyOf', initialdata, root)
+        assert(isinstance(self.data['anyOf'], list))
+
 def SchemaFactory(schema, root=None):
+
     if 'type' in schema:
         if schema['type'] == 'string':
             if 'enum' in schema:
@@ -464,6 +491,8 @@ def SchemaFactory(schema, root=None):
     elif 'allOf' in schema:
         return AllOfSchema(schema, root)
     elif 'anyOf' in schema:
+        if 'x-anyOf-codegen-behavior' in schema and schema['x-anyOf-codegen-behavior'] == "matchFirst":
+            return AnyOfFirstMatchSchema(schema, root)
         return AnyOfSchema(schema, root)
     elif 'oneOf' in schema:
         return OneOfSchema(schema, root)

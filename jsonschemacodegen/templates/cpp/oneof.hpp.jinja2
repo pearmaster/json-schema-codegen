@@ -11,11 +11,12 @@
     {%-endif-%}
 {%-endmacro%}
 {%-set optionList -%}
-{%-for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+{%-if schema.allow_none-%}boost::blank, {%endif-%} 
+{%-for s in schema.GetComponents() -%}{%set optionName%}Option{{loop.index}}{%endset-%}
 {{ObjectType(optionName, s)}}{%if not loop.last%}, {%endif-%}
 {%-endfor -%}
 {%-endset%}
-/*! {{Name}} is a wrapper around one of {{schema.oneOf|length}} different types.
+/*! {{Name}} is a wrapper around one of {{schema.GetComponents()|length}} different types.
  {%-if schema.description %}
  *
  {{schema.description | indent(1) }}
@@ -25,12 +26,18 @@
 class {{Name}}
 {
 public:
-    {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
+    {%-for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset%}
     {{loader.Class('hpp', resolver, [Name], optionName, s) | indent(4) }}
     
     {%endfor%}
 
-    {%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
+    {%-if schema.allow_none-%}
+    /*! Constructor where no value is needed for initialization.
+     */
+    {{Name}}();
+    {%-endif-%}
+
+    {%-for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset%}
     /*! Constructor that initializes the {{Name}} object with a {{ObjectType(optionName, s)}} instance.]
      */
     {{Name}}(const {{ObjectType(optionName, s)}}& obj);
@@ -53,27 +60,6 @@ public:
     /*! Gets a variant object containing whatever instance of whatever object has been set.
      */
     boost::variant<{{optionList}}> Get() const;
-
-    {#{%-for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
-    /*! Asserts that the type provided is a {{ObjectType(optionName, s)}}.
-     * Asserts that when `object.Get().which() == {{loop.index - 1}}` the expression `boost::get<{{ObjectType(optionName, s)}}>(object.Get())` is valid.
-     * This is static_assertion, so it will break at compile time, which is desireable.
-     * \code
-       boost::variant<{{optionList}}> v = instance.Get();
-       if (v.which() == {{loop.index - 1}})
-       {
-           {{Name}}::StaticAssertWhich{{loop.index - 1}}Type<{{ObjectType(optionName, s)}}>();
-           {{ObjectType(optionName, s)}} opt = boost::get<{{ObjectType(optionName, s)}}>(v);
-           // do other stuff with opt
-       }
-     * \endcode
-     */
-    template <typename T>
-    static inline void StaticAssertWhich{{loop.index - 1}}Type()
-    {
-        static_assert(std::is_same<T, {{ObjectType(optionName, s)}}>::value, "Type {{loop.index - 1}} is not {{ObjectType(optionName, s)}}");
-    }
-    {%-endfor -%}#}
 
     /*! Sets the variant object.
      * \fn void Set(const boost::variant<{{optionList}}>& variant)

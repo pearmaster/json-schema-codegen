@@ -26,12 +26,12 @@
 {%-endset-%}
 
 class {{Name}}(object):
-    """This represents one of {{schema['oneOf'] | length}} options"
-    {%-for comp in schema['oneOf']%}
+    """This represents one of {{schema.GetComponents() | length}} options"
+    {%-for comp in schema.GetComponents()%}
       * {{ComponentName(comp, loop.index)}}
     {%-endfor%}
     """
-    {%-for comp in schema['oneOf']%}
+    {%-for comp in schema.GetComponents()%}
     {%-if '$ref' not in comp%}
     {{loader.Class(resolver, ComponentName(comp, loop.index), comp, fullClassPath) |indent(4)}}
     {%-endif%}
@@ -57,7 +57,7 @@ class {{Name}}(object):
         else:
             self._type = None
             self._value = None
-            {%-for compSchema in schema['oneOf']%}
+            {%-for compSchema in schema.GetComponents()%}
             if self._type is None:
                 try:
                     self._value = {{ComponentType(compSchema, loop.index)}}(data)

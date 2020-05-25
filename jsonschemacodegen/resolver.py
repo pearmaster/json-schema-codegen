@@ -153,3 +153,12 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
 
     def cpp_get_lib_ns(self):
         return []
+
+    def py_test_filename(self, reference):
+        ref = self._get_reference_parts(reference)
+        return f"test_{ref['type']}_{ref['name']}.py"
+
+    def py_client_filepath(self, client_type, filename):
+        if client_type not in ['utilizer', 'provider', 'summary']:
+            return None
+        return f"{client_type}.py"

@@ -2,3 +2,6 @@
 {%-if 'default' in schema%}
  * Default value: `{{schema.default | lower }}`
 {%-endif-%}
+{%-if 'const' in schema%}
+ * Value must be: `{{schema.const | lower }}`
+{%-endif-%}

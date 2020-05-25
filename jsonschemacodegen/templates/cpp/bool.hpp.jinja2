@@ -7,34 +7,32 @@
 class {{Name}}
 {
 public:
-    /*! \fn {{Name}}(bool value)
-     * \brief Constructor with initial value
-     * \param value initial value
+    {%-if schema.default is defined%}
+    /*! The default value of the boolean.
+     * If the boolean has not been set to a value, `{{schema.default |lower}}` would be returned for value getting methods.
      */
-    {{Name}}(bool value);
+    static constexpr bool DEFAULT_VALUE = {{schema.default |lower}};
+    
+    {%-endif%}
+    {%-if schema.const is defined%}
+    /*! The constant value of the boolean.
+     * The value is not allowed to be anything other than `{{schema.const |lower}}`.
+     */
+    static constexpr bool CONST_VALUE = {{schema.const |lower}};
 
-    {%-if schema.default is defined %}
+    {%endif-%}
+    {%if schema.default is defined or schema.const is defined%}
     /*! \fn {{Name}}()
      * \brief Constructor that uses default value of {{schema.default}}
      */
     {{Name}}();
-    {%-endif%}
+    {%endif%}
 
     virtual ~{{Name}}() = default;
 
     /*! Cast to bool operator
      */
     operator bool() const;
-    
-    /*! Assign from bool operator
-     */
-    {{Name}}& operator=(bool value);
-
-    /*! \fn void Set(bool value)
-     * \brief reset value to new bool
-     * \param value new value
-     */
-    void Set(bool value);
 
     /*! \fn bool Get() const
      * \brief get current boolean value
@@ -68,6 +66,26 @@ public:
      * \returns the handle string
      */
     std::string GetHandle() const;
+
+{%if 'const' in schema%}
+private:
+{%endif%}
+    /*! \fn {{Name}}(bool value)
+     * \brief Constructor with initial value
+     * \param value initial value
+     */
+    {{Name}}(bool value);
+
+    /*! Assign from bool operator
+     */
+    {{Name}}& operator=(bool value);
+
+    /*! \fn void Set(bool value)
+     * \brief reset value to new bool
+     * \param value new value
+     */
+    void Set(bool value);
+
 private:
     bool _value;
     std::string _handle;

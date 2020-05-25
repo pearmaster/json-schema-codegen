@@ -12,17 +12,26 @@
     {%-endif-%}
 {%-endmacro%}
 {%-set optionList -%}
-{%-for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+{%-if schema.allow_none-%}boost::blank, {%endif-%} 
+{%-for s in schema.GetComponents() -%}{%set optionName%}Option{{loop.index}}{%endset-%}
 {{ObjectType(optionName, s)}}{%if not loop.last%}, {%endif-%}
 {%-endfor -%}
 {%-endset%}
+{%set loopOffset = (schema.allow_none == False) and 1 or 0 -%}
 {%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
 
-{%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
+{%-for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset%}
 {{loader.Class('cpp', resolver, [className], optionName, s) }}
 {%-endfor%}
 
-{%-for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset%}
+{%-if schema.allow_none-%}
+{{className}}::{{Name}}() : _value()
+{
+
+}
+{%-endif-%}
+
+{%-for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset%}
 {{className}}::{{Name}}(const {{ObjectType(optionName, s)}}& obj) : _value(obj)
 {
 
@@ -36,9 +45,9 @@ namespace {{origNs}} {
 {%-endfor%} 
 {{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& inst)
 {
-    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset-%}
     {%if not loop.first%}
-    else {%endif%}if (inst._value.which() == {{loop.index - 1}})
+    else {%endif%}if (inst._value.which() == {{loop.index - loopOffset}})
     {
         os << boost::get<{{ObjectType(optionName, s)}}>(inst._value);
     }
@@ -49,9 +58,9 @@ namespace {{origNs}} {
 {{std}}size_t hash_value(const {{className}}& inst)
 {
     {{std}}size_t seed = 0;
-    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset-%}
     {%if not loop.first%}
-    else {%endif%}if (inst._value.which() == {{loop.index - 1}})
+    else {%endif%}if (inst._value.which() == {{loop.index - loopOffset}})
     {
         boost::hash_combine(seed, boost::get<{{ObjectType(optionName, s)}}>(inst._value));
     }
@@ -69,9 +78,9 @@ boost::variant<{{optionList}}> {{className}}::Get() const
 void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
 {
     _value = variant;
-    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset-%}
     {%if not loop.first%}
-    else {%endif%}if (_value.which() == {{loop.index - 1}})
+    else {%endif%}if (_value.which() == {{loop.index - loopOffset}})
     {
         boost::get<{{ObjectType(optionName, s)}}>(_value).SetHandle(_handle);
     }
@@ -82,7 +91,7 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
 {{className}} {{className}}::FromString(const std::string& str)
 {
     {{exception}}Collection exceptionCollection;
-    {%for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%for s in schema.GetComponents() -%}{%set optionName%}Option{{loop.index}}{%endset-%}
     try
     {
         auto obj = {{ObjectType(optionName, s)}}::FromString(str);
@@ -104,7 +113,7 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
 {{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
     {{exception}}Collection exceptionCollection;
-    {%for s in schema.oneOf -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%for s in schema.GetComponents() -%}{%set optionName%}Option{{loop.index}}{%endset-%}
     try
     {
         auto obj = {{ObjectType(optionName, s)}}::FromJson(json);
@@ -118,15 +127,19 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
     }
     {%endfor %}
 
-    // Didnt deserialize
+    // Didnt deserialize an object
+    {%-if schema.allow_none%}
+    return {{className}}();
+    {%-else%}
     throw {{exception}}(exceptionCollection.what());
+    {%-endif%}
 }
 
 void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
 {
-    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset-%}
     {%if not loop.first%}
-    else {%endif%}if (_value.which() == {{loop.index - 1}})
+    else {%endif%}if (_value.which() == {{loop.index - loopOffset}})
     {
         boost::get<{{ObjectType(optionName, s)}}>(_value).ToJson(value, allocator);
     }
@@ -137,9 +150,9 @@ void {{className}}::SetHandle(const std::string& handle)
 {
     _handle = handle;
 
-    {%for s in schema.oneOf %}{%set optionName%}Option{{loop.index}}{%endset-%}
+    {%for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset-%}
     {%if not loop.first%}
-    else {%endif%}if (_value.which() == {{loop.index - 1}})
+    else {%endif%}if (_value.which() == {{loop.index - loopOffset}})
     {
         boost::get<{{ObjectType(optionName, s)}}>(_value).SetHandle(handle);
     }

@@ -2,16 +2,17 @@
 {%-set rapidjson = resolver.cpp_resolve_namespace(['rapidjson']) %}
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+
 {{className}}::{{Name}}(bool value)
 {
     Set(value);
 }
 
-{%-if schema.default is defined %}
+{%-if schema.default is defined or schema.const is defined%}
 {%set emptyConstructor = true %}
 {{className}}::{{Name}}()
 {
-    Set({{schema.default|lower}});
+    Set({%if schema.const is defined%}CONST_VALUE{%else%}DEFAULT_VALUE{%endif%});
 }
 {%-endif%}
 
@@ -42,7 +43,12 @@ bool {{className}}::Get() const
     {
         throw {{exception}}("Not a boolean");
     }
-
+    {%if 'const' in schema%}
+    if (json.GetBool() != CONST_VALUE)
+    {
+        throw {{exception}}("Not the required value of '{{schema.const | lower}}'");
+    }
+    {%endif-%}
     {{className}} newObject(json.GetBool());
     return newObject;
 }

@@ -1,5 +1,5 @@
 {%-import 'schema.jinja2' as loader-%}
-An **object**{%if 'title' in schema%} - {{schema.title|italics}}.  It is {%endif%} made up of properties from one or more of these groups:
+An **object**{%if 'title' in schema%} - {{schema.title|italics}}.  It is {%endif%} made up of properties from {%if schema.allow_none%}*zero*{%else%}one{%endif%} or more of these groups:
 {%for s in schema.GetComponents() %}
-{{loader.Display(s.Resolve(resolver), resolver)}}
+Option{%if schema.allow_none%}al{%endif%} - {{loader.Display(s.Resolve(resolver), resolver)}}
 {%endfor%}

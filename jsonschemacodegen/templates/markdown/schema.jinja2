@@ -4,7 +4,11 @@
 {%-elif schema.allOf is defined -%}
 {%-include 'allOf.md.jinja2'-%}
 {%-elif schema.anyOf is defined -%}
+{%-if 'x-anyOf-codegen-behavior' in schema and schema['x-anyOf-codgen-behavior'] == 'matchFirst' -%}
+{%-include 'oneOf.md.jinja2'-%}
+{%-else-%}
 {%-include 'anyOf.md.jinja2'-%}
+{%-endif-%}
 {%-elif 'type' in schema %}
 {%-include schema.type+'.md.jinja2'-%}
 {%-else-%}

@@ -4,7 +4,11 @@
 {%-elif schema.allOf is defined -%}
 {%-include 'allof.'+filetype+'.jinja2'-%}
 {%-elif schema.anyOf is defined -%}
+{%-if 'x-anyOf-codegen-behavior' in schema and schema['x-anyOf-codgen-behavior'] == 'matchFirst' -%}
+{%-include 'oneof.'+filetype+'.jinja2'-%}
+{%-else-%}
 {%-include 'anyof.'+filetype+'.jinja2'-%}
+{%-endif-%}
 {%-elif '$ref' in schema -%}
 // An object representing {{schema['$ref']}} is used in this structure
 {# -#}
