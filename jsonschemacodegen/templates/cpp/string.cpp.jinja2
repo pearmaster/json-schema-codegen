@@ -103,10 +103,10 @@ void {{className}}::Validate(const {{std}}string& testValue)
     }
     {%-endif%}
     {%-if schema.pattern is defined %}
-    {{std}}regex regexPattern("{{schema.pattern}}");
+    {{std}}regex regexPattern("{{schema.pattern | replace('\\', '\\\\')}}");
     {{std}}smatch regexMatch;
     {{std}}regex_match(testValue, regexMatch, regexPattern);
-    if (regexMatch.empty()) throw {{exception}}("The string value did not match the required regular expression pattern '{{schema.pattern}}'");
+    if (regexMatch.empty()) throw {{exception}}("The string value did not match the required regular expression pattern '{{schema.pattern | replace('\\', '\\\\')}}'");
     {%-endif%}
     {%-if schema.const is defined %}
     if (testValue != CONST_VALUE)
