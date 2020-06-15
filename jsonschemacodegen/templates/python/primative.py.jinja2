@@ -88,7 +88,7 @@ if {{varName}} not in acceptable_values:
     raise ValueError("Value '{}' is not in the list of acceptable value: {}".format({{varName}}, acceptable_values))
 {%-endif%} {#enum#}
 {%-if schema.const is defined%}
-if {{varName}} != {{schema.const | quotestring(schema.type)}}:
+if {{varName}} != {{schema.const | quotestring(schema.type=='string')}}:
     raise ValueError("Value '{}' is not the constant value '{{schema.const}}'".format({{varName}}))
 {%-endif%} {#enum#}
 {%-if schema.pattern is defined%}
