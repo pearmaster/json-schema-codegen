@@ -11,6 +11,7 @@
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
+{%-set additionalProperties = ('additionalProperties' in schema and schema['additionalProperties'] is false)%}
 /*! {{Name}} is a wrapper around an object.
  * \brief Wrapper around object with properties: {%for propName in schema.properties.keys() %}{{propName}}{%if not loop.last%}, {%endif%}{%endfor%}
  {%-if schema.description %}
@@ -62,14 +63,18 @@ public:
     {%for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required%}
     /*! Returns the required '{{propName}}' property of the object
-     * \fn {{ObjectType(propName, propSchema)}} Get{{propName | UpperCamelCase}}() const
-     * \returns {{ObjectType(propName, propSchema)}} Required property value
+     * \returns Required '{{propName}}' property value
      */
     {{ObjectType(propName, propSchema)}} Get{{propName | UpperCamelCase}}() const;
+
+    /*! Returns a reference to the required '{{propName}}' property of the object.
+     * The reference is valid as long as the {{Name}} object.
+     * \returns Required '{{propName}}' property reference
+     */
+    {{ObjectType(propName, propSchema)}}& Get{{propName | UpperCamelCase}}Reference() const;
     {%else%}
     /*! Returns the optional '{{propName}}' property of the object
-     * \fn boost::optional<{{ObjectType(propName, propSchema)}}> Get{{propName | UpperCamelCase}}() const
-     * \returns boost::optional<{{ObjectType(propName, propSchema)}}> Optional property value
+     * \returns Optional '{{propName}}' property value
      */
     boost::optional<{{ObjectType(propName, propSchema)}}> Get{{propName | UpperCamelCase}}() const;
     {%-endif%}
@@ -109,6 +114,16 @@ public:
      * \returns the handle string
      */
     std::string GetHandle() const;
+    {%if additionalProperties%}
+    /*! Adds an additional property to the JSON structure that created from ToJson.
+     * These properties are added to the JSON object before any other modification.
+     * Values may be overwritten by properties defined in the JSON schema.
+     * Values are not checked against any schema, so it is possible that additing additional properties may result in a schema-invalid object.
+     * \param propName The name of the property in the JSON object.
+     * \param propValue is a RapidJSON Value which is copied into the {{Name}} instance.
+     */
+    void AdditionalProperty(const std::string& propName, const rapidjson::Value& propValue)
+    {%endif%}
 private:
     {%-for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required %}
@@ -118,4 +133,5 @@ private:
     {%-endif%}
     {%-endfor%}
     std::string _handle;
+    {%if additionalProperties%}std::vector<std::pair<std::string, rapidjson::Value>> _additionalProperties;{%endif%}
 };

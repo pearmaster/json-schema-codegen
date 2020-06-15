@@ -14,6 +14,7 @@
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
+{%-set additionalProperties = ('additionalProperties' in schema and schema['additionalProperties'] is false)%}
 {%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset-%}
 
 {%import 'loader.jinja2' as loader with context%}
@@ -66,6 +67,11 @@
 {%-if propName in schema.required%}
 
 {{ObjectType(propName, propSchema)}} {{className}}::Get{{propName | UpperCamelCase}}() const
+{
+    return {{propName | privatize}};
+}
+
+{{ObjectType(propName, propSchema)}}& {{className}}::Get{{propName | UpperCamelCase}}Reference() const
 {
     return {{propName | privatize}};
 }
@@ -161,7 +167,12 @@ void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.cpp_resolve_nam
     {
         value.SetObject();
     }
-
+    {%if additionalProperties %}
+    for (const auto &i : _additionalProperties)
+    {
+        value.AddMember(i->first, i->second);
+    }
+    {%endif%}
     {%-for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required%}
     {{rapidjson}}Value temp{{propName|UpperCamelCase}};
@@ -187,3 +198,9 @@ std::string {{className}}::GetHandle() const
 {
     return _handle;
 }
+{%if additionalProperties %}
+void {{className}}::AdditionalProperty(const std::string& propName, const rapidjson::Value& propValue)
+{
+    _additionalProperties.push_back(std::make_pair<std::string, rapidjson::Value>(propName, propValue));
+}
+{%endif%}
