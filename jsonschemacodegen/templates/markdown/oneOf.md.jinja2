@@ -1,5 +1,5 @@
 {%-import 'schema.jinja2' as loader-%}
-{%if schema.allow_none %}Zero or one{%else%}One{%endif%} of the following types:
+{%if schema.allow_none %}Zero or one{%else%}One{%endif%} of the following types{%if schema.default is defined%}, with the default of `{{schema.default}}`{%endif%}:
 {%- for s in schema.GetComponents() %}
  * OR {{loader.Display(s.Resolve(resolver), resolver) | mdindent(2)}}
 {%endfor-%}
