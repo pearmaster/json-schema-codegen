@@ -63,19 +63,25 @@ public:
     virtual ~{{Name}}() = default;
 
     {%-for s in schema.allOf %}{%set componentName%}{{ComponentName(Name, s, loop.index)}}{%endset%}
-    /*! \fn {{ObjectType(componentName, s)}} Get{{ObjectName(componentName, s)}}() const
-     * \brief returns the {{ObjectType(componentName, s)}} component of the {{Name}} object
+    /*! Returns the {{ObjectType(componentName, s)}} component of the {{Name}} object
+     * \returns Copy of the {{ObjectType(componentName, s)}} component.
      */
     {{ObjectType(componentName, s)}} Get{{ObjectName(componentName, s)}}() const;
 
-    /*! \fn void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
+    /*! Returns a reference to the {{ObjectType(componentName, s)}} component of the {{Name}} object.
+     * The reference is valid as long as the {{Name}} object.
+     * \returns Reference to the {{ObjectName(componentName, s)}} component.
+     */
+    {{ObjectType(componentName, s)}}& Get{{ObjectName(componentName, s)}}Reference() const;
+
+    /*! 
      * \brief Sets the {{ObjectType(componentName, s)}} component of {{Name}} object.
      * \param component is copied into the storage for this class.
      */
     void Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component);
     {%endfor%}
 
-    /*! \fn {{Name}} FromJson(const rapidjson::Value& json)
+    /*! 
      * \brief Deserializes JSON into a new instance of the {{Name}} object.
      * \param json is the RapidJSON value which must be of object type and conforming to the schema.
      * \throw {{exception}} If any of the components don't deserialize correctly according to their schemas.

@@ -54,6 +54,11 @@
     return {{componentName|privatize}};
 }
 
+{{ObjectType(componentName, s)}}& {{className}}::Get{{ObjectName(componentName, s)}}Reference() const
+{
+    return {{componentName|privatize}};
+}
+
 void {{className}}::Set{{ObjectName(componentName, s)}}(const {{ObjectType(componentName, s)}}& component)
 {
     {{componentName|privatize}} = component;
