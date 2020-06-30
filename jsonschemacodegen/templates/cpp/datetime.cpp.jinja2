@@ -48,7 +48,7 @@
 }
 {%for origNs in originalNamespace %}
 namespace {{origNs}} {
-{%-endfor%}  
+{%-endfor%}
 {{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& obj)
 {
     os << obj.GetString();
@@ -62,9 +62,14 @@ void {{className}}::Set(const {{std}}string& value)
     {
         {{std}}string fixedValue = boost::replace_nth_copy(value, "T", 0, " ");
         boost::algorithm::trim_right_if(fixedValue, [](char c) { return c == 'Z' || c == 'z'; });
+        auto plus = fixedValue.find('+');
+        if (plus != {{std}}string::npos)
+        {
+            fixedValue.erase(plus);
+        }
         Set(boost::posix_time::time_from_string(fixedValue));
     }
-    catch (const std::exception& e)
+    catch (const {{std}}exception& e)
     {
         throw {{exception}}({{std}}string("Could not parse timestamp: ") + e.what());
     }
@@ -72,7 +77,7 @@ void {{className}}::Set(const {{std}}string& value)
 
 void {{className}}::Set(const char* value)
 {
-    Set(std::string(value));
+    Set({{std}}string(value));
 }
 
 void {{className}}::Set(const boost::posix_time::ptime& datetime)
@@ -127,7 +132,7 @@ boost::posix_time::ptime {{className}}::Get() const
 void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
 {
     std::string tempVal(GetString());
-    value.SetString(tempVal.c_str(), tempVal.size(), allocator);  
+    value.SetString(tempVal.c_str(), tempVal.size(), allocator);
 }
 
 void {{className}}::SetHandle(const std::string& handle)
