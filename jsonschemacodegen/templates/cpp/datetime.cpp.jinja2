@@ -61,6 +61,7 @@ void {{className}}::Set(const {{std}}string& value)
     try
     {
         {{std}}string fixedValue = boost::replace_nth_copy(value, "T", 0, " ");
+        boost::algorithm::trim_right_if(fixedValue, [](char c) { return c == 'Z' || c == 'z'; });
         Set(boost::posix_time::time_from_string(fixedValue));
     }
     catch (const std::exception& e)
