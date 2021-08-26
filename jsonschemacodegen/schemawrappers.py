@@ -1,61 +1,12 @@
 import collections
-import random
 import copy
 
-def bitsNeededForNumber(num):
-    bits = 0
-    while num > 0:
-        num = num >> 1
-        bits += 1
-    return bits
-
-def rightBitMask(bits):
-    mask = 1
-    mask = mask << bits
-    mask -= 1
-    return mask
-
-XCOUNT = 1
-
-class ExampleIndex(object):
-
-    def __init__(self, index):
-        self.index = index
-        self.current = index
-
-    def _full(self):
-        return self.index == -1
-
-    def BooleanChoice(self):
-        if self._full():
-            return True
-        choice = self.current & 0x01
-        self.current = self.current >> 1
-        return bool(choice)
-
-    def Choice(self, population):
-        number_choices = len(population)-1
-        index = self.Number(number_choices)
-        try:
-            choice = population[index % (number_choices+1)]
-        except Exception as e:
-            print(f"{e}: Choice {index} from {population}")
-        else:
-            return choice
-
-    def Number(self, maximum) -> int:
-        if self._full() or maximum == 0:
-            return maximum
-        bits = bitsNeededForNumber(maximum)
-        mask = rightBitMask(bits)
-        choice = self.current & mask
-        self.current = self.current >> bits
-        return choice % (maximum + 1)
-
-    def __repr__(self):
-        return str(self.index)
+from example_util import bitsNeededForNumber, ExampleIndex
 
 class SchemaBase(collections.UserDict):
+    """
+    Abstract base class for all types of schemas.
+    """
 
     def __init__(self, initialdata, root=None):
         super().__init__(initialdata)
@@ -109,7 +60,15 @@ class SchemaBase(collections.UserDict):
             print(f"Failed to get an example for {self.data} against {self.root['info']['title']}")
             raise
 
+
 class Reference(SchemaBase):
+    """
+    A reference schema looks like this:
+
+    ```yaml
+    $ref: "path/to/schema"
+    ```
+    """
 
     def __init__(self, initialdata, root=None):
         super().__init__(initialdata, root)
@@ -145,6 +104,18 @@ class Reference(SchemaBase):
 
 
 class ObjectSchema(SchemaBase):
+    """
+    An object schema looks like this:
+
+    ```yaml
+    type: object
+    properties:
+      a: 
+        type: integer
+    required:
+      - a
+    ```
+    """
 
     def __init__(self, initialdata, root=None):
         super().__init__(initialdata, root)
@@ -228,6 +199,22 @@ class ObjectSchema(SchemaBase):
         return ret
 
 class StringSchema(SchemaBase):
+    """
+    A string schema could look like this:
+
+    ```yaml
+    type: string
+    minLength: 0
+    maxLength: 10
+    ```
+
+    or perhaps like this:
+
+    ```yaml
+    type: string
+    format: uuid
+    ```
+    """
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -254,6 +241,17 @@ class StringSchema(SchemaBase):
 
 
 class StringEnumSchema(StringSchema):
+    """
+    A string schema with enumerated values looks like this:
+    
+    ```yaml
+    type: string
+    enum:
+      - a
+      - frog
+      - george washington
+    ```
+    """
     
     def GetExampleCombos(self, resolver) -> int:
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
@@ -265,6 +263,22 @@ class StringEnumSchema(StringSchema):
 
 
 class NumberSchema(SchemaBase):
+    """
+    A number schema may look like:
+
+    ```yaml
+    type: integer
+    multipleOf: 4
+    ```
+
+    or like this:
+
+    ```yaml
+    type: number
+    format: double
+    minimum: 1.0
+    ```
+    """
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -281,7 +295,16 @@ class NumberSchema(SchemaBase):
             return self.data['exclusiveMaximum'] - (self.data['type'] == 'integer' and 1 or 0.000001)
         return self.data['type'] == 'integer' and 1 or 1.1
 
+
 class BooleanSchema(SchemaBase):
+    """
+    A boolean schema may look like this:
+
+    ```yaml
+    type: boolean
+    default: false
+    ```
+    """
 
     def GetExampleCombos(self, resolver) -> int:
         combos = 2
@@ -294,6 +317,13 @@ class BooleanSchema(SchemaBase):
 
 
 class NullSchema(SchemaBase):
+    """
+    A null schema is simply:
+
+    ```yaml
+    type: null
+    ```
+    """
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -304,6 +334,17 @@ class NullSchema(SchemaBase):
         return None
 
 class ArraySchema(SchemaBase):
+    """
+    A schema for an array of unique strings looks something like:
+
+    ```yaml
+    type: array
+    maxItems: 4
+    uniqueItems: true
+    items:
+      type: string
+    ```
+    """
     
     def GetItemSchema(self):
         return SchemaFactory(self.data['items'], self.root)
@@ -335,6 +376,8 @@ class ArraySchema(SchemaBase):
 
 
 class CombinatorSchemaBase(SchemaBase):
+    """ This is a base class for anyOf, allOf, oneOf schema types.
+    """
     
     def __init__(self, name, initialdata, root=None):
         super().__init__(initialdata, root)
@@ -375,7 +418,17 @@ class CombinatorSchemaBase(SchemaBase):
             return self.GetComponents()
         return self.data[key]
 
+
 class OneOfSchema(CombinatorSchemaBase):
+    """
+    A schema that requires an item to be either a string or null would look like:
+
+    ```yaml
+    oneOf:
+      - type: string
+      - type: null
+    ```
+    """
     
     def __init__(self, initialdata, root=None):
         super().__init__('oneOf', initialdata, root)
@@ -418,6 +471,7 @@ class OneOfSchema(CombinatorSchemaBase):
         ex = component.Example(resolver, index)
         return ex
 
+
 class AllOfSchema(CombinatorSchemaBase):
 
     def __init__(self, initialdata, root=None):
@@ -431,6 +485,7 @@ class AllOfSchema(CombinatorSchemaBase):
         for comp in self.GetComponents():
             ret.update(comp.Example(resolver, index, self.requiredProperties))
         return ret
+
 
 class AnyOfSchema(CombinatorSchemaBase):
 
@@ -473,34 +528,3 @@ class AnyOfFirstMatchSchema(OneOfSchema):
         CombinatorSchemaBase.__init__(self, 'anyOf', initialdata, root)
         assert(isinstance(self.data['anyOf'], list))
 
-def SchemaFactory(schema, root=None):
-
-    if 'type' in schema:
-        if schema['type'] == 'string':
-            if 'enum' in schema:
-                return StringEnumSchema(schema, root)
-            return StringSchema(schema, root)
-        elif schema['type'] == 'number' or schema['type'] == 'integer':
-            return NumberSchema(schema, root)
-        elif schema['type'] == 'boolean':
-            return BooleanSchema(schema, root)
-        elif schema['type'] == 'null':
-            return NullSchema(schema, root)
-        elif schema['type'] == 'object':
-            return ObjectSchema(schema, root)
-        elif schema['type'] == 'array':
-            return ArraySchema(schema, root)
-        else:
-            raise NotImplementedError(f"The type '{schema['type']}' is not implemented")
-    elif 'allOf' in schema:
-        return AllOfSchema(schema, root)
-    elif 'anyOf' in schema:
-        if 'x-anyOf-codegen-behavior' in schema and schema['x-anyOf-codegen-behavior'] == "matchFirst":
-            return AnyOfFirstMatchSchema(schema, root)
-        return AnyOfSchema(schema, root)
-    elif 'oneOf' in schema:
-        return OneOfSchema(schema, root)
-    elif '$ref' in schema:
-        return Reference(schema, root)
-    else:
-        raise NotImplementedError(str(schema))
