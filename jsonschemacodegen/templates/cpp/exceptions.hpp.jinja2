@@ -92,12 +92,14 @@ class RapidJsonParseException : public JsonException
 {
 public:
     /*! Constructor (C strings).
-     *  @param whatArg C-style string error message.
+     *
+     *  \param whatArg C-style string error message.
      */
     explicit RapidJsonParseException(const char* whatArg) : JsonException(), _whatArg(whatArg) { }
 
     /*! Constructor (C++ STL strings).
-     *  @param whatArg The error message.
+     *
+     *  \param whatArg The error message.
      */
     explicit RapidJsonParseException(const std::string& whatArg) : JsonException(), _whatArg(whatArg) { }
 
@@ -107,7 +109,8 @@ public:
     virtual ~RapidJsonParseException() throw () {}
 
     /** Returns a pointer to the (constant) error description.
-     *  @return A pointer to a const char*. 
+     *
+     *  \returns A pointer to a const char*. 
      */
     virtual const char* what() const throw() 
     {

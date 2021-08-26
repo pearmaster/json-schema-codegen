@@ -1,6 +1,26 @@
 {%-import 'constraints.jinja2' as constraint-%}
-{%-if schema.type == 'integer'%}{%-set rjtype = 'int'%}{%-else%}{%-set rjtype = 'number'%}{%-endif-%}
-{%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif%}
+{%-if schema.type == 'integer'-%}
+    {%-if schema.format is defined and schema.format == 'uint64'-%}
+        {%-set rjtype = 'uint64'-%}
+    {%-elif schema.format is defined and schema.format == 'int64'-%}
+        {%-set rjtype = 'int64'-%}
+    {%-else-%}
+        {%-set rjtype = 'int'-%}
+    {%-endif-%}
+{%-else%}
+    {%-set rjtype = 'double'-%}
+{%-endif-%}
+{%-if schema.type == 'integer'-%}
+    {%-if schema.format is defined and schema.format == 'uint64'-%}
+        {%-set cpptype = 'uint64_t'-%}
+    {%-elif schema.format is defined and schema.format == 'int64'-%}
+        {%-set cpptype = 'int64_t'-%}
+    {%-else-%}
+        {%-set cpptype = 'int'-%}
+    {%-endif-%}
+{%-else-%}
+    {%-set cpptype = 'double'-%}
+{%-endif-%}
 {%-set std = resolver.cpp_resolve_namespace(['std']) %}
 {%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
 {%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
@@ -75,7 +95,7 @@ void {{className}}::Validate({{cpptype}} testValue)
     if (testValue >= {{constraint.ExprName('exclusiveMaximum')}}) throw {{exception}}("Value was less than or equal to {{schema.exclusiveMaximum}}");
     {%-endif%}
     {%-if schema.multipleOf is defined %}
-    if ((testValue % {{constraint.ExprName('multipleOf')}}) != 0) throw {{exception}}("Value was less than or equal to {{schema.exclusiveMaximum}}");
+    if ((testValue % {{constraint.ExprName('multipleOf')}}) != 0) throw {{exception}}("Value was not a multiple of {{schema.multipleOf}}");
     {%-endif%}
     {%-if schema.const is defined%}
     if (testValue != {{constraint.ExprName('const')}}) throw {{exception}}("Value was not {{schema.const}}");
@@ -84,12 +104,12 @@ void {{className}}::Validate({{cpptype}} testValue)
 
 {{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
 {
-    if (!(json.Is{{rjtype | UpperCamelCase}}()))
+    if (!(json.Is{{rjtype == 'double' and 'Number' or rjtype | UpperCamelCase}}()))
     {
-        throw {{exception}}("Wasn't a {{rjtype}}");
+        throw {{exception}}("Wasn't a{%if rjtype.startswith('i') or rjtype.startswith('u')%}n{%endif%} {{rjtype}}");
     }
 
-    {{className}} newObject(json.Get{{cpptype | UpperCamelCase}}());
+    {{className}} newObject(json.Get{{rjtype | UpperCamelCase}}());
     return newObject;
 }
 
@@ -100,7 +120,7 @@ void {{className}}::Validate({{cpptype}} testValue)
 
 void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
 {
-    value.Set{{cpptype | UpperCamelCase}}(_value); 
+    value.Set{{rjtype | UpperCamelCase}}(_value);
 }
 
 void {{className}}::SetHandle(const std::string& handle)

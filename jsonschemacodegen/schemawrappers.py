@@ -181,6 +181,10 @@ class ObjectSchema(SchemaBase):
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
         incs.update({"<boost/optional.hpp>"})
+        if len(self.UnRequiredList(False)) > 0:
+            incs.update({"<boost/none.hpp>"})
+        if 'additionalProperties' not in self.data or self.data['additionalProperties'] is False:
+            incs.update({"<utility>"})
         for _, ps in self.GetPropertySchemas().items():
             incs.update(ps.CppIncludes(resolver))
         return incs

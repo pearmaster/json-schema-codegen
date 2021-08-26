@@ -80,9 +80,17 @@ void {{className}}::Append(const {{itemtype}}& item)
         {
             arr.push_back({{itemtype}}::FromJson(v));
         }
-        catch (const {{exception}}& e)
+        catch (const gaap::JsonSchemaException& e)
         {
             exceptionCollection.AddException(e, std::to_string(i));
+        }
+        catch (const gaap::JsonSchemaExceptionCollection& ec)
+        {
+            exceptionCollection.AddException(ec, std::to_string(i));
+        }
+        catch (const std::exception& e)
+        {
+            exceptionCollection.AddException(gaap::JsonSchemaException(e), std::to_string(i));
         }
         i++;
     }

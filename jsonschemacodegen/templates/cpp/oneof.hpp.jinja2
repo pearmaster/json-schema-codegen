@@ -20,6 +20,11 @@
  {%-if schema.description %}
  *
  {{schema.description | indent(1) }}
+
+ Sub-Types:
+ {%for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset-%}
+   - `{{ObjectType(optionName, s)}}` {{s.Resolve(resolver).title}}
+ {%endfor%}
  *
  {%-endif%}
  */
@@ -66,13 +71,29 @@ public:
      * \param variant  An instance of one of these types must be passed: {{optionList}}
      */
     void Set(const boost::variant<{{optionList}}>& variant);
-
+    {# #}
     {%-if commonType in ['boolean', 'integer', 'number', string] %}
-    /*! \fn {{Name}} FromString(const std::string& str)
-     * \brief Performs a "lexical cast" on the string to create a new {{Name}} object
-     * \param const std::string& str stringified representation of a {{schema.GetCommonType(resolver)}}
-     * \throw {{exception}} If the string cannot be cast or does not JSON-schema validate
-     * \return {{Name}}
+    /*! Gets the value of as an {{commonType}} regardless of the actual variant type.
+     *
+     * This object was generated from a `oneOf` JSON-Schema object, which specifies that the value must match exactly 1 of the sub-types.  We don't verify that a value would not match multiple subtypes as defined in the schema.  If the schema incorrectly allowed this, we will match against the first sub-type match.
+     *
+     * \return {{commonType}} value
+     */
+    {{ {'boolean':'bool', 'integer':'int', 'number':'float', string:'std::string'}[commonType] }} GetAs{{commonType|UpperCamelCase}}() const;
+
+    {%if commonType == 'integer'%}
+    /*! Uses the integer value to create a new {{Name}} instance.
+     *
+     * \param value This value must conform to one of the variant types.
+     * \return new {{Name}} instance.
+     */
+    static {{Name}} FromInteger(int value);
+    {%endif%}
+    /*! Performs a "lexical cast" on the string to create a new {{Name}} object.
+     *
+     * \param str stringified representation of a {{schema.GetCommonType(resolver)}}.
+     * \throw {{exception}} If the string cannot be cast or does not JSON-schema validate.
+     * \returns New instance of {{Name}}.
      */
     static {{Name}} FromString(const std::string& str);
     {%-endif%}

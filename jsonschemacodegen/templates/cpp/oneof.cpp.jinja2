@@ -40,6 +40,19 @@
 
 {%set commonType = schema.GetCommonType(resolver)%}
 {%-if commonType in ['boolean', 'integer', 'number', string] %}
+{{ {'boolean':'bool', 'integer':'int', 'number':'float', string:'std::string'}[commonType] }} {{className}}::GetAs{{commonType|UpperCamelCase}}() const
+{
+    switch(_value.which())
+    {
+        {%for s in schema.GetComponents() %}{%set optionName%}Option{{loop.index}}{%endset%}
+        case {{loop.index - loopOffset}}:
+            return boost::get<{{ObjectType(optionName, s)}}>(_value).Get();
+    {%-endfor%}
+    }
+    throw std::runtime_error("boost::variant.which() didn't match any variant");
+}
+
+
 {%for origNs in originalNamespace %}
 namespace {{origNs}} {
 {%-endfor%} 
@@ -88,6 +101,30 @@ void {{className}}::Set(const boost::variant<{{optionList}}>& variant)
 }
 
 {%-if commonType in ['boolean', 'integer', 'number', string] %}
+
+{%if commonType == 'integer'%}
+{{className}} {{className}}::FromInteger(int value)
+{
+    {{exception}}Collection exceptionCollection;
+    {%for s in schema.GetComponents() -%}{%set optionName%}Option{{loop.index}}{%endset-%}
+    try
+    {
+        auto obj = {{ObjectType(optionName, s)}}({%-if 'const' not in s.Resolve(resolver) -%}value{%-endif-%});
+        return {{className}}(obj);
+    }
+    catch (const std::exception& e)
+    {
+        // {{optionName}} wasnt able to deserialize{%if not loop.last%}
+        // but there are other option to try{%endif%}
+        exceptionCollection.AddException(e);
+    }
+    {%endfor %}
+
+    // Didnt deserialize
+    throw {{exception}}(exceptionCollection.what());
+}
+{%endif%}
+
 {{className}} {{className}}::FromString(const std::string& str)
 {
     {{exception}}Collection exceptionCollection;

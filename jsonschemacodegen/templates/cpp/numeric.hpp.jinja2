@@ -1,6 +1,27 @@
 {%-import 'constraints.jinja2' as constraint-%}
 {%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
-{%-if schema.type == 'integer'%}{%-set cpptype = 'int'%}{%-else%}{%-set cpptype = 'double'%}{%-endif-%}
+{%-if schema.type == 'integer'-%}
+    {%-if schema.format is defined and schema.format == 'uint64'-%}
+        {%-set rjtype = 'uint64'-%}
+    {%-elif schema.format is defined and schema.format == 'int64'-%}
+        {%-set rjtype = 'int64'-%}
+    {%-else-%}
+        {%-set rjtype = 'int'-%}
+    {%-endif-%}
+{%-else%}
+    {%-set rjtype = 'number'-%}
+{%-endif-%}
+{%-if schema.type == 'integer'-%}
+    {%-if schema.format is defined and schema.format == 'uint64'-%}
+        {%-set cpptype = 'uint64_t'-%}
+    {%-elif schema.format is defined and schema.format == 'int64'-%}
+        {%-set cpptype = 'int64_t'-%}
+    {%-else-%}
+        {%-set cpptype = 'int'-%}
+    {%-endif-%}
+{%-else-%}
+    {%-set cpptype = 'double'-%}
+{%-endif-%}
 /*! {{Name}} is a wrapper around a {{schema.type}}.
  * \brief wrapper around {{cpptype}}
  {%-if schema.description %}
@@ -52,11 +73,18 @@ public:
      */
     static constexpr int {{constraint.ExprName('const')}} = {{schema.const}};
     {%endif%}
-    {%-if schema.const is not defined%}
-    /*! Constructor
-     * \param value the initial value
+    {%-if schema.const is defined%}
+private:
+    {%endif%}
+    /*! Constructor that accepts an initial value. 
+     {%if schema.const is defined%}* This constructor is private because a constant value is defined for the class.{%endif%}
+     *
+     * \param value the initial value.  {%if schema.const is defined%}Must be `{{schema.const}}`.{%endif%}
+     {%if schema.const is defined%}* \throws {{exception}} When the provided value is not {{schema.const}}{%endif%}
      */
     {{Name}}({{cpptype}} value);
+    {%-if schema.const is defined%}
+public:
     {%endif%}
     {%-if schema.default is defined or schema.const is defined %}
     /*! Default value constructor.
