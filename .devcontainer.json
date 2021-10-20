@@ -1,5 +1,0 @@
-{
-  "image": "python:3-slim",
-  "workspaceFolder": "/workspace",
-  "workspaceMount": "source=remote-workspace,target=/workspace,type=volume"
-}
