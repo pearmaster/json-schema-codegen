@@ -94,7 +94,7 @@ Python code generation has been deprecated.
 
 This project started as a generator for C++ code, with the goal of generating C++ structures that abstracted away JSON stuff and could do some enforcing of the schema at compile time.
 
-But creating structures in Python that could be quickly converted to JSON is much easier than in C++, and so the value of a Python structure generator didn't make sense.  Instead, I suggest creating a Python structure and validating it with the [jsonschema](https://pypi.org/project/jsonschema/) Python package.
+But creating structures in Python that could be quickly converted to JSON is much easier than in C++, and so the value of a Python structure generator didn't make sense.  Instead, I suggest creating a Python structure and validating it with the [jsonschema](https://pypi.org/project/jsonschema/) Python package or with [jacobs-json-schema](https://github.com/pearmaster/jacobs-json-schema).
 
 ## License
 
