@@ -1,6 +1,10 @@
 # JSON-Schema Codegen
 
-This python library consumes JSON-Schema and generates C++ or Python code.  It generates structures to hold the values defined in the schema, restricting the values according to the schema. 
+This python library consumes JSON-Schema and generates C++ code.  It generates structures to hold the values defined in the schema, restricting the values according to the schema. 
+
+Where possible, the schema is enforced through by C++ types, so that errors in data construction are enforced at compile time.  For example, an object with two required parameters will be a C++ object where the constructor requires the two parameters.
+
+When compile time enforcement is not possible, we resort to throwing an exception when the data objects are constructed.  For example, constructing an int-based object with a number greater than the maximum would throw an exception.
 
 ## Python Requirements for Code Generation
 
