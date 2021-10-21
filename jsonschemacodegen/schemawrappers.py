@@ -1,7 +1,13 @@
+"""
+This module wraps a schema object in classes which augment each schema element with additional methods.
+"""
+
+
 import collections
 import copy
 
-from example_util import bitsNeededForNumber, ExampleIndex
+from .example_util import bitsNeededForNumber, ExampleIndex
+from .schemafactory import SchemaFactory
 
 class SchemaBase(collections.UserDict):
     """
@@ -13,12 +19,14 @@ class SchemaBase(collections.UserDict):
         self.root = root
 
     def CppIncludes(self, resolver):
+        #pylint: disable=unused-argument
         return {
             '"rapidjson/document.h"',
             "<exception>"
         }
 
     def Resolve(self, resolver):
+        #pylint: disable=unused-argument
         return self
 
     def GetTitle(self):
@@ -33,12 +41,13 @@ class SchemaBase(collections.UserDict):
         return ('writeOnly' in self.data) and (self.data['writeOnly'] is True)
 
     def GetExampleCombos(self, resolver) -> int:
+        #pylint: disable=unused-argument
         combos = 1
         if 'examples' in self.data:
             combos = len(self.data['examples'])
         return combos
 
-    def AnExample(self, resolver, index):
+    def AnExample(self, resolver, index, required=None):
         raise NotImplementedError
     
     def Example(self, resolver, index: ExampleIndex, required=None):
@@ -85,7 +94,7 @@ class Reference(SchemaBase):
         try:
             for propName in self.requiredProperties:
                 resolution.SetPropertyRequired(propName)
-        except:
+        except Exception:
             pass
         return resolution
 
@@ -94,6 +103,13 @@ class Reference(SchemaBase):
 
     def GetExampleCombos(self, resolver) -> int:
         return self.Resolve(resolver).GetExampleCombos(resolver)
+
+    def AnExample(self, resolver, index, required=None):
+        try:
+            return self.Resolve(resolver).AnExample(resolver, index, required)
+        except:
+            print(f"Trying to resolve {self.data['$ref']} against yaml root {self.root}")
+            raise
 
     def Example(self, resolver, index: ExampleIndex, required=None):
         try:
@@ -228,7 +244,7 @@ class StringSchema(SchemaBase):
                 incs.update({"<boost/optional.hpp>", "<boost/date_time/posix_time/posix_time.hpp>", "<boost/algorithm/string/replace.hpp>", "<boost/algorithm/string/trim.hpp>"})
         return incs
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         if 'format' in self.data:
             if self.data['format'] == 'uuid':
                 return "a18dfb2c-2b17-4a19-85e0-5c6c8d6a89e8"
@@ -258,7 +274,7 @@ class StringEnumSchema(StringSchema):
             return super().GetExampleCombos(resolver)
         return len(self.data['enum'])
     
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         return index.Choice(self.data['enum'])
 
 
@@ -285,7 +301,7 @@ class NumberSchema(SchemaBase):
         incs.update({"<boost/lexical_cast.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         for k in ['minimum', 'maximum']:
             if k in self.data:
                 return self.data[k]
@@ -312,7 +328,7 @@ class BooleanSchema(SchemaBase):
             combos = super().GetExampleCombos(resolver)
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         return index.Choice([True, False])
 
 
@@ -330,7 +346,7 @@ class NullSchema(SchemaBase):
         incs.update({"<boost/none.hpp>"})
         return incs
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         return None
 
 class ArraySchema(SchemaBase):
@@ -364,7 +380,7 @@ class ArraySchema(SchemaBase):
         combos *= self.GetItemSchema().GetExampleCombos(resolver)
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         ret = []
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
@@ -466,7 +482,7 @@ class OneOfSchema(CombinatorSchemaBase):
             combos *= max_component_combo
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex):
+    def AnExample(self, resolver, index: ExampleIndex, required=None):
         component = index.Choice(self.GetComponents())
         ex = component.Example(resolver, index)
         return ex
