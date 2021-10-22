@@ -10,9 +10,13 @@ When compile time enforcement is not possible, we resort to throwing an exceptio
 
 These requirements should be satisfied when `pip3` installing `json-schema-codegen`.
 
-* python 3.7
+* python 3.7 or later
 * jinja2
 * stringcase
+
+### Requirements for testing
+
+Because test suites will actually generate code, compile them, and use them, we require a C++ compiler to be installed as well as the runtime dependencies.
 
 ## Installation
 
@@ -92,13 +96,11 @@ sampleSchema = {"type": "string"}
 generator.Generate(sampleSchema, 'Example', 'example')
 ```
 
-## Python Generated Code
+## Python code generation dropped
 
-Python code generation has been deprecated.
+Python code generation has been removed.
 
-This project started as a generator for C++ code, with the goal of generating C++ structures that abstracted away JSON stuff and could do some enforcing of the schema at compile time.
-
-But creating structures in Python that could be quickly converted to JSON is much easier than in C++, and so the value of a Python structure generator didn't make sense.  Instead, I suggest creating a Python structure and validating it with the [jsonschema](https://pypi.org/project/jsonschema/) Python package or with [jacobs-json-schema](https://github.com/pearmaster/jacobs-json-schema).
+It didn't really make sense. It is easy enough to create the data structures directly in python.  There weren't enough benefits over using an existing JSON Schema validator to warrent continued development.
 
 ## License
 
