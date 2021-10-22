@@ -29,17 +29,8 @@ class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.Sch
     def cpp_get_usings(self) -> list:
         return self.usings
 
-    def _get_reference_parts(self, reference) -> tuple:
-        pkg = None
-        fn = reference.split('#')[0] or None
-        path = reference.split('#')[1]
-        parts = path.split('/')
-        if fn:
-            pkg = fn.split('.')[0]
-        return (pkg, parts[-2], stringcase.pascalcase(parts[-1]))
-
     def _get_reference_parts(self, reference) -> dict:
-        assert('#' in reference), "Reference '{}' seemed malformed".format(reference)
+        assert '#' in reference, f"Reference '{reference}' seemed malformed"
         url, path = reference.split('#')
         theType, name = path.split('/')[-2:]
         return {

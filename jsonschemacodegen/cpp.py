@@ -46,20 +46,17 @@ class ResolverBaseClass(abc.ABC):
         """ Given a $ref reference from a schema, return the name/path of the header file that should be included for the declaration
         of the represented object.
         """
-        pass
 
     @abc.abstractmethod
     def cpp_get_namespace(self, reference: str) -> list:
         """Given a reference and the current usings statements, return the namespace of the object pointed to by the reference.
         If the namespace is not empty, also append the append string
         """
-        pass
 
     @abc.abstractmethod
     def cpp_get_name(self, reference: str) -> str:
         """Given a reference, return the C++ object name pointed to by the reference.
         """
-        pass
 
     def cpp_get_ns_name(self, reference: str) -> str:
         ns = self.cpp_get_namespace(reference)
