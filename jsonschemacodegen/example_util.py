@@ -47,7 +47,9 @@ class ExampleIndex(object):
     def _full(self):
         return self.index == -1
 
-    def BooleanChoice(self):
+    def BooleanChoice(self) -> bool:
+        """Use 1 bit of the index to return a boolean
+        """
         if self._full():
             return True
         choice = self.current & 0x01
@@ -55,6 +57,8 @@ class ExampleIndex(object):
         return bool(choice)
 
     def Choice(self, population: list):
+        """Use some bits of the index to return a choice from the provided population.
+        """
         number_choices = len(population)-1
         index = self.Number(number_choices)
         try:
@@ -64,7 +68,9 @@ class ExampleIndex(object):
         else:
             return choice
 
-    def Number(self, maximum) -> int:
+    def Number(self, maximum: int) -> int:
+        """Use some number of bits from the index to return a number from 0 to maximum
+        """
         if self._full() or maximum == 0:
             return maximum
         bits = bitsNeededForNumber(maximum)
