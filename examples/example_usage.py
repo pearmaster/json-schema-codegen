@@ -1,5 +1,4 @@
 import jsonschemacodegen.cpp as cpp
-from jsonschemacodegen.resolver import SimpleResolver
 
 if __name__ == '__main__':
     simpleResolver = SimpleResolver("myproject")

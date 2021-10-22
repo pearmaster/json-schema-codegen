@@ -1,6 +1,5 @@
-from jsonschemacodegen import templator
-from jsonschemacodegen.resolver import SimpleResolver
-from jsonschemacodegen.schemawrappers import SchemaFactory
+from jacobsjsondoc.document import Document
+from jsonschemacodegen.schemafactory import SchemaFactory
 
 schema = {
     "type" : "object",
@@ -45,7 +44,6 @@ schema = {
 
 
 if __name__ == '__main__':
-    simpleResolver = SimpleResolver("myproject")
     t = templator.Generator('jsonschemacodegen.templates.markdown', 'output')
     schema = SchemaFactory(schema)
     t.RenderTemplate('description.md.jinja2', 'example.md', schema=schema, resolver=simpleResolver)

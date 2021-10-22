@@ -1,5 +1,5 @@
 from jsonschemacodegen.json_example import GeneratorFromSchema
-from jsonschemacodegen import schemawrappers
+from jsonschemacodegen.schemafactory import SchemaFactory
 
 if __name__ == '__main__':
     schema_structure = {
@@ -33,7 +33,7 @@ if __name__ == '__main__':
             "outerbool"
         ]
     }
-    schema = schemawrappers.SchemaFactory(schema_structure)
+    schema = SchemaFactory.CreateSchema(schema_structure)
     generator = GeneratorFromSchema(None)
     examples = generator.GenerateSome(schema, number_of_examples=10)
     print(f"{len(examples)} number of examples:")
