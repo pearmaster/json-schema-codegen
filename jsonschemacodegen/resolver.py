@@ -1,5 +1,4 @@
 from . import cpp
-from . import python as pyschema
 from . import json_example as jsex
 import stringcase
 from . import schemawrappers
@@ -9,7 +8,7 @@ from copy import copy
 class TreeWalkerException(Exception):
     pass
 
-class SimpleResolver(cpp.ResolverBaseClass, pyschema.ResolverBaseClass, jsex.SchemaResolverBaseClass):
+class SimpleResolver(cpp.ResolverBaseClass, jsex.SchemaResolverBaseClass):
 
     def __init__(self, uri, root=None):
         self.uri = uri
