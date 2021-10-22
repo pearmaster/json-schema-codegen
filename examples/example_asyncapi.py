@@ -1,5 +1,4 @@
 import jsonschemacodegen.cpp as cpp
-import jsonschemacodegen.resolver
 import sys
 import yaml
 import stringcase
