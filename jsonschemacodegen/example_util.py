@@ -59,8 +59,8 @@ class ExampleIndex(object):
         index = self.Number(number_choices)
         try:
             choice = population[index % (number_choices+1)]
-        except Exception as e:
-            print(f"{e}: Choice {index} from {population}")
+        except Exception as exc:
+            print(f"{exc}: Choice {index} from {population}")
         else:
             return choice
 
