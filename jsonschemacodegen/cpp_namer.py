@@ -5,7 +5,7 @@ import stringcase
 
 from jacobsjsondoc import Document
 
-class CppNamer(object):
+class CppNamer(ABC):
 
     def __init__(self):
         pass
@@ -23,7 +23,6 @@ class CppNamer(object):
         :param doc: This is the parsed YAML/JSON file.
         :returns: path to header file.
         """
-        pass
 
     @abstractmethod
     def get_source_path(self, source_uri: str, json_path: str) -> str:
@@ -37,7 +36,6 @@ class CppNamer(object):
         :param json_path: This is the JSON path into the document to a particular schema definition.
         :param doc: This is the parsed YAML/JSON file.
         """
-        pass
 
     @abstractmethod
     def get_object_name(self, source_uri: str, json_path: str) -> str:
@@ -51,7 +49,6 @@ class CppNamer(object):
         :param json_path: This is the JSON path into the document to a particular schema definition.
         :param doc: This is the parsed YAML/JSON file.
         """
-        pass
 
     @abstractmethod
     def get_include_path(self, source_uri: str, json_path: str) -> str:
@@ -65,7 +62,6 @@ class CppNamer(object):
         :param json_path: This is the JSON path into the document to a particular schema definition.
         :param doc: This is the parsed YAML/JSON file.
         """
-        pass
 
     @abstractmethod
     def get_util_source_path(self, util_name: str) -> str:
@@ -85,20 +81,16 @@ class CppNamer(object):
         Depending on your build system, you may need to have a list of the files created.  In this case, you
         can override this method in your inheriting class and have it write whatever files you need.
 
-
         """
-        pass
-
-
 
 
 class GeneralCppNamer(CppNamer):
 
     def __init__(self, base_dir):
-        super().__init__(self)
+        super().__init__()
         self._base_dir = base_dir
 
-    def get_header_path(self, source_uri: str, json_path: str) -> str:
+    def get_header_path(self, source_uri: str, json_path: str, doc) -> str:
         """
         Constructs a path for a header file.
 
@@ -123,8 +115,9 @@ class GeneralCppNamer(CppNamer):
         :param doc: Is unused.
         """
         json_path_parts = json_path.split('/')
-        fn = os.path.join(self._base_dir, "src", "{}.cpp".format("_".join([ pp.lower() for pp in json_path_parts[-2:] ])))
-        return fn
+        joined_path_parts = "_".join([ pp.lower() for pp in json_path_parts[-2:] ])
+        filename = os.path.join(self._base_dir, "src", "{}.cpp".format(joined_path_parts))
+        return filename
 
     def get_object_name(self, source_uri: str, json_path: str) -> str:
         """
@@ -153,6 +146,7 @@ class GeneralCppNamer(CppNamer):
         source_filename = source_uri.split(os.path.sep)[-1]
         module_name = source_filename.split('.')[0]
         json_path_parts = json_path.split('/')
-        fn = os.path.join(module_name, "{}.hpp".format("_".join([ pp.lower() for pp in json_path_parts[-2:] ])))
-        return f'"{fn}"'
+        joined_path_parts = "_".join([ pp.lower() for pp in json_path_parts[-2:] ])
+        filename = os.path.join(module_name, "{}.hpp".format(joined_path_parts))
+        return f'"{filename}"'
 

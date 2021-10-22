@@ -1,5 +1,6 @@
 """
-This module wraps a schema object in classes which augment each schema element with additional methods.
+This module wraps a schema object in classes which
+augment each schema element with additional methods.
 """
 
 
@@ -18,7 +19,7 @@ class SchemaBase(collections.UserDict):
         super().__init__(initialdata)
         self.root = root
 
-    def CppIncludes(self, resolver):
+    def CppIncludes(self, resolver) -> set:
         #pylint: disable=unused-argument
         return {
             '"rapidjson/document.h"',
@@ -29,15 +30,15 @@ class SchemaBase(collections.UserDict):
         #pylint: disable=unused-argument
         return self
 
-    def GetTitle(self):
+    def GetTitle(self) -> str:
         if 'title' in self.data:
             return self.data['title']
         return ''
 
-    def IsReadOnly(self):
+    def IsReadOnly(self) -> bool:
         return ('readOnly' in self.data) and (self.data['readOnly'] is True)
     
-    def IsWriteOnly(self):
+    def IsWriteOnly(self) -> bool:
         return ('writeOnly' in self.data) and (self.data['writeOnly'] is True)
 
     def GetExampleCombos(self, resolver) -> int:
@@ -83,7 +84,7 @@ class Reference(SchemaBase):
         super().__init__(initialdata, root)
         self.requiredProperties = set()
 
-    def CppIncludes(self, resolver=None):
+    def CppIncludes(self, resolver=None) -> set:
         incs = super().CppIncludes(resolver=resolver)
         if resolver:
             incs.update({'"'+resolver.cpp_get_header(self.data['$ref'])+'"'})
@@ -362,8 +363,8 @@ class ArraySchema(SchemaBase):
     ```
     """
     
-    def GetItemSchema(self):
-        return SchemaFactory(self.data['items'], self.root)
+    def GetItemSchema(self) -> SchemaBase:
+        return SchemaFactory.CreateSchema(self.data['items'], self.root)
 
     def CppIncludes(self, resolver=None):
         incs = super().CppIncludes(resolver=resolver)
@@ -448,7 +449,7 @@ class OneOfSchema(CombinatorSchemaBase):
     
     def __init__(self, initialdata, root=None):
         super().__init__('oneOf', initialdata, root)
-        assert(isinstance(self.data['oneOf'], list))
+        assert isinstance(self.data['oneOf'], list)
         if isinstance(initialdata, OneOfSchema):
             self.allow_none = initialdata.allow_none
         else:
@@ -492,7 +493,7 @@ class AllOfSchema(CombinatorSchemaBase):
 
     def __init__(self, initialdata, root=None):
         super().__init__('allOf', initialdata, root)
-        assert(isinstance(self.data['allOf'], list))
+        assert isinstance(self.data['allOf'], list)
 
     def AnExample(self, resolver, index: ExampleIndex, required=None):
         ret = {}
@@ -507,7 +508,7 @@ class AnyOfSchema(CombinatorSchemaBase):
 
     def __init__(self, initialdata, root=None):
         super().__init__('anyOf', initialdata, root)
-        assert(isinstance(self.data['anyOf'], list))
+        assert isinstance(self.data['anyOf'], list)
         self.allow_none = (True in self.data['anyOf'])
 
     def CppIncludes(self, resolver=None):
@@ -523,7 +524,7 @@ class AnyOfSchema(CombinatorSchemaBase):
         combos = bitsNeededForNumber(numberComponents - 1)
         combos << (numberComponents - 1)
         return combos
-    
+
     def AnExample(self, resolver, index: ExampleIndex, required=None):
         ret = {}
         if required is not None:
@@ -542,5 +543,4 @@ class AnyOfFirstMatchSchema(OneOfSchema):
 
     def __init__(self, initialdata, root=None):
         CombinatorSchemaBase.__init__(self, 'anyOf', initialdata, root)
-        assert(isinstance(self.data['anyOf'], list))
-
+        assert isinstance(self.data['anyOf'], list)

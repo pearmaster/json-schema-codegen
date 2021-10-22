@@ -1,9 +1,25 @@
+"""
+This module will create the write schema wrapper based on the schemas type.
 
-from schemawrappers import *
+It implements a factory pattern.
+"""
 
-class SchemaFactory(object):
+from typing import Optional
 
-    def CreateSchema(schema, root=None):
+from jsonschemacodegen.schemawrappers import BooleanSchema, NullSchema, StringEnumSchema, \
+        NumberSchema, ObjectSchema, ArraySchema, AllOfSchema, AnyOfSchema, AnyOfFirstMatchSchema, \
+        OneOfSchema, Reference, StringSchema, SchemaBase
+
+class SchemaFactory:
+    """
+    Class with one factory method.
+    """
+
+    @staticmethod
+    def CreateSchema(schema:dict, root:Optional[dict]=None) -> SchemaBase:
+        """Returns the schema wrapped in one of the schema wrapper classes that provides
+        additional functionality.
+        """
 
         if 'type' in schema:
             if schema['type'] == 'string':
@@ -25,7 +41,8 @@ class SchemaFactory(object):
         elif 'allOf' in schema:
             return AllOfSchema(schema, root)
         elif 'anyOf' in schema:
-            if 'x-anyOf-codegen-behavior' in schema and schema['x-anyOf-codegen-behavior'] == "matchFirst":
+            if 'x-anyOf-codegen-behavior' in schema \
+                    and schema['x-anyOf-codegen-behavior'] == "matchFirst":
                 return AnyOfFirstMatchSchema(schema, root)
             return AnyOfSchema(schema, root)
         elif 'oneOf' in schema:

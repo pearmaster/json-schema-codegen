@@ -1,6 +1,5 @@
 import json
 import abc
-import stringcase
 import os
 
 from jacobsjinjatoo import templator
