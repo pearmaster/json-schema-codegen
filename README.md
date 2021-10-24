@@ -68,7 +68,7 @@ On any type, the `default`, `examples`, `title`, and `description` properties ca
 
 ##### References
 
-`$ref` references are supported for array items, object properties, allOf, anyOf, and oneOf.  However, the caller must provide a "resolver" class which translates the reference into a class name and namespace. 
+`$ref` references are supported for array items, object properties, allOf, anyOf, and oneOf, through providing a proper "resolver" object to the jacobs-json-doc parser.
 
 ### Dependencies of the C++ generated code
 
@@ -80,20 +80,16 @@ On any type, the `default`, `examples`, `title`, and `description` properties ca
 See [example_usage.py](./examples/example_usage.py) for a more elaborate example on generating C++ code.
 
 ```py
-import jsonschemacodegen.cpp as cpp
+from jsonschemacodegen import cpp, cpp_namer
+import jacobsjsondoc
 
-simpleResolver = cpp.SimpleResolver()
 output_dir = "/tmp"
-    
-generator = cpp.GeneratorFromSchema(src_output_dir=output_dir,
-    header_output_dir=output_dir, 
-    resolver=simpleResolver,
-    namespace=[],
-    src_usings=[])
+namer = cpp_name.CppNamer(output_dir)
+generator = cpp.GeneratorFromSchema(namer)
 
-sampleSchema = {"type": "string"}
-
-generator.generate(sampleSchema, 'Example', 'example')
+sample_schema_text = """{"type": "string"}"""
+schema = jacobsjsondoc.parse(sample_schema_text)
+generator.generate(schema, 'example.schema', '/example')
 ```
 
 ## Python code generation dropped

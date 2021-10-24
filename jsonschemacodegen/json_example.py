@@ -7,7 +7,7 @@ from . import schemawrappers
 class GeneratorFromSchema(object):
 
     def __init__(self):
-        self.resolver = None
+        pass
 
     @staticmethod
     def deduplicate(aList : list, limit=None) -> list:
@@ -25,7 +25,7 @@ class GeneratorFromSchema(object):
         examples = []
         indexes = []
         random.seed(random_seed)
-        number_of_combos = schema.GetExampleCombos(self.resolver)
+        number_of_combos = schema.GetExampleCombos()
         bits_for_combos = schemawrappers.bitsNeededForNumber(number_of_combos)
         index_max = 1 << bits_for_combos
         if number_of_examples >= index_max:
@@ -41,17 +41,17 @@ class GeneratorFromSchema(object):
                     indexes.append(schemawrappers.ExampleIndex(rand_index))
                     index_numbers.append(rand_index)
         for index in indexes:
-            ex = schema.Example(self.resolver, index)
+            ex = schema.Example(index)
             examples.append(ex)
         return self.deduplicate(examples, limit=number_of_examples)
 
     def generate_full(self, schema) -> list:
         index = schemawrappers.ExampleIndex(-1)
-        return [schema.Example(self.resolver, index)]
+        return [schema.Example(index)]
 
     def generate_limited(self, schema) -> list:
         index = schemawrappers.ExampleIndex(0)
-        return [schema.Example(self.resolver, index)]
+        return [schema.Example(index)]
     
     def generate(self, schema, number_of_examples=3) -> list:
         examples = []
