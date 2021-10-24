@@ -4,23 +4,6 @@ import abc
 from copy import copy
 from . import schemawrappers
 
-class SchemaResolverBaseClass(abc.ABC):
-
-    @abc.abstractmethod
-    def get_schema(self, reference, root=None):
-        """Given a reference, returns a wrapped schema object.
-        """
-        pass
-
-    @abc.abstractmethod
-    def get_json(self, reference, root=None) -> dict:
-        pass
-
-    @abc.abstractmethod
-    def get_document(self, reference):
-        pass
-
-
 class GeneratorFromSchema(object):
 
     def __init__(self, resolver=None):
