@@ -150,3 +150,13 @@ class GeneralCppNamer(CppNamer):
         filename = os.path.join(module_name, "{}.hpp".format(joined_path_parts))
         return f'"{filename}"'
 
+    def get_util_source_path(self, util_name: str) -> str:
+        filepath = os.path.join(self._base_dir, "src", f"util_{util_name}.cpp")
+        return filepath
+
+    def get_util_header_path(self, util_name: str) -> str:
+        filepath = os.path.join(self._base_dir, "include", "util", f"{util_name}.hpp")
+        return filepath
+
+    def get_util_object_name(self, util_name: str) -> str:
+        return "util::{}".format(super().get_util_object_name(util_name))

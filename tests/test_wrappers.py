@@ -20,3 +20,13 @@ class TestWrappers(unittest.TestCase):
         self.assertIsInstance(wrapped, NumberSchema)
         example = wrapped.AnExample(None, 1)
         self.assertIsInstance(example, int)
+
+    def test_integer_title(self):
+        schema_text = """{
+            "type": "integer",
+            "title": "Hello World"
+        }
+        """
+        schema_obj = jacobsjsondoc.parse(schema_text)
+        wrapped = SchemaFactory.CreateSchema(schema_obj)
+        self.assertEqual(wrapped.GetTitle(), "Hello World")
