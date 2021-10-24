@@ -20,14 +20,14 @@ class SchemaBase(collections.UserDict):
         super().__init__(initialdata)
         self.root = root
 
-    def CppIncludes(self, resolver) -> set:
+    def CppIncludes(self) -> set:
         #pylint: disable=unused-argument
         return {
             '"rapidjson/document.h"',
             "<exception>"
         }
 
-    def Resolve(self, resolver):
+    def Resolve(self):
         #pylint: disable=unused-argument
         return self
 
@@ -42,17 +42,17 @@ class SchemaBase(collections.UserDict):
     def IsWriteOnly(self) -> bool:
         return ('writeOnly' in self.data) and (self.data['writeOnly'] is True)
 
-    def GetExampleCombos(self, resolver) -> int:
+    def GetExampleCombos(self) -> int:
         #pylint: disable=unused-argument
         combos = 1
         if 'examples' in self.data:
             combos = len(self.data['examples'])
         return combos
 
-    def AnExample(self, resolver, index, required=None):
+    def AnExample(self, index, required=None):
         raise NotImplementedError
     
-    def Example(self, resolver, index: ExampleIndex, required=None):
+    def Example(self, index: ExampleIndex, required=None):
         if 'const' in self.data:
             return self.data['const']
         if 'example' in self.data:
@@ -63,10 +63,10 @@ class SchemaBase(collections.UserDict):
             return self.data['default']
         try:
             try:
-                return self.AnExample(resolver, index, required)
+                return self.AnExample(index, required)
             except TypeError:
                 pass
-            return self.AnExample(resolver, index)
+            return self.AnExample(index)
         except:
             print(f"Failed to get an example for {self.data} against {self.root['info']['title']}")
             raise
@@ -85,37 +85,38 @@ class Reference(SchemaBase):
         super().__init__(initialdata, root)
         self.requiredProperties = set()
 
-    def CppIncludes(self, resolver=None) -> set:
-        incs = super().CppIncludes(resolver=resolver)
-        if resolver:
-            incs.update({'"'+resolver.cpp_get_header(self.data['$ref'])+'"'})
+    def CppIncludes(self) -> set:
+        incs = super().CppIncludes()
+        # if resolver:
+        #    incs.update({'"'+resolver.cpp_get_header(self.data['$ref'])+'"'})
         return incs
 
-    def Resolve(self, resolver):
-        resolution = resolver.get_schema(self.data['$ref'], self.root)
+    def Resolve(self):
+        raise NotImplementedError
+        """resolution = resolver.get_schema(self.data['$ref'], self.root)
         try:
             for propName in self.requiredProperties:
                 resolution.SetPropertyRequired(propName)
         except Exception:
             pass
-        return resolution
+        return resolution"""
 
     def SetPropertyRequired(self, propertyName):
         self.requiredProperties.add(propertyName)
 
-    def GetExampleCombos(self, resolver) -> int:
-        return self.Resolve(resolver).GetExampleCombos(resolver)
+    def GetExampleCombos(self) -> int:
+        return self.Resolve().GetExampleCombos()
 
-    def AnExample(self, resolver, index, required=None):
+    def AnExample(self, index, required=None):
         try:
-            return self.Resolve(resolver).AnExample(resolver, index, required)
+            return self.Resolve().AnExample(index, required)
         except:
             print(f"Trying to resolve {self.data['$ref']} against yaml root {self.root}")
             raise
 
-    def Example(self, resolver, index: ExampleIndex, required=None):
+    def Example(self, index: ExampleIndex, required=None):
         try:
-            return self.Resolve(resolver).Example(resolver, index, required)
+            return self.Resolve().Example(index, required)
         except:
             print(f"Trying to resolve {self.data['$ref']} against yaml root {self.root}")
             raise
@@ -167,15 +168,15 @@ class ObjectSchema(SchemaBase):
         else:
             return self.data[key]
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         incs.update({"<boost/optional.hpp>"})
         if len(self.UnRequiredList(False)) > 0:
             incs.update({"<boost/none.hpp>"})
         if 'additionalProperties' not in self.data or self.data['additionalProperties'] is False:
             incs.update({"<utility>"})
         for _, ps in self.GetPropertySchemas().items():
-            incs.update(ps.CppIncludes(resolver))
+            incs.update(ps.CppIncludes())
         return incs
 
     # TODO: Need something that specifies that this is 'required' for init
@@ -197,23 +198,23 @@ class ObjectSchema(SchemaBase):
                 theList.append((propName, schemaObject))
         return theList
 
-    def GetExampleCombos(self, resolver) -> int:
+    def GetExampleCombos(self) -> int:
         combos = 1
         for _, item in self.RequiredList(default_negates_required=False):
-            combos *= item.GetExampleCombos(resolver)
+            combos *= item.GetExampleCombos()
         for _, item in self.UnRequiredList(default_negates_required=False):
-            combos *= (1 + item.GetExampleCombos(resolver))
+            combos *= (1 + item.GetExampleCombos())
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         if required is None:
             required = []
         ret = {}
         for name, item in self.RequiredList(default_negates_required=False):
-            ret[name] = item.Example(resolver, index)
+            ret[name] = item.Example(index)
         for name, item in self.UnRequiredList(default_negates_required=False):
             if index.BooleanChoice() or name in required:
-                ret[name] = item.Example(resolver, index)
+                ret[name] = item.Example(index)
         return ret
 
 class StringSchema(SchemaBase):
@@ -234,8 +235,8 @@ class StringSchema(SchemaBase):
     ```
     """
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         incs.update({"<string>", "<boost/functional/hash.hpp>"})
         if 'pattern' in self.data:
             incs.add("<regex>")
@@ -246,7 +247,7 @@ class StringSchema(SchemaBase):
                 incs.update({"<boost/optional.hpp>", "<boost/date_time/posix_time/posix_time.hpp>", "<boost/algorithm/string/replace.hpp>", "<boost/algorithm/string/trim.hpp>"})
         return incs
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         if 'format' in self.data:
             if self.data['format'] == 'uuid':
                 return "a18dfb2c-2b17-4a19-85e0-5c6c8d6a89e8"
@@ -271,12 +272,12 @@ class StringEnumSchema(StringSchema):
     ```
     """
     
-    def GetExampleCombos(self, resolver) -> int:
+    def GetExampleCombos(self) -> int:
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
-            return super().GetExampleCombos(resolver)
+            return super().GetExampleCombos()
         return len(self.data['enum'])
     
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         return index.Choice(self.data['enum'])
 
 
@@ -298,12 +299,12 @@ class NumberSchema(SchemaBase):
     ```
     """
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         incs.update({"<boost/lexical_cast.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         for k in ['minimum', 'maximum']:
             if k in self.data:
                 return self.data[k]
@@ -324,13 +325,13 @@ class BooleanSchema(SchemaBase):
     ```
     """
 
-    def GetExampleCombos(self, resolver) -> int:
+    def GetExampleCombos(self) -> int:
         combos = 2
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
-            combos = super().GetExampleCombos(resolver)
+            combos = super().GetExampleCombos()
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         return index.Choice([True, False])
 
 
@@ -343,12 +344,12 @@ class NullSchema(SchemaBase):
     ```
     """
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         incs.update({"<boost/none.hpp>"})
         return incs
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         return None
 
 class ArraySchema(SchemaBase):
@@ -367,27 +368,27 @@ class ArraySchema(SchemaBase):
     def GetItemSchema(self) -> SchemaBase:
         return SchemaFactory.CreateSchema(self.data['items'], self.root)
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         incs.update({"<vector>", "<string>"})
-        incs.update(self.GetItemSchema().CppIncludes(resolver))
+        incs.update(self.GetItemSchema().CppIncludes())
         return incs
 
-    def GetExampleCombos(self, resolver) -> int:
+    def GetExampleCombos(self) -> int:
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
-            return super().GetExampleCombos(resolver)
+            return super().GetExampleCombos()
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
         combos = bitsNeededForNumber((right - left)+1)
-        combos *= self.GetItemSchema().GetExampleCombos(resolver)
+        combos *= self.GetItemSchema().GetExampleCombos()
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         ret = []
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
         for _ in range(0, left+index.Number(right-left)):
-            ret.append(self.GetItemSchema().Example(resolver, index))
+            ret.append(self.GetItemSchema().Example(index))
         if 'uniqueItems' in self.data and self.data['uniqueItems']:
             ret = list(set(ret))
         return ret
@@ -425,10 +426,10 @@ class CombinatorSchemaBase(SchemaBase):
     def GetComponents(self):
         return self.components
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         for c in self.GetComponents():
-            incs.update(c.CppIncludes(resolver))
+            incs.update(c.CppIncludes())
         return incs
 
     def __getitem__(self, key):
@@ -456,15 +457,15 @@ class OneOfSchema(CombinatorSchemaBase):
         else:
             self.allow_none = True in initialdata['oneOf']
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         incs.update({"<boost/variant.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
-    def GetCommonType(self, resolver):
+    def GetCommonType(self):
         commonType = None
         for comp in self.GetComponents():
-            subSchema = comp.Resolve(resolver)
+            subSchema = comp.Resolve()
             if 'type' in subSchema:
                 if commonType is None:
                     commonType = subSchema['type']
@@ -472,21 +473,21 @@ class OneOfSchema(CombinatorSchemaBase):
                     return None
         return commonType
 
-    def GetExampleCombos(self, resolver) -> int:
+    def GetExampleCombos(self) -> int:
         combos = 1
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
-            combos = super().GetExampleCombos(resolver)
+            combos = super().GetExampleCombos()
         else:
             combos = len(self.GetComponents())#bitsNeededForNumber(len(self.GetComponents()) - 1)
             max_component_combo = 1
             for comp in self.GetComponents():
-                max_component_combo = max(max_component_combo, comp.GetExampleCombos(resolver))
+                max_component_combo = max(max_component_combo, comp.GetExampleCombos()))
             combos *= max_component_combo
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         component = index.Choice(self.GetComponents())
-        ex = component.Example(resolver, index)
+        ex = component.Example(index)
         return ex
 
 
@@ -496,12 +497,12 @@ class AllOfSchema(CombinatorSchemaBase):
         super().__init__('allOf', initialdata, root)
         assert isinstance(self.data['allOf'], list)
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         ret = {}
         if required is not None:
             self.requiredProperties.update(required)
         for comp in self.GetComponents():
-            ret.update(comp.Example(resolver, index, self.requiredProperties))
+            ret.update(comp.Example(index, self.requiredProperties))
         return ret
 
 
@@ -512,21 +513,21 @@ class AnyOfSchema(CombinatorSchemaBase):
         assert isinstance(self.data['anyOf'], list)
         self.allow_none = (True in self.data['anyOf'])
 
-    def CppIncludes(self, resolver=None):
-        incs = super().CppIncludes(resolver=resolver)
+    def CppIncludes(self):
+        incs = super().CppIncludes()
         if not self.allow_none:
             incs.add("<boost/variant.hpp>")
         return incs
 
-    def GetExampleCombos(self, resolver) -> int:
+    def GetExampleCombos(self) -> int:
         if 'example' in self.data or 'examples' in self.data or 'default' in self.data:
-            return super().GetExampleCombos(resolver)
+            return super().GetExampleCombos()
         numberComponents = len(self.GetComponents())
         combos = bitsNeededForNumber(numberComponents - 1)
         combos << (numberComponents - 1)
         return combos
 
-    def AnExample(self, resolver, index: ExampleIndex, required=None):
+    def AnExample(self, index: ExampleIndex, required=None):
         ret = {}
         if required is not None:
             self.requiredProperties.update(required)
@@ -534,10 +535,10 @@ class AnyOfSchema(CombinatorSchemaBase):
         for comp in self.GetComponents():
             if index.BooleanChoice():
                 gotOne = True
-                ret.update(comp.Example(resolver, index, self.requiredProperties))
+                ret.update(comp.Example(index, self.requiredProperties))
         if not gotOne:
             comp = index.Choice(self.GetComponents())
-            ret.update(comp.Example(resolver, index, self.requiredProperties))
+            ret.update(comp.Example(index, self.requiredProperties))
         return ret
 
 class AnyOfFirstMatchSchema(OneOfSchema):

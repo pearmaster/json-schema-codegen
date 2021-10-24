@@ -13,7 +13,7 @@ class GeneratorFromSchema(object):
         self._namer = namer
         self._created_cpp_files = set()
         self._created_hpp_files = set()
-        self._code_generator = templator.CodeTemplator(output_dir=templator.Templator.USE_FULL_PATH)
+        self._code_generator = templator.CodeTemplator(output_dir=templator.Templator.USE_FULL_PATHS)
         self._code_generator.add_template_package('jsonschemacodegen.templates.cpp')
 
     def _make_sure_directory_exists(self, filename:str):
@@ -36,7 +36,7 @@ class GeneratorFromSchema(object):
 
         source_path = self._namer.get_source_path(uri, path)
         self._make_sure_directory_exists(source_path)
-        header_path = self._namer.get_header_path(uri, path)
+        header_path = self._namer.get_header_path(uri, path, schema)
         self._make_sure_directory_exists(header_path)
 
         self._code_generator.render_template(template_name="source.cpp.jinja2", 

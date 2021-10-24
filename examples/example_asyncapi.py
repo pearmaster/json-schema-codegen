@@ -1,6 +1,6 @@
-import jsonschemacodegen.cpp as cpp
+from jsonschemacodegen import cpp, cpp_namer
 import sys
-import yaml
+import jacobsjsondoc
 import stringcase
 from pprint import pprint
 
@@ -75,24 +75,14 @@ components:
 
 if __name__ == '__main__':
 
-    spec = yaml.load(EXAMPLE_YAML)
-
-    name = 'example'
-
-    resolver = jsonschemacodegen.resolver.SimpleResolver('example')
-    resolver.cpp_add_using(["asyncapi", name])
-    resolver.cpp_set_root_namespace(["asyncapi"])
-    output_dir = "output"
-
-    generator = cpp.GeneratorFromSchema(src_output_dir=output_dir,
-        header_output_dir=output_dir, 
-        resolver=resolver)
+    spec = jacobsjsondoc.parse(EXAMPLE_YAML)
+    generator = cpp.GeneratorFromSchema(cpp_namer.GeneralCppNamer("/tmp"))
 
     for msgName, msg in spec['components']['messages'].items():
-        path = "{}#/components/messages/{}".format(name, msgName)
-        generator.generate(msg['payload'], path)
+        path = f"#/components/messages/{msgName}"
+        generator.generate(msg['payload'], "example", path)
 
     for schemaName, schema in spec['components']['schemas'].items():
-        path = "{}#/components/schemas/{}".format(name, schemaName)
-        generator.generate(schema, path)
+        path = f"#/components/schemas/{schemaName}".format(schemaName)
+        generator.generate(schema, "example", path)
 
