@@ -96,7 +96,7 @@ if __name__ == '__main__':
         }
     }
 
-    print("Generated {}".format(generator.Generate(schema, "myproject#/example/object")))
+    print("Generated {}".format(generator.generate(schema, "myproject#/example/object")))
 
     schemaWithRefs = {
         "oneOf": [
@@ -124,18 +124,18 @@ if __name__ == '__main__':
             {"$ref": "#/components/schemas/localObject"},
         ]
     }
-    print("Generated {}".format(generator.Generate(schemaWithRefs, "myproject#/example/objectFoo")))
+    print("Generated {}".format(generator.generate(schemaWithRefs, "myproject#/example/objectFoo")))
 
     dateTimeSchema = {
         "type": "string",
         "format": "date-time"
     }
 
-    print("Generated {}".format(generator.Generate(dateTimeSchema, "myproject#/example/dateTimeObject")))
+    print("Generated {}".format(generator.generate(dateTimeSchema, "myproject#/example/dateTimeObject")))
 
     uuidSchema = {
         "type": "string",
         "format": "uuid"
     }
 
-    print("Generated {}".format(generator.Generate(uuidSchema, "myproject#/example/uuidObject")))
+    print("Generated {}".format(generator.generate(uuidSchema, "myproject#/example/uuidObject")))

@@ -70,7 +70,7 @@ class GeneratorFromSchema(object):
         index = schemawrappers.ExampleIndex(0)
         return [schema.Example(self.resolver, index)]
     
-    def Generate(self, schema, number_of_examples=3) -> list:
+    def generate(self, schema, number_of_examples=3) -> list:
         examples = []
         if number_of_examples > 0:
             ex = self.GenerateFull(schema)

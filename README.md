@@ -93,7 +93,7 @@ generator = cpp.GeneratorFromSchema(src_output_dir=output_dir,
 
 sampleSchema = {"type": "string"}
 
-generator.Generate(sampleSchema, 'Example', 'example')
+generator.generate(sampleSchema, 'Example', 'example')
 ```
 
 ## Python code generation dropped

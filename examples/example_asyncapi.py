@@ -90,9 +90,9 @@ if __name__ == '__main__':
 
     for msgName, msg in spec['components']['messages'].items():
         path = "{}#/components/messages/{}".format(name, msgName)
-        generator.Generate(msg['payload'], path)
+        generator.generate(msg['payload'], path)
 
     for schemaName, schema in spec['components']['schemas'].items():
         path = "{}#/components/schemas/{}".format(name, schemaName)
-        generator.Generate(schema, path)
+        generator.generate(schema, path)
 
