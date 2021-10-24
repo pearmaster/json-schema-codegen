@@ -23,13 +23,3 @@ void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Valu
 {
     value.SetNull();  
 }
-
-void {{className}}::SetHandle(const std::string& handle)
-{
-    _handle = handle;
-}
-
-std::string {{className}}::GetHandle() const
-{
-    return _handle;
-}

@@ -35,18 +35,4 @@ public:
      */
     void ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const;
 
-    /*! Sets a string handle associated with this {{Name}} instance.
-     * This gets called by a parent object after creating an instance that is used for an object's property.
-     * \param handle is the string name.
-     */
-    void SetHandle(const std::string& handle);
-
-    /*! Gets the string handle associated with this {{Name}} instance.
-     * This is often the property name used in a JSON-object parent.
-     * It may be empty.
-     * \returns the handle string
-     */
-    std::string GetHandle() const;
-private:
-    std::string _handle;
 };
