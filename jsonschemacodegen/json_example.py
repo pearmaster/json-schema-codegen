@@ -7,7 +7,7 @@ from . import schemawrappers
 class GeneratorFromSchema(object):
 
     def __init__(self):
-        pass
+        self.resolver = None
 
     @staticmethod
     def deduplicate(aList : list, limit=None) -> list:
@@ -21,7 +21,7 @@ class GeneratorFromSchema(object):
         text_sorted = sorted(text_unique, key=len)
         return [json.loads(s) for s in text_sorted]
 
-    def generate_some((self, schema, number_of_examples=2, random_seed=0xBEEF) -> list:
+    def generate_some(self, schema, number_of_examples=2, random_seed=0xBEEF) -> list:
         examples = []
         indexes = []
         random.seed(random_seed)
@@ -45,24 +45,24 @@ class GeneratorFromSchema(object):
             examples.append(ex)
         return self.deduplicate(examples, limit=number_of_examples)
 
-    def generate_full((self, schema) -> list:
+    def generate_full(self, schema) -> list:
         index = schemawrappers.ExampleIndex(-1)
         return [schema.Example(self.resolver, index)]
 
-    def generate_limited((self, schema) -> list:
+    def generate_limited(self, schema) -> list:
         index = schemawrappers.ExampleIndex(0)
         return [schema.Example(self.resolver, index)]
     
     def generate(self, schema, number_of_examples=3) -> list:
         examples = []
         if number_of_examples > 0:
-            ex = self.generate_full((schema)
+            ex = self.generate_full(schema)
             examples.extend(ex)
         if number_of_examples > 1:
-            ex = self.generate_limited((schema)
+            ex = self.generate_limited(schema)
             examples.extend(ex)
         if number_of_examples > 2:
-            examples.extend(self.generate_some((schema, number_of_examples))
+            examples.extend(self.generate_some(schema, number_of_examples))
         ret = self.deduplicate(examples, limit=number_of_examples)
         return ret
 
