@@ -35,7 +35,7 @@ if __name__ == '__main__':
     }
     schema = SchemaFactory.CreateSchema(schema_structure)
     generator = GeneratorFromSchema(None)
-    examples = generator.GenerateSome(schema, number_of_examples=10)
+    examples = generator.generate_some((schema, number_of_examples=10)
     print(f"{len(examples)} number of examples:")
     for ex in examples:
         print(ex)

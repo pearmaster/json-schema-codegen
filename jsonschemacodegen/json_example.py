@@ -6,11 +6,11 @@ from . import schemawrappers
 
 class GeneratorFromSchema(object):
 
-    def __init__(self, resolver=None):
-        self.resolver = resolver
+    def __init__(self):
+        pass
 
     @staticmethod
-    def DeDuplicate(aList : list, limit=None) -> list:
+    def deduplicate(aList : list, limit=None) -> list:
         text_list = [json.dumps(a, sort_keys=True) for a in aList]
         text_unique = []
         for t in text_list:
@@ -21,7 +21,7 @@ class GeneratorFromSchema(object):
         text_sorted = sorted(text_unique, key=len)
         return [json.loads(s) for s in text_sorted]
 
-    def GenerateSome(self, schema, number_of_examples=2, random_seed=0xBEEF) -> list:
+    def generate_some((self, schema, number_of_examples=2, random_seed=0xBEEF) -> list:
         examples = []
         indexes = []
         random.seed(random_seed)
@@ -43,26 +43,26 @@ class GeneratorFromSchema(object):
         for index in indexes:
             ex = schema.Example(self.resolver, index)
             examples.append(ex)
-        return self.DeDuplicate(examples, limit=number_of_examples)
+        return self.deduplicate(examples, limit=number_of_examples)
 
-    def GenerateFull(self, schema) -> list:
+    def generate_full((self, schema) -> list:
         index = schemawrappers.ExampleIndex(-1)
         return [schema.Example(self.resolver, index)]
 
-    def GenerateLimited(self, schema) -> list:
+    def generate_limited((self, schema) -> list:
         index = schemawrappers.ExampleIndex(0)
         return [schema.Example(self.resolver, index)]
     
     def generate(self, schema, number_of_examples=3) -> list:
         examples = []
         if number_of_examples > 0:
-            ex = self.GenerateFull(schema)
+            ex = self.generate_full((schema)
             examples.extend(ex)
         if number_of_examples > 1:
-            ex = self.GenerateLimited(schema)
+            ex = self.generate_limited((schema)
             examples.extend(ex)
         if number_of_examples > 2:
-            examples.extend(self.GenerateSome(schema, number_of_examples))
-        ret = self.DeDuplicate(examples, limit=number_of_examples)
+            examples.extend(self.generate_some((schema, number_of_examples))
+        ret = self.deduplicate(examples, limit=number_of_examples)
         return ret
 
