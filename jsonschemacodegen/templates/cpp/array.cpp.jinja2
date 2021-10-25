@@ -96,7 +96,7 @@ void {{className}}::Append(const {{itemtype}}& item)
     return {{className}}(arr);
 }
 
-void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
+void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, rapidjson::AllocatorType& allocator) const
 {
     value.SetArray();
     for (const {{itemtype}}& el : _arr)

@@ -176,7 +176,7 @@ boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propNa
     return *optNewInstance;
 }
 
-void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
+void {{className}}::ToJson({{rapidjson}}Value& value, rapidjson::AllocatorType& allocator) const
 {
     if (!value.IsObject())
     {

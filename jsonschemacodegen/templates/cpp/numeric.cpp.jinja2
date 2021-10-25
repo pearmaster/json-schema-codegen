@@ -21,9 +21,9 @@
 {%-else-%}
     {%-set cpptype = 'double'-%}
 {%-endif-%}
-{%-set std = resolver.cpp_resolve_namespace(['std']) %}
-{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-set std = "std" %}
+{%-set className = namer.get_object_name(uri, path)%}
+{%-set exception %}{{namer.get_util_object_name('JsonSchemaException')}}{%endset%}
 {%if schema.const is not defined%}
 {{className}}::{{Name}}({{cpptype}} value)
 {
@@ -102,7 +102,7 @@ void {{className}}::Validate({{cpptype}} testValue)
     {%-endif%}
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
     if (!(json.Is{{rjtype == 'double' and 'Number' or rjtype | UpperCamelCase}}()))
     {
@@ -115,10 +115,10 @@ void {{className}}::Validate({{cpptype}} testValue)
 
 {{className}} {{className}}::FromString(const {{std}}string& str)
 {
-    return {{className}}({{resolver.cpp_resolve_namespace(['boost'])}}lexical_cast<{{cpptype}}>(str));
+    return {{className}}(boost::lexical_cast<{{cpptype}}>(str));
 }
 
-void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::AllocatorType& allocator) const
 {
     value.Set{{rjtype | UpperCamelCase}}(_value);
 }

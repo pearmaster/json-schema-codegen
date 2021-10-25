@@ -7,9 +7,9 @@
 {%-endfor%}
 
 {%-set originalNamespace=ns%}
-{%for using in resolver.cpp_get_usings() %}
+{%for using in namer.get_namespace(uri, path) %}
 using namespace {{using | join("::") }};
 {%-endfor%}
 
 {%-from 'loader.jinja2' import Class with context%}
-{{-Class('cpp', resolver, ns, Name, schema)}}
+{{-Class('cpp', uri, path, schema, namer)}}

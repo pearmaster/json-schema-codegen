@@ -83,6 +83,10 @@ class CppNamer(ABC):
 
         """
 
+    def get_namespace(self, source_uri: str, json_path: str) -> List[str]:
+        full_name = self.get_object_name(source_uri, json_path)
+        return full_name.split("::")[:-1]
+
 
 class GeneralCppNamer(CppNamer):
 

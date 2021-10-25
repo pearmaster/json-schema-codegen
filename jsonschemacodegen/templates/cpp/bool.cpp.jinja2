@@ -53,7 +53,7 @@ bool {{className}}::Get() const
     return newObject;
 }
 
-void {{className}}::ToJson({{rapidjson}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
+void {{className}}::ToJson({{rapidjson}}Value& value, rapidjson::AllocatorType& allocator) const
 {
     value.SetBool(_value); 
 }

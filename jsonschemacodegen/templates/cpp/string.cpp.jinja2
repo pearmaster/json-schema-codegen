@@ -140,7 +140,7 @@ void {{className}}::Validate(const {{std}}string& testValue)
     {%-endif%}
 }
 
-void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
+void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, rapidjson::AllocatorType& allocator) const
 {
     value.SetString(_value.c_str(), _value.size(), allocator);  
 }

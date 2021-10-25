@@ -481,7 +481,7 @@ class OneOfSchema(CombinatorSchemaBase):
             combos = len(self.GetComponents())#bitsNeededForNumber(len(self.GetComponents()) - 1)
             max_component_combo = 1
             for comp in self.GetComponents():
-                max_component_combo = max(max_component_combo, comp.GetExampleCombos()))
+                max_component_combo = max(max_component_combo, comp.GetExampleCombos())
             combos *= max_component_combo
         return combos
 

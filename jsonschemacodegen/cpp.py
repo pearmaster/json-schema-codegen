@@ -34,19 +34,27 @@ class GeneratorFromSchema(object):
         if '$ref' in schema:
             return
 
+        wrapped_schema = schemawrappers.SchemaFactory.CreateSchema(schema)
+
         source_path = self._namer.get_source_path(uri, path)
         self._make_sure_directory_exists(source_path)
         header_path = self._namer.get_header_path(uri, path, schema)
         self._make_sure_directory_exists(header_path)
 
-        self._code_generator.render_template(template_name="source.cpp.jinja2", 
+        self._code_generator.render_template(template_name="source.cpp.jinja2",
+            uri=uri,
+            path=path,
             output_name=source_path, 
-            schema=schema)
+            schema=wrapped_schema,
+            namer=self._namer)
         self._created_cpp_files.add(source_path)
 
         self._code_generator.render_template(template_name="header.hpp.jinja2", 
+            uri=uri,
+            path=path,
             output_name=header_path,
-            schema=schema)
+            schema=wrapped_schema,
+            namer=self._namer)
         self._created_hpp_files.add(header_path)
 
     def get_lists_of_generated_files(self):

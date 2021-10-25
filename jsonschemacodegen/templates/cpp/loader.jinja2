@@ -1,4 +1,4 @@
-{%-macro Class(filetype, resolver, ns, Name, schema) %}
+{%-macro Class(filetype, uri, path, schema, namer) %}
 {%-if schema.oneOf is defined -%}
 {%-include 'oneof.'+filetype+'.jinja2'-%}
 {%-elif schema.allOf is defined -%}

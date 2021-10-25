@@ -19,7 +19,7 @@ boost::none_t {{className}}::Get() const
     return {{className}}();
 }
 
-void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, {{resolver.cpp_resolve_namespace(['rapidjson', 'Value'])}}AllocatorType& allocator) const
+void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, rapidjson::AllocatorType& allocator) const
 {
     value.SetNull();  
 }

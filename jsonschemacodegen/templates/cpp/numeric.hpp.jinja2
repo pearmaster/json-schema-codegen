@@ -1,5 +1,5 @@
 {%-import 'constraints.jinja2' as constraint-%}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-set exception %}util::JsonSchemaException{%endset%}
 {%-if schema.type == 'integer'-%}
     {%-if schema.format is defined and schema.format == 'uint64'-%}
         {%-set rjtype = 'uint64'-%}
