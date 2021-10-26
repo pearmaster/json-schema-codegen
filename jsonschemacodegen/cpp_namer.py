@@ -71,8 +71,13 @@ class CppNamer(ABC):
     def get_util_header_path(self, util_name: str) -> str:
         pass
 
-    def get_util_object_name(self, util_name: str) -> str:
-        return stringcase.pascalcase(util_name)
+    @abstractmethod
+    def get_util_include_path(self, util_name: str) -> str:
+        pass
+
+    @abstractmethod
+    def get_util_namespace(self) -> List[str]:
+        pass
 
     def write_file_indexes(self, source_files: List[str], header_files: List[str]):
         """
@@ -85,7 +90,13 @@ class CppNamer(ABC):
 
     def get_namespace(self, source_uri: str, json_path: str) -> List[str]:
         full_name = self.get_object_name(source_uri, json_path)
-        return full_name.split("::")[:-1]
+        if "::" in full_name:
+            return full_name.split("::")[:-1]
+        return []
+
+    def get_class_name(self, uri, path) -> str:
+        full_class_name = self.get_object_name(uri, path)
+        return full_class_name.split("::")[-1]
 
 
 class GeneralCppNamer(CppNamer):
@@ -162,5 +173,8 @@ class GeneralCppNamer(CppNamer):
         filepath = os.path.join(self._base_dir, "include", "util", f"{util_name}.hpp")
         return filepath
 
-    def get_util_object_name(self, util_name: str) -> str:
-        return "util::{}".format(super().get_util_object_name(util_name))
+    def get_util_include_path(self, util_name: str) -> str:
+        return f'"util/{util_name}.hpp"'
+
+    def get_util_namespace(self) -> List[str]:
+        return ["util"]

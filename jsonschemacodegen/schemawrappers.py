@@ -20,7 +20,7 @@ class SchemaBase(collections.UserDict):
         super().__init__(initialdata)
         self.root = root
 
-    def CppIncludes(self) -> set:
+    def cpp_includes(self) -> set:
         #pylint: disable=unused-argument
         return {
             '"rapidjson/document.h"',
@@ -85,8 +85,8 @@ class Reference(SchemaBase):
         super().__init__(initialdata, root)
         self.requiredProperties = set()
 
-    def CppIncludes(self) -> set:
-        incs = super().CppIncludes()
+    def cpp_includes(self) -> set:
+        incs = super().cpp_includes()
         # if resolver:
         #    incs.update({'"'+resolver.cpp_get_header(self.data['$ref'])+'"'})
         return incs
@@ -168,15 +168,15 @@ class ObjectSchema(SchemaBase):
         else:
             return self.data[key]
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         incs.update({"<boost/optional.hpp>"})
         if len(self.UnRequiredList(False)) > 0:
             incs.update({"<boost/none.hpp>"})
         if 'additionalProperties' not in self.data or self.data['additionalProperties'] is False:
             incs.update({"<utility>"})
         for _, ps in self.GetPropertySchemas().items():
-            incs.update(ps.CppIncludes())
+            incs.update(ps.cpp_includes())
         return incs
 
     # TODO: Need something that specifies that this is 'required' for init
@@ -235,8 +235,8 @@ class StringSchema(SchemaBase):
     ```
     """
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         incs.update({"<string>", "<boost/functional/hash.hpp>"})
         if 'pattern' in self.data:
             incs.add("<regex>")
@@ -299,8 +299,8 @@ class NumberSchema(SchemaBase):
     ```
     """
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         incs.update({"<boost/lexical_cast.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
@@ -344,8 +344,8 @@ class NullSchema(SchemaBase):
     ```
     """
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         incs.update({"<boost/none.hpp>"})
         return incs
 
@@ -368,10 +368,10 @@ class ArraySchema(SchemaBase):
     def GetItemSchema(self) -> SchemaBase:
         return SchemaFactory.CreateSchema(self.data['items'], self.root)
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         incs.update({"<vector>", "<string>"})
-        incs.update(self.GetItemSchema().CppIncludes())
+        incs.update(self.GetItemSchema().cpp_includes())
         return incs
 
     def GetExampleCombos(self) -> int:
@@ -426,10 +426,10 @@ class CombinatorSchemaBase(SchemaBase):
     def GetComponents(self):
         return self.components
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         for c in self.GetComponents():
-            incs.update(c.CppIncludes())
+            incs.update(c.cpp_includes())
         return incs
 
     def __getitem__(self, key):
@@ -457,8 +457,8 @@ class OneOfSchema(CombinatorSchemaBase):
         else:
             self.allow_none = True in initialdata['oneOf']
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         incs.update({"<boost/variant.hpp>", "<boost/functional/hash.hpp>"})
         return incs
 
@@ -513,8 +513,8 @@ class AnyOfSchema(CombinatorSchemaBase):
         assert isinstance(self.data['anyOf'], list)
         self.allow_none = (True in self.data['anyOf'])
 
-    def CppIncludes(self):
-        incs = super().CppIncludes()
+    def cpp_includes(self):
+        incs = super().cpp_includes()
         if not self.allow_none:
             incs.add("<boost/variant.hpp>")
         return incs

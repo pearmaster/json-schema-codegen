@@ -33,7 +33,3 @@ class TestGeneralCppNamer(unittest.TestCase):
     def test_util_source_path(self):
         src_path = self.namer.get_util_source_path("base")
         self.assertEqual(src_path, "/path/src/util_base.cpp")
-
-    def test_util_object_name(self):
-        obj_name = self.namer.get_util_object_name("base")
-        self.assertEqual(obj_name, "util::Base")

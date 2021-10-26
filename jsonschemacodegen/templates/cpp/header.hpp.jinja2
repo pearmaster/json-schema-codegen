@@ -5,27 +5,21 @@
 #pragma once
 
 #include <cstdint>
-{%-for dep in deps|sort|reverse %}
+{%-for dep in schema.cpp_includes()|sort|reverse %}
 {%-if 'rapidjson' not in dep %}{# rapidjson should go last and always #}
 #include {{dep}}
 {%-endif-%}
 {%-endfor%}
-#include "util/exceptions.hpp"
-
-// FIXME: Somehow rapidjson provides a copy of inttypes.h that conflicts
-// with what google/breakpad needs.  This flag gets things to compile, but
-// we probably need to look into the issue further, especially if we
-// ever try to use 64-bit ints.
-#define RAPIDJSON_NO_INT64DEFINE
+#include {{namer.get_util_include_path("exceptions")}}
 #include "rapidjson/document.h"
 
-{%for n in ns %}
+{%for n in namer.get_namespace(uri, path) %}
 namespace {{n}} {
 {%-endfor%}
 
 {%from 'loader.jinja2' import Class with context%}
 {{Class('hpp', uri, path, schema, namer)}}
-
-{%-for n in ns|reverse %}
-} // end ns {{n}}
+{#''#}
+{%-for n in namer.get_namespace(uri, path)|reverse %}
+} // end namespace {{n}}
 {%-endfor%}

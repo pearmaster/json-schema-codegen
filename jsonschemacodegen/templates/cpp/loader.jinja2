@@ -1,4 +1,5 @@
 {%-macro Class(filetype, uri, path, schema, namer) %}
+{%set Name = namer.get_class_name(uri, path) %}
 {%-if schema.oneOf is defined -%}
 {%-include 'oneof.'+filetype+'.jinja2'-%}
 {%-elif schema.allOf is defined -%}
