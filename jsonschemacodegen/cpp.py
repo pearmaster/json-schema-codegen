@@ -26,9 +26,9 @@ class GeneratorFromSchema(object):
         self._make_sure_directory_exists(path)
         self._code_generator.render_template(template_name="exceptions.hpp.jinja2",
             output_name=path,
-            ns=self._namer.get_util_object_name("exceptions").split("::")[:-1],
+            ns=self._namer.get_util_namespace("exceptions")[:-1],
         )
-        self._created_cpp_files.add(path)
+        self._created_hpp_files.add(path)
 
     def generate(self, schema:jacobsjsondoc.document.DocElement, uri:str, path:str):
         if '$ref' in schema:

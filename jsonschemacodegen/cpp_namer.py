@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 import os.path
 import stringcase
 
@@ -76,7 +76,7 @@ class CppNamer(ABC):
         pass
 
     @abstractmethod
-    def get_util_namespace(self) -> List[str]:
+    def get_util_namespace(self, object_name:Optional[str]=None) -> List[str]:
         pass
 
     def write_file_indexes(self, source_files: List[str], header_files: List[str]):
@@ -176,5 +176,8 @@ class GeneralCppNamer(CppNamer):
     def get_util_include_path(self, util_name: str) -> str:
         return f'"util/{util_name}.hpp"'
 
-    def get_util_namespace(self) -> List[str]:
-        return ["util"]
+    def get_util_namespace(self, object_name:Optional[str]=None) -> List[str]:
+        ns_arr = ["util"]
+        if object_name is not None:
+            ns_arr.append(object_name)
+        return ns_arr
