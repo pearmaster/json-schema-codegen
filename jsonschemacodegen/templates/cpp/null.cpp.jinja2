@@ -1,5 +1,5 @@
-{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-set className = namer.get_object_name(uri, path)%}
+{%-set exception %}{{ namer.get_util_namespace("JsonSchemaException") | join("::") }}{%endset%}
 {{className}}::{{Name}}()
 {
 }
@@ -9,7 +9,7 @@ boost::none_t {{className}}::Get() const
     return boost::none;
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
     if (!(json.IsNull()))
     {
@@ -19,7 +19,7 @@ boost::none_t {{className}}::Get() const
     return {{className}}();
 }
 
-void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, rapidjson::AllocatorType& allocator) const
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
 {
     value.SetNull();  
 }

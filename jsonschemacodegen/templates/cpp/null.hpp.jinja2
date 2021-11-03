@@ -1,4 +1,4 @@
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-set exception %}util::JsonSchemaException{%endset%}
 /*! {{Name}} is a wrapper around "null".
  {%-if schema.description %}
  * {{schema.description}}

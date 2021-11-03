@@ -11,6 +11,7 @@ import jacobsjsondoc
 class CodeGeneratorMixin:
 
     def setUp(self):
+        self.root_gen_dir = "/tmp"
         self.namer = GeneralCppNamer("/tmp")
         self.generator = GeneratorFromSchema(self.namer)
         self.generator.generate_utils()
@@ -18,7 +19,7 @@ class CodeGeneratorMixin:
 
     def do_compile(self, uri, path):
         source_path = self.namer.get_source_path(uri, path)
-        header_dir = "/tmp/include"
+        header_dir = os.path.join(self.root_gen_dir, "include")
         command = ["g++", f"-I{header_dir}", "-c", source_path]
         rc = subprocess.call(command)
         self.assertEqual(rc, 0)
@@ -69,3 +70,14 @@ class TestStringGenerator(unittest.TestCase, CodeGeneratorMixin):
         self.generate_class(schema_text, path)
         self.do_compile(self.uri, path)
 
+
+class TestNullGenerator(unittest.TestCase, CodeGeneratorMixin):
+
+    def setUp(self):
+        CodeGeneratorMixin.setUp(self)
+
+    def test_generate_null_class(self):
+        schema_text = """{ "type": "null" }"""
+        path = "/objects/null"
+        self.generate_class(schema_text, path)
+        self.do_compile(self.uri, path)
