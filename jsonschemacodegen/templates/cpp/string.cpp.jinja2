@@ -1,8 +1,7 @@
-{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
-{%-set std = resolver.cpp_resolve_namespace(['std']) %}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-set className = namer.get_object_name(uri, path)%}
+{%-set exception %}{{ namer.get_util_namespace("JsonSchemaException") | join("::") }}{%endset%}
 {%-if schema.const is not defined%}
-{{className}}::{{Name}}(const {{std}}string& value)
+{{className}}::{{Name}}(const std::string& value)
 {
     Set(value);
 }
@@ -23,12 +22,12 @@
     SetUuid();
 }
 {%-endif%}
-{{className}}::operator {{std}}string() const
+{{className}}::operator std::string() const
 {
     return Get();
 }
 
-{{className}}& {{className}}::operator=(const {{std}}string& value)
+{{className}}& {{className}}::operator=(const std::string& value)
 {
     Set(value);
     return *this;
@@ -39,10 +38,10 @@
     Set(value);
     return *this;
 }
-{%for origNs in originalNamespace %}
-namespace {{origNs}} {
+{%for ns in namer.get_namespace(uri, path) %}
+namespace {{ns}} {
 {%-endfor%}  
-{{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& str)
+std::ostream& operator<<(std::ostream& os, const {{className}}& str)
 {
     os << str._value;
     return os;
@@ -53,13 +52,13 @@ bool operator< (const {{className}}& left, const {{className}}& right)
     return left._value < right._value;
 }
 
-{{std}}size_t hash_value(const {{className}}& str)
+std::size_t hash_value(const {{className}}& str)
 {
     return boost::hash_value(str._value);
 }
-{%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
+{%for _ in namer.get_namespace(uri, path) %}}{%-endfor%} // end namespaces
 
-{{className}}&  {{className}}::Set(const {{std}}string& value)
+{{className}}& {{className}}::Set(const std::string& value)
 {
     Validate(value);
     _value = value;
@@ -83,12 +82,12 @@ bool operator< (const {{className}}& left, const {{className}}& right)
 }
 {%-endif-%}{# #}
 
-{{std}}string {{className}}::Get() const
+std::string {{className}}::Get() const
 {
     return _value;
 }
 
-void {{className}}::Validate(const {{std}}string& testValue)
+void {{className}}::Validate(const std::string& testValue)
 {
     {%-if schema.maxLength is defined %}
     if (testValue.size() > {{className}}::MAX_LENGTH)
@@ -103,9 +102,9 @@ void {{className}}::Validate(const {{std}}string& testValue)
     }
     {%-endif%}
     {%-if schema.pattern is defined %}
-    {{std}}regex regexPattern("{{schema.pattern | replace('\\', '\\\\')}}");
-    {{std}}smatch regexMatch;
-    {{std}}regex_match(testValue, regexMatch, regexPattern);
+    std::regex regexPattern("{{schema.pattern | replace('\\', '\\\\')}}");
+    std::smatch regexMatch;
+    std::regex_match(testValue, regexMatch, regexPattern);
     if (regexMatch.empty()) throw {{exception}}("The string value did not match the required regular expression pattern '{{schema.pattern | replace('\\', '\\\\')}}'");
     {%-endif%}
     {%-if schema.const is defined %}
@@ -116,7 +115,7 @@ void {{className}}::Validate(const {{std}}string& testValue)
     {%-endif%}
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
     if (!(json.IsString()))
     {
@@ -130,7 +129,7 @@ void {{className}}::Validate(const {{std}}string& testValue)
     {%-endif%}
 }
 
-{{className}} {{className}}::FromString(const {{std}}string& str)
+{{className}} {{className}}::FromString(const std::string& str)
 {
     {%if schema.const is defined-%}
     Validate(str);
@@ -140,7 +139,7 @@ void {{className}}::Validate(const {{std}}string& testValue)
     {%-endif%}
 }
 
-void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, rapidjson::AllocatorType& allocator) const
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
 {
     value.SetString(_value.c_str(), _value.size(), allocator);  
 }

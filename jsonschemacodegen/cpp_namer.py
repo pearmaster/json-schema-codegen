@@ -3,15 +3,13 @@ from typing import List, Optional
 import os.path
 import stringcase
 
-from jacobsjsondoc import Document
-
 class CppNamer(ABC):
 
     def __init__(self):
         pass
 
     @abstractmethod
-    def get_header_path(self, source_uri: str, json_path: str, doc: Document) -> str:
+    def get_header_path(self, source_uri: str, json_path: str, doc: "Document") -> str:
         """
         Constructs a path for a header file.
 
