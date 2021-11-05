@@ -1,0 +1,27 @@
+{%-macro IntType(schema)-%}
+    {%-if 'format' in schema-%}
+        {%-if schema['format'].startswith('u')%}u{%else%}i{%endif-%}
+        {%-if schema['format'].endswith('64')%}64{%endif-%}
+        {%-if schema['format'].endswith('32')%}32{%endif-%}
+        {%-if schema['format'].endswith('16')%}16{%endif-%}
+        {%-if schema['format'].endswith('8')%}8{%endif-%}
+    {%-else-%}
+        i32
+    {%-endif-%}
+{%-endmacro-%}
+
+pub struct IntegerObject {
+    value: {{ IntType(schema)}},
+}
+
+impl IntegerObject {
+
+    pub fn get(&self) -> {{ IntType(schema)}} {
+        self.value
+    }
+
+    pub fn set(&mut self, new_value: {{ IntType(schema)}}) {
+        self.value = new_value
+    }
+    
+}
