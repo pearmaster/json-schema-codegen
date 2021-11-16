@@ -1,5 +1,6 @@
 import collections
 import random
+from copy import deepcopy
 
 def bitsNeededForNumber(num):
     bits = 0
@@ -291,6 +292,15 @@ class NullSchema(SchemaBase):
 
 class ArraySchema(SchemaBase):
     
+    def IsTupleSchema(self):
+        return isinstance(self.data["items"], list)
+
+    def NumberTupleItems(self):
+        return len(self.data["items"])
+
+    def GetTupleSchema(self):
+        return [ SchemaFactory(x, self.root) for x in self.data['items'] ]
+
     def GetItemSchema(self):
         return SchemaFactory(self.data['items'], self.root)
 
@@ -443,7 +453,24 @@ class AnyOfSchema(CombinatorSchemaBase):
             ret.update(comp.Example(resolver, index, self.requiredProperties))
         return ret
 
+class AlwaysValidSchema(collections.UserDict):
+
+    def __init__(self, always:bool, root=None):
+        super().__init__()
+        self.always_valid = always
+        self.root = root
+
+    def Resolve(self, resolver):
+        return self
+
+    def Example(self, resolver, index: ExampleIndex, required=None):
+        pass
+
 def SchemaFactory(schema, root=None):
+    if isinstance(schema, bool):
+        return AlwaysValidSchema(schema, root)
+    elif isinstance(schema, AlwaysValidSchema):
+        return schema
     if 'type' in schema:
         if schema['type'] == 'string':
             if 'enum' in schema:
@@ -459,6 +486,13 @@ def SchemaFactory(schema, root=None):
             return ObjectSchema(schema, root)
         elif schema['type'] == 'array':
             return ArraySchema(schema, root)
+        elif isinstance(schema['type'], list):
+            allOfSchema = []
+            for t in schema["type"]:
+                new_schema = deepcopy(schema)
+                new_schema["type"] = t
+                allOfSchema.append(new_schema)
+            return OneOfSchema({"oneOf":allOfSchema}, root)
         else:
             raise NotImplementedError(f"The type '{schema['type']}' is not implemented")
     elif 'allOf' in schema:

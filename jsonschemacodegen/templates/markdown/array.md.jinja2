@@ -14,6 +14,10 @@
   {%-endif-%}
 {%-endmacro-%}
 {%-import 'schema.jinja2' as loader-%}
-**Array**{%if 'title' in schema%} - {{schema.title|italics}}.{%endif%} {{numItems(schema)}}  Each element is:
+**Array**{%if 'title' in schema%} - {{schema.title|italics}}.{%endif%} {%if not schema.IsTupleSchema() %}{{numItems(schema)}}  Each element is:
 
 {{loader.Display(schema.GetItemSchema().Resolve(resolver), resolver) | replace("\n", "\n> ")}}
+{%-else%}  The array must have {{schema.NumberTupleItems()}} elements: {%for item in schema.GetTupleSchema()%}
+Element {{loop.index}}:
+{{loader.Display(item.Resolve(resolver), resolver) | replace("\n", "\n> ")}}
+{%endfor%}{%endif%}
