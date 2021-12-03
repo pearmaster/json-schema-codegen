@@ -4,7 +4,8 @@ augment each schema element with additional methods.
 """
 
 import collections
-import copy
+import random
+from copy import deepcopy
 
 from typing import Optional
 
@@ -352,9 +353,11 @@ class NullSchema(SchemaBase):
     def AnExample(self, index: ExampleIndex, required=None):
         return None
 
+
 class ArraySchema(SchemaBase):
     """
     A schema for an array of unique strings looks something like:
+
 
     ```yaml
     type: array
@@ -365,6 +368,18 @@ class ArraySchema(SchemaBase):
     ```
     """
     
+    def IsTupleSchema(self):
+        return isinstance(self.data["items"], list)
+
+    def NumberTupleItems(self):
+        return len(self.data["items"])
+
+    def GetTupleSchema(self):
+        return [ SchemaFactory(x, self.root) for x in self.data['items'] ]
+
+    def GetItemSchema(self):
+        return SchemaFactory(self.data['items'], self.root)
+
     def GetItemSchema(self) -> SchemaBase:
         return SchemaFactory.CreateSchema(self.data['items'], self.root)
 
@@ -547,6 +562,21 @@ class AnyOfFirstMatchSchema(OneOfSchema):
         CombinatorSchemaBase.__init__(self, 'anyOf', initialdata, root)
         assert isinstance(self.data['anyOf'], list)
 
+
+class AlwaysValidSchema(collections.UserDict):
+
+    def __init__(self, always:bool, root=None):
+        super().__init__()
+        self.always_valid = always
+        self.root = root
+
+    def Resolve(self, resolver):
+        return self
+
+    def Example(self, resolver, index: ExampleIndex, required=None):
+        pass
+
+
 class SchemaFactory:
     """
     Class with one factory method.
@@ -557,7 +587,10 @@ class SchemaFactory:
         """Returns the schema wrapped in one of the schema wrapper classes that provides
         additional functionality.
         """
-
+        if isinstance(schema, bool):
+            return AlwaysValidSchema(schema, root)
+        elif isinstance(schema, AlwaysValidSchema):
+            return schema
         if 'type' in schema:
             if schema['type'] == 'string':
                 if 'enum' in schema:
@@ -586,5 +619,3 @@ class SchemaFactory:
             return OneOfSchema(schema, root)
         elif '$ref' in schema:
             return Reference(schema, root)
-        else:
-            raise NotImplementedError(str(schema))

@@ -1,5 +1,7 @@
 {%-macro Display(schema, resolver=None) %}
-{%-if schema.oneOf is defined -%}
+{%-if schema.always_valid is defined -%}
+{%if schema.always_valid %}Can be anything{%else%}🚫 Must not be present{%endif%}.
+{%-elif schema.oneOf is defined -%}
 {%-include 'oneOf.md.jinja2'-%}
 {%-elif schema.allOf is defined -%}
 {%-include 'allOf.md.jinja2'-%}
@@ -22,7 +24,7 @@
     
 **{{propName}}** {%if required %}(required){%endif%}
     
-{%if 'title' in prop%}*{{prop.title}}*
+{%if 'title' in prop%}*{{prop.title}}* 
 {%endif%}
 </td>
 <td>
