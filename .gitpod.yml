@@ -6,3 +6,4 @@ tasks:
 vscode:
   extensions:
     - samuelcolvin.jinjahtml
+    - ms-python.python
