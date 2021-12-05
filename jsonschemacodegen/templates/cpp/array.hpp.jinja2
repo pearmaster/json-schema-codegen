@@ -1,7 +1,7 @@
 {%-import 'loader.jinja2' as loader-%}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-set exception %}util::JsonSchemaException{%endset%}
 {%-if schema.GetItemSchema()['$ref'] %}
-    {%-set itemtype = loader.Reference(resolver, schema.GetItemSchema()['$ref']) %}
+    {%-set itemtype = namer.get_object_name(uri, schema.GetItemSchema()['$ref']) %}
 {%-else-%}
     {%-set itemtype = 'Item'-%}
 {%-endif%}
@@ -15,7 +15,8 @@ class {{Name}}
 {
 public:
     {%-if schema.GetItemSchema()['$ref'] is not defined %}
-    {{loader.Class('hpp', resolver, [Name], 'Item', schema.GetItemSchema()) | indent(4) }}
+    {{-loader.SubClass('hpp', "Item", schema.GetItemSchema()) | indent(4) }}
+
     {%-endif%}
 
     {%-if schema.maxItems is defined %}

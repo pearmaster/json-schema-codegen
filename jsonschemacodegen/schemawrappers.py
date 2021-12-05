@@ -6,8 +6,9 @@ augment each schema element with additional methods.
 import collections
 import random
 from copy import deepcopy
+import stringcase
 
-from typing import Optional
+from typing import Optional, List
 
 from . example_util import bitsNeededForNumber, ExampleIndex
 
@@ -32,16 +33,17 @@ class SchemaBase(collections.UserDict):
         #pylint: disable=unused-argument
         return self
 
-    def GetTitle(self) -> str:
+    def get_title(self, convert_case:Optional[str]=None) -> Optional[str]:
         if 'title' in self.data:
-            return self.data['title']
-        return ''
+            title = self.data['title']
+            if hasattr(stringcase, convert_case):
+                converter = getattr(stringcase, convert_case)
+                title = converter(title)
+            return title
+        return None
 
     def IsReadOnly(self) -> bool:
         return ('readOnly' in self.data) and (self.data['readOnly'] is True)
-    
-    def IsWriteOnly(self) -> bool:
-        return ('writeOnly' in self.data) and (self.data['writeOnly'] is True)
 
     def GetExampleCombos(self) -> int:
         #pylint: disable=unused-argument
@@ -354,6 +356,49 @@ class NullSchema(SchemaBase):
         return None
 
 
+class TupleSchema(SchemaBase):
+    """
+    A schema for an tuple array of indexed items looks something like:
+
+
+    ```yaml
+    type: array
+    items:
+       - type: string
+       - type: integer
+       - type: string
+    ```
+    """
+    def IsTupleSchema(self):
+        return True
+
+    def NumberTupleItems(self) -> int:
+        return len(self.data["items"])
+
+    def get_tuple_schemas(self) -> List[SchemaBase]:
+        return [ SchemaFactory.CreateSchema(x, self.root) for x in self.data['items'] ]
+
+    def get_tuple_schema(self, idx:int) -> SchemaBase:
+        schema = self.data['items'][idx]
+        return SchemaFactory.CreateSchema(schema, self.root)
+
+    def get_tuple_titles(self, convert_case:str="pascalcase") -> List[str]:
+        schemas = self.get_tuple_schemas()
+        titles = []
+        for schema in schemas:
+            title = schema.get_title(convert_case=convert_case)
+            if title is None:
+                title = "Item"
+            titles.append(title)
+        fixed_titles = []
+        for i, t in enumerate(titles):
+            title = t
+            if titles.count(t) > 1:
+                title = f"{title}{i}"
+            fixed_titles.append(title)
+        return fixed_titles
+
+
 class ArraySchema(SchemaBase):
     """
     A schema for an array of unique strings looks something like:
@@ -369,19 +414,16 @@ class ArraySchema(SchemaBase):
     """
     
     def IsTupleSchema(self):
-        return isinstance(self.data["items"], list)
-
-    def NumberTupleItems(self):
-        return len(self.data["items"])
-
-    def GetTupleSchema(self):
-        return [ SchemaFactory(x, self.root) for x in self.data['items'] ]
-
-    def GetItemSchema(self):
-        return SchemaFactory(self.data['items'], self.root)
+        return False
 
     def GetItemSchema(self) -> SchemaBase:
         return SchemaFactory.CreateSchema(self.data['items'], self.root)
+
+    def get_item_title(self, convert_case:Optional[str]="pascalcase") -> str:
+        title = self.GetItemSchema().get_title(convert_case=convert_case)
+        if title is None:
+            title = "Item"
+        return title
 
     def cpp_includes(self):
         incs = super().cpp_includes()
@@ -605,7 +647,12 @@ class SchemaFactory:
             elif schema['type'] == 'object':
                 return ObjectSchema(schema, root)
             elif schema['type'] == 'array':
-                return ArraySchema(schema, root)
+                if 'items' in schema:
+                    if isinstance(schema['items'], list):
+                        return TupleSchema(schema, root)
+                    else:
+                        return ArraySchema(schema, root)
+                raise NotImplementedError(f"Array schema without items definition is not implemented")
             else:
                 raise NotImplementedError(f"The type '{schema['type']}' is not implemented")
         elif 'allOf' in schema:

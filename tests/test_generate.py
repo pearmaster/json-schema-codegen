@@ -81,3 +81,21 @@ class TestNullGenerator(unittest.TestCase, CodeGeneratorMixin):
         path = "/objects/null"
         self.generate_class(schema_text, path)
         self.do_compile(self.uri, path)
+
+class TestArrayGenerator(unittest.TestCase, CodeGeneratorMixin):
+
+    def setUp(self):
+        CodeGeneratorMixin.setUp(self)
+
+    def test_generate_array_of_ints_class(self):
+        schema_text = """
+        {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            }
+        }
+        """
+        path = "/objects/array_of_ints"
+        self.generate_class(schema_text, path)
+        self.do_compile(self.uri, path)
