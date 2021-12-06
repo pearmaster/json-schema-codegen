@@ -21,6 +21,7 @@ class CodeGeneratorMixin:
         source_path = self.namer.get_source_path(uri, path)
         header_dir = os.path.join(self.root_gen_dir, "include")
         command = ["g++", f"-I{header_dir}", "-c", source_path]
+        print(" ".join(command))
         rc = subprocess.call(command)
         self.assertEqual(rc, 0)
 

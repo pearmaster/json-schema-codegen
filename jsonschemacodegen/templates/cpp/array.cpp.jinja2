@@ -1,6 +1,7 @@
 {%import 'loader.jinja2' as loader with context-%}
 {%-set className = namer.get_object_name(uri, path)%}
 {%-set exception %}{{ namer.get_util_namespace("JsonSchemaException") | join("::") }}{%endset%}
+{%-set exceptionCollection %}{{ namer.get_util_namespace("JsonSchemaExceptionCollection") | join("::") }}{%endset%}
 
 {%-if schema.GetItemSchema()['$ref'] %}
 // Array uses items reference
@@ -9,7 +10,7 @@
 {%-set itemtype = className+'::Item'%}
 
 // {{itemtype}}
-{{-loader.SubClass('cpp', itemtype, schema.GetItemSchema())}}
+{{-loader.SubClass('cpp', itemtype, "Item", schema.GetItemSchema())}}
 {%endif%}
 
 {{className}}::{{Name}}(std::vector<{{itemtype}}> arr)
@@ -64,7 +65,7 @@ void {{className}}::Append(const {{itemtype}}& item)
         throw {{exception}}("The JSON wasn't an array");
     }
     std::vector<{{itemtype}}> arr;
-    {{exception}}Collection exceptionCollection;
+    {{exceptionCollection}} exceptionCollection;
     unsigned i = 0;
     for (auto& v : json.GetArray())
     {
@@ -72,17 +73,17 @@ void {{className}}::Append(const {{itemtype}}& item)
         {
             arr.push_back({{itemtype}}::FromJson(v));
         }
-        catch (const gaap::JsonSchemaException& e)
+        catch (const {{exception}}& e)
         {
             exceptionCollection.AddException(e, std::to_string(i));
         }
-        catch (const gaap::JsonSchemaExceptionCollection& ec)
+        catch (const {{exceptionCollection}}& ec)
         {
             exceptionCollection.AddException(ec, std::to_string(i));
         }
         catch (const std::exception& e)
         {
-            exceptionCollection.AddException(gaap::JsonSchemaException(e), std::to_string(i));
+            exceptionCollection.AddException({{exception}}(e), std::to_string(i));
         }
         i++;
     }

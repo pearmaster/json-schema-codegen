@@ -15,7 +15,7 @@ class {{Name}}
 {
 public:
     {%-if schema.GetItemSchema()['$ref'] is not defined %}
-    {{-loader.SubClass('hpp', "Item", schema.GetItemSchema()) | indent(4) }}
+    {{-loader.SubClass('hpp', None, "Item", schema.GetItemSchema()) | indent(4) }}
 
     {%-endif%}
 
