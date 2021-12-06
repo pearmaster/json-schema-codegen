@@ -100,3 +100,35 @@ class TestArrayGenerator(unittest.TestCase, CodeGeneratorMixin):
         path = "/objects/array_of_ints"
         self.generate_class(schema_text, path)
         self.do_compile(self.uri, path)
+
+    def test_generate_array_of_strings_class(self):
+        schema_text = """
+        {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "title": "People Names",
+            }
+        }
+        """
+        path = "/objects/array_of_strings"
+        self.generate_class(schema_text, path)
+        self.do_compile(self.uri, path)
+
+    def test_generate_array_of_arrays_of_numbers(self):
+        schema_text = """
+        {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "title": "List of Numbers",
+                "items": {
+                    "type": "number"
+                },
+                "maxItems": 6,
+            }
+        }
+        """
+        path = "/objects/array_of_arrays_of_nums"
+        self.generate_class(schema_text, path)
+        self.do_compile(self.uri, path)

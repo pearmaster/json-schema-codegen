@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import os.path
 import stringbender
 
@@ -95,6 +95,10 @@ class CppNamer(ABC):
     def get_class_name(self, uri, path) -> str:
         full_class_name = self.get_object_name(uri, path)
         return full_class_name.split("::")[-1]
+
+    @staticmethod
+    def split_reference(ref) -> Tuple[str, str]:
+        return ref.split("#")
 
 
 class GeneralCppNamer(CppNamer):

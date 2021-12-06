@@ -416,19 +416,28 @@ class ArraySchema(SchemaBase):
     def IsTupleSchema(self):
         return False
 
-    def GetItemSchema(self) -> SchemaBase:
+    def get_item_schema(self) -> SchemaBase:
         return SchemaFactory.CreateSchema(self.data['items'], self.root)
 
     def get_item_title(self, convert_case:Optional[str]="pascal") -> str:
-        title = self.GetItemSchema().get_title(convert_case=convert_case)
+        title = self.get_item_schema().get_title(convert_case=convert_case)
         if title is None:
             title = "Item"
         return title
 
+    def get_item_object_name(self, array_name, namer) -> str:
+        if '$ref' in self.get_item_schema():
+            name = namer.get_object_name(*namer.split_reference(self.get_item_schema()['$ref']))
+        else:
+            name = self.get_item_title()
+        if name == array_name:
+            name = f"Inner{name}"
+        return name
+
     def cpp_includes(self):
         incs = super().cpp_includes()
         incs.update({"<vector>", "<string>"})
-        incs.update(self.GetItemSchema().cpp_includes())
+        incs.update(self.get_item_schema().cpp_includes())
         return incs
 
     def GetExampleCombos(self) -> int:
@@ -437,7 +446,7 @@ class ArraySchema(SchemaBase):
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
         combos = bitsNeededForNumber((right - left)+1)
-        combos *= self.GetItemSchema().GetExampleCombos()
+        combos *= self.get_item_schema().GetExampleCombos()
         return combos
 
     def AnExample(self, index: ExampleIndex, required=None):
@@ -445,7 +454,7 @@ class ArraySchema(SchemaBase):
         left = 'minItems' in self.data and int(self.data['minItems']) or 0
         right = 'maxItems' in self.data and int(self.data['maxItems']) or (left + 3)
         for _ in range(0, left+index.Number(right-left)):
-            ret.append(self.GetItemSchema().Example(index))
+            ret.append(self.get_item_schema().Example(index))
         if 'uniqueItems' in self.data and self.data['uniqueItems']:
             ret = list(set(ret))
         return ret

@@ -16,7 +16,7 @@
 {%-import 'schema.jinja2' as loader-%}
 **Array**{%if 'title' in schema%} - {{schema.title|italics}}.{%endif%} {%if not schema.IsTupleSchema() %}{{numItems(schema)}}  Each element is:
 
-{{loader.Display(schema.GetItemSchema().Resolve(resolver), resolver) | replace("\n", "\n> ")}}
+{{loader.Display(schema.get_item_schema().Resolve(resolver), resolver) | replace("\n", "\n> ")}}
 {%-else%}  The array must have {{schema.NumberTupleItems()}} elements: {%for item in schema.get_tuple_schemas()%}
 Element {{loop.index}}:
 {{loader.Display(item.Resolve(resolver), resolver) | replace("\n", "\n> ")}}
