@@ -30,5 +30,5 @@ class TestWrappers(unittest.TestCase):
         schema_obj = jacobsjsondoc.parse(schema_text)
         wrapped = SchemaFactory.CreateSchema(schema_obj)
         self.assertEqual(wrapped["title"], "Hello World")
-        self.assertEqual(wrapped.get_title(convert_case="pascalcase"), "HelloWorld")
+        self.assertEqual(wrapped.get_title(convert_case="pascal"), "HelloWorld")
         self.assertEqual(wrapped.get_title(convert_case="doesnotexistcase"), "Hello World")

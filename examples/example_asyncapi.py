@@ -1,7 +1,6 @@
 from jsonschemacodegen import cpp, cpp_namer
 import sys
 import jacobsjsondoc
-import stringcase
 from pprint import pprint
 
 # This comes from the AsyncAPI Streetlights example

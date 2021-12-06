@@ -10,9 +10,9 @@ When compile time enforcement is not possible, we resort to throwing an exceptio
 
 These requirements should be satisfied when `pip3` installing `json-schema-codegen`.
 
-* python 3.7 or later
-* jinja2
-* stringcase
+* python 3.8 or later
+* jacobs-jinja-too
+* stringbender
 
 ### Requirements for testing
 

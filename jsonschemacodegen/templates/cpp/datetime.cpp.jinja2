@@ -90,7 +90,7 @@ void {{className}}::SetNow()
     Set(boost::posix_time::microsec_clock::universal_time());
 }
 
-void {{className}}::SetCurrent{{schema.format | PascalCase}}()
+void {{className}}::SetCurrent{{schema.format | pascal}}()
 {
     _value = boost::none;
 }

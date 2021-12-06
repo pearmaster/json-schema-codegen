@@ -6,7 +6,7 @@ augment each schema element with additional methods.
 import collections
 import random
 from copy import deepcopy
-import stringcase
+import stringbender
 
 from typing import Optional, List
 
@@ -36,8 +36,8 @@ class SchemaBase(collections.UserDict):
     def get_title(self, convert_case:Optional[str]=None) -> Optional[str]:
         if 'title' in self.data:
             title = self.data['title']
-            if hasattr(stringcase, convert_case):
-                converter = getattr(stringcase, convert_case)
+            if hasattr(stringbender, convert_case):
+                converter = getattr(stringbender, convert_case)
                 title = converter(title)
             return title
         return None
@@ -382,7 +382,7 @@ class TupleSchema(SchemaBase):
         schema = self.data['items'][idx]
         return SchemaFactory.CreateSchema(schema, self.root)
 
-    def get_tuple_titles(self, convert_case:str="pascalcase") -> List[str]:
+    def get_tuple_titles(self, convert_case:str="pascal") -> List[str]:
         schemas = self.get_tuple_schemas()
         titles = []
         for schema in schemas:
@@ -419,7 +419,7 @@ class ArraySchema(SchemaBase):
     def GetItemSchema(self) -> SchemaBase:
         return SchemaFactory.CreateSchema(self.data['items'], self.root)
 
-    def get_item_title(self, convert_case:Optional[str]="pascalcase") -> str:
+    def get_item_title(self, convert_case:Optional[str]="pascal") -> str:
         title = self.GetItemSchema().get_title(convert_case=convert_case)
         if title is None:
             title = "Item"

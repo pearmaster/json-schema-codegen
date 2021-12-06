@@ -1,3 +1,3 @@
-stringcase
+stringbender==0.3.0
 jacobs-jinja-too>=0.0.6
 jacobs-json-doc>=0.14.0

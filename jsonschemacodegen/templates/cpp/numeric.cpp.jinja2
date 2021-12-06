@@ -50,7 +50,7 @@
 {%for ns in namer.get_namespace(uri, path) %}
 namespace {{ns}} {
 {%-endfor%} 
-{{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& num)
+std::ostream& operator<<(std::ostream& os, const {{className}}& num)
 {
     os << num._value;
     return os;
@@ -61,7 +61,7 @@ bool operator< (const {{className}}& left, const {{className}}& right)
     return left._value < right._value;
 }
 
-{{std}}size_t hash_value(const {{className}}& num)
+std::size_t hash_value(const {{className}}& num)
 {
     return boost::hash_value(num._value);
 }
@@ -112,7 +112,7 @@ void {{className}}::Validate({{cpptype}} testValue)
     return newObject;
 }
 
-{{className}} {{className}}::FromString(const {{std}}string& str)
+{{className}} {{className}}::FromString(const std::string& str)
 {
     return {{className}}(boost::lexical_cast<{{cpptype}}>(str));
 }

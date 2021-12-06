@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 import os.path
-import stringcase
+import stringbender
 
 class CppNamer(ABC):
 
@@ -145,7 +145,7 @@ class GeneralCppNamer(CppNamer):
         obj_parts = [module_name]
         if len(json_path_parts) >= 2:
             obj_parts.append(json_path_parts[-2].lower())
-        obj_parts.append(stringcase.pascalcase(json_path_parts[-1]))
+        obj_parts.append(stringbender.pascal(json_path_parts[-1]))
         obj_name = "::".join(obj_parts)
         return obj_name
 
