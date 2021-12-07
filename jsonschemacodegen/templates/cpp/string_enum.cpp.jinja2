@@ -1,7 +1,7 @@
-{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
-{%-set std = resolver.cpp_resolve_namespace(['std']) %}
+
 {%-set enumType = className+"::Value"%}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset%}
+{%-set exception %}{{ namer.get_util_namespace("JsonSchemaException") | join("::") }}{%endset%}
+
 {{className}}::{{Name}}({{enumType}} value)
 {
     Set(value);
@@ -25,10 +25,10 @@
     Set(value);
     return *this;
 }
-{%for origNs in originalNamespace %}
-namespace {{origNs}} {
+{%for ns in namer.get_namespace(uri, path) %}
+namespace {{ns}} {
 {%-endfor%}  
-{{std}}ostream& operator<<({{std}}ostream& os, const {{className}}& v)
+std::ostream& operator<<(std::ostream& os, const {{className}}& v)
 {
     os << v.EnumToString(v._value);
     return os;
@@ -39,11 +39,11 @@ bool operator< (const {{className}}& left, const {{className}}& right)
     return left._value < right._value;
 }
 
-{{std}}size_t hash_value(const {{className}}& e)
+std::size_t hash_value(const {{className}}& e)
 {
     return boost::hash_value(e.ToString());
 }
-{%for origNs in originalNamespace %}}{%-endfor%} // end namespaces
+{%for _ in namer.get_namespace(uri, path) %}}{%-endfor%} // end namespaces
 
 void {{className}}::Set({{enumType}} value)
 {
@@ -55,7 +55,7 @@ void {{className}}::Set({{enumType}} value)
     return _value;
 }
 
-{{std}}string {{className}}::EnumToString({{enumType}} value)
+std::string {{className}}::EnumToString({{enumType}} value)
 {
     switch (value)
     {
@@ -85,14 +85,14 @@ void {{className}}::Set({{enumType}} value)
     }
 }
 
-{{className}} {{className}}::FromJson(const {{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& json)
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
     if (!(json.IsString()))
     {
         throw {{exception}}("JSON wasn't a string");
     }
 
-    {{std}}string testValue = json.GetString();
+    std::string testValue = json.GetString();
     try
     {
         return {{className}}(StringToEnum(testValue));
@@ -103,18 +103,18 @@ void {{className}}::Set({{enumType}} value)
     }
 }
 
-{{className}} {{className}}::FromString(const {{std}}string& str)
+{{className}} {{className}}::FromString(const std::string& str)
 {
     return {{className}}(StringToEnum(str));
 }
 
-void {{className}}::ToJson({{resolver.cpp_resolve_namespace(['rapidjson'])}}Value& value, rapidjson::AllocatorType& allocator) const
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
 {
-    {{std}}string strValue = EnumToString(_value);
+    std::string strValue = EnumToString(_value);
     value.SetString(strValue.c_str(), strValue.size(), allocator);
 }
 
-{{std}}string {{className}}::ToString() const
+std::string {{className}}::ToString() const
 {
     return EnumToString(_value);
 }
