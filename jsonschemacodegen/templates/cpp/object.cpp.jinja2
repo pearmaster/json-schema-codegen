@@ -1,6 +1,9 @@
+{%import 'loader.jinja2' as loader with context-%}
 {%-import 'propname.jinja2' as helper-%}
-{%-set className = resolver.cpp_resolve_namespace(ns)+Name%}
-{%-set rapidjson = resolver.cpp_resolve_namespace(['rapidjson']) %}
+
+{%-set exception %}{{ namer.get_util_namespace("JsonSchemaException") | join("::") }}{%endset%}
+{%-set exceptionCollection %}{{ namer.get_util_namespace("JsonSchemaExceptionCollection") | join("::") }}{%endset%}
+
 {%macro NestedObjectNameOnly(name) -%}
     {%-if name|UpperCamelCase != Name|UpperCamelCase%}{{-name | UpperCamelCase-}}{%else%}{{name | UpperCamelCase}}Property{%endif-%}
 {%-endmacro%}
@@ -9,20 +12,18 @@
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-loader.Reference(resolver, propSchema['$ref'])-}}
+        {{-namer.get_object_name(uri, propSchema['$ref']) -}}
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
 {%-endmacro%}
 {%-set additionalProperties = ('additionalProperties' not in schema or not schema['additionalProperties'])%}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset-%}
 
-{%import 'loader.jinja2' as loader with context%}
 {%-for propName, propSchema in schema.RequiredList() %}
-{{loader.Class('cpp', resolver, [className], NestedObjectNameOnly(propName), propSchema) }}
+{{-loader.SubClass('cpp', className, NestedObjectNameOnly(propName), propSchema)}}
 {%-endfor%}
 {%-for propName, propSchema in schema.UnRequiredList() %}
-{{loader.Class('cpp', resolver, [className], NestedObjectNameOnly(propName), propSchema) }}
+{{-loader.SubClass('cpp', className, NestedObjectNameOnly(propName), propSchema)}}
 {%-endfor%}
 
 {%if schema.RequiredList() | length > 0 %}
@@ -97,14 +98,14 @@ boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propNa
 {%endif%}
 {%-endfor%}
 
-{{className}} {{className}}::FromJson(const {{rapidjson}}Value& json)
+{{className}} {{className}}::FromJson(const rapidjson::Value& json)
 {
     if (!(json.IsObject()))
     {
         throw {{exception}}("JSON wasn't an object");
     }
     {##}
-    {{exception}}Collection exceptionCollection;
+    {{exceptionCollection}} exceptionCollection;
     {%for propName, propSchema in schema.RequiredList()-%}
     boost::optional<{{ObjectType(propName, propSchema)}}> optLocal{{propName | UpperCamelCase}};
     if (!json.HasMember({{helper.ConstPropertyName(propName)}}))
@@ -122,7 +123,7 @@ boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propNa
         {
             exceptionCollection.AddException(e, {{helper.ConstPropertyName(propName)}});
         }
-        catch (const {{exception}}Collection& ec)
+        catch (const {{exceptionCollection}}& ec)
         {
             exceptionCollection.AddException(ec, {{helper.ConstPropertyName(propName)}});
         }
@@ -159,7 +160,7 @@ boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propNa
         {
             exceptionCollection.AddException(e, {{helper.ConstPropertyName(propName)}});
         }
-        catch (const {{exception}}Collection& ec)
+        catch (const {{exceptionCollection}}& ec)
         {
             exceptionCollection.AddException(ec, {{helper.ConstPropertyName(propName)}});
         }
@@ -176,7 +177,7 @@ boost::optional<{{ObjectType(propName, propSchema)}}> {{className}}::Get{{propNa
     return *optNewInstance;
 }
 
-void {{className}}::ToJson({{rapidjson}}Value& value, rapidjson::AllocatorType& allocator) const
+void {{className}}::ToJson(rapidjson::Value& value, rapidjson::Value::AllocatorType& allocator) const
 {
     if (!value.IsObject())
     {
@@ -190,15 +191,15 @@ void {{className}}::ToJson({{rapidjson}}Value& value, rapidjson::AllocatorType& 
     {%endif%}
     {%-for propName, propSchema in schema.properties.items() %}
     {%-if propName in schema.required%}
-    {{rapidjson}}Value temp{{propName|UpperCamelCase}};
+    rapidjson::Value temp{{propName|UpperCamelCase}};
     {{propName|privatize}}.ToJson(temp{{propName|UpperCamelCase}}, allocator);
-    value.AddMember({{rapidjson}}StringRef({{helper.ConstPropertyName(propName)}}), temp{{propName|UpperCamelCase}}, allocator);
+    value.AddMember(rapidjson::StringRef({{helper.ConstPropertyName(propName)}}), temp{{propName|UpperCamelCase}}, allocator);
     {%else%}
     if ({{propName|privatize}})
     {
-        {{rapidjson}}Value temp{{propName|UpperCamelCase}};
+        rapidjson::Value temp{{propName|UpperCamelCase}};
         {{propName|privatize}}->ToJson(temp{{propName|UpperCamelCase}}, allocator);
-        value.AddMember({{rapidjson}}StringRef({{helper.ConstPropertyName(propName)}}), temp{{propName|UpperCamelCase}}, allocator);
+        value.AddMember(rapidjson::StringRef({{helper.ConstPropertyName(propName)}}), temp{{propName|UpperCamelCase}}, allocator);
     }
     {%endif%}
     {%-endfor%}

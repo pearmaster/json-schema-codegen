@@ -156,7 +156,7 @@ class ObjectSchema(SchemaBase):
     def GetPropertySchemas(self):
         props = {}
         for n, p in self.data['properties'].items():
-            props[n] = SchemaFactory(p, self.root)
+            props[n] = SchemaFactory.CreateSchema(p, self.root)
         return props
 
     def PropertyKeys(self):
@@ -187,14 +187,14 @@ class ObjectSchema(SchemaBase):
         theList = []
         for propName, propSchema in self.data['properties'].items():
             if (propName in self.requiredProperties) and not (default_negates_required and 'default' in propSchema):
-                theList.append((propName, SchemaFactory(propSchema, self.root)))
+                theList.append((propName, SchemaFactory.CreateSchema(propSchema, self.root)))
         return theList
 
     # TODO: Need something that specifies that this is 'required' for init
     def UnRequiredList(self, default_negates_required=True):
         theList = []
         for propName, propSchema in self.data['properties'].items():
-            schemaObject = SchemaFactory(propSchema, self.root)
+            schemaObject = SchemaFactory.CreateSchema(propSchema, self.root)
             if default_negates_required and 'default' in propSchema:
                 theList.append((propName, schemaObject))
             elif propName not in self.requiredProperties:
@@ -472,7 +472,7 @@ class CombinatorSchemaBase(SchemaBase):
         self.allow_none = False
         for s in self.data[self.name]:
             if hasattr(s, '__iter__') and ('type' in s or 'required' not in s):
-                schema = SchemaFactory(s, self.root)
+                schema = SchemaFactory.CreateSchema(s, self.root)
                 self.components.append(schema)
 
         for s in self.data[self.name]:

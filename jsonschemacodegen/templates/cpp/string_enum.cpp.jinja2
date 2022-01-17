@@ -59,8 +59,8 @@ std::string {{className}}::EnumToString({{enumType}} value)
 {
     switch (value)
     {
-        {%-for enum in schema.enum%}
-        case {{enumType}}::{{enum | enumify}}:
+        {%-for e in schema.enum%}
+        case {{enumType}}::{{e | enumify}}:
             return "{{enum}}";
         {%-endfor%}
     }

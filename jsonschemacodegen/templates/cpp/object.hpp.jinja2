@@ -1,12 +1,12 @@
 {%-import 'loader.jinja2' as loader-%}
 {%-import 'propname.jinja2' as helper-%}
-{%-set exception %}{{resolver.cpp_get_lib_ns() | join('::')}}::JsonSchemaException{%endset-%}
+{%-set exception %}util::JsonSchemaException{%endset%}
 {%macro NestedObjectName(name) -%}
     {%-if name|UpperCamelCase != Name|UpperCamelCase%}{{-name | UpperCamelCase-}}{%else%}{{name | UpperCamelCase}}Property{%endif-%}
 {%-endmacro%}
 {%-macro ObjectType(propName, propSchema) -%}
     {%-if '$ref' in propSchema -%}
-        {{-loader.Reference(resolver, propSchema['$ref'])-}}
+        {{-namer.get_object_name(uri, propSchema['$ref'])-}}
     {%-else-%}
         {{-NestedObjectName(propName)-}}
     {%-endif-%}
@@ -28,7 +28,7 @@ public:
     {%endfor-%}
     {%-for propName, propSchema in schema.properties.items() %}
     {%-if '$ref' not in propSchema %}
-    {{loader.Class('hpp', resolver, [Name], NestedObjectName(propName), propSchema) | indent(4) }}
+    {{-loader.SubClass('hpp', Name, NestedObjectName(propName), propSchema) | indent(4) }}
     {%-endif%}
     {%endfor%}
 
