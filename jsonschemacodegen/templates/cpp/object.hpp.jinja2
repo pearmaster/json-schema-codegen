@@ -71,7 +71,7 @@ public:
      * The reference is valid as long as the {{Name}} object.
      * \returns Required '{{propName}}' property reference
      */
-    {{ObjectType(propName, propSchema)}}& Get{{propName | UpperCamelCase}}Reference() const;
+    {{ObjectType(propName, propSchema)}}& Get{{propName | UpperCamelCase}}Reference();
     {%else%}
     /*! Returns the optional '{{propName}}' property of the object
      * \returns Optional '{{propName}}' property value

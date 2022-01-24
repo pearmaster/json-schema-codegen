@@ -202,5 +202,24 @@ class TestObjectGenerator(unittest.TestCase, CodeGeneratorMixin):
         self.generate_class(schema_text, path)
         self.do_compile(self.uri, path)
 
+    def test_generate_example1_class(self):
+        schema_text = """
+        {
+            "type": "object",
+            "properties": {
+                "foo": {
+                    "type": "integer"
+                },
+                "barIsRequired": {
+                    "type": "string",
+                    "maxLength": 10
+                }
+            },
+            required: ["barIsRequired"]
+        }"""
+        path = "/objects/exampleObject1"
+        self.generate_class(schema_text, path)
+        self.do_compile(self.uri, path)
+
     def tearDown(self):
         CodeGeneratorMixin.tearDown(self)
