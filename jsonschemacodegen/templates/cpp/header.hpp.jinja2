@@ -10,7 +10,7 @@
 #include {{dep}}
 {%-endif-%}
 {%-endfor%}
-#include "{{resolver.cpp_get_lib_ns() | join("/")}}/exceptions.hpp"
+#include "{{resolver.cpp_get_lib_ns() | join("/")}}{%if resolver.cpp_get_lib_ns() %}/{%endif%}exceptions.hpp"
 
 // FIXME: Somehow rapidjson provides a copy of inttypes.h that conflicts
 // with what google/breakpad needs.  This flag gets things to compile, but
